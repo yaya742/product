@@ -141,7 +141,18 @@ class WeatherService:
         status, reasons = self._evaluate_points(relevant_hours)
         return ActivityEvaluation(
             activity=activity,
+            activity_text={
+                ActivityKind.RUNNING: "跑步",
+                ActivityKind.WALKING: "步行",
+                ActivityKind.CYCLING: "骑行",
+                ActivityKind.SPORTS: "户外运动",
+            }[activity],
             status=status,
+            status_text={
+                "suitable": "适合",
+                "caution": "需要注意",
+                "unsuitable": "不建议",
+            }[status],
             evaluated_from=relevant_hours[0].forecast_time,
             evaluated_to=relevant_hours[-1].forecast_time,
             reasons=reasons,

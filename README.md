@@ -1,6 +1,6 @@
-# Campus Weather Plugin
+# 校园天气插件
 
-天气插件为校园 Agent 提供三个只读能力：
+天气插件面向中国大学生，为校园 Agent 提供三个只读能力：
 
 - 当前天气：`GET /api/weather/current`
 - 逐小时预报：`GET /api/weather/forecast`
@@ -24,7 +24,7 @@ uvicorn weather_plugin.main:app --reload
 ```text
 GET /api/weather/current?latitude=30.27&longitude=120.15&timezone=Asia/Shanghai
 GET /api/weather/forecast?latitude=30.27&longitude=120.15&hours=48&timezone=Asia/Shanghai
-GET /api/weather/outdoor-activity?latitude=30.27&longitude=120.15&start=2026-09-10T18:00:00%2B08:00&end=2026-09-10T20:00:00%2B08:00&activity=running&timezone=Asia/Shanghai
+GET /api/weather/outdoor-activity?latitude=30.27&longitude=120.15&start=2026-09-10T18:00:00%2B08:00&end=2026-09-10T20:00:00%2B08:00&activity=跑步&timezone=Asia/Shanghai
 ```
 
 ## 设计约束

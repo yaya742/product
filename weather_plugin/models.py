@@ -17,6 +17,27 @@ class ActivityKind(str, Enum):
     SPORTS = "sports"
 
 
+ACTIVITY_ALIASES = {
+    "running": ActivityKind.RUNNING,
+    "跑步": ActivityKind.RUNNING,
+    "walking": ActivityKind.WALKING,
+    "步行": ActivityKind.WALKING,
+    "cycling": ActivityKind.CYCLING,
+    "骑行": ActivityKind.CYCLING,
+    "sports": ActivityKind.SPORTS,
+    "运动": ActivityKind.SPORTS,
+}
+
+
+def parse_activity_kind(value: str) -> ActivityKind:
+    """Accept stable machine codes and Chinese activity names."""
+
+    activity = ACTIVITY_ALIASES.get(value.strip().lower())
+    if activity is None:
+        raise ValueError("活动类型只能是跑步、步行、骑行或运动。")
+    return activity
+
+
 class WeatherLocation(BaseModel):
     """A WGS84 coordinate and the timezone used for display."""
 
@@ -82,7 +103,9 @@ class ActivityEvaluation(BaseModel):
     """Rule-based evaluation for an outdoor activity window."""
 
     activity: ActivityKind
+    activity_text: str
     status: str = Field(pattern="^(suitable|caution|unsuitable)$")
+    status_text: str
     evaluated_from: datetime
     evaluated_to: datetime
     reasons: list[str] = Field(min_length=1)

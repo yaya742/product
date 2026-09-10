@@ -52,14 +52,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         await http_client.aclose()
 
     app = FastAPI(
-        title="Campus Weather Plugin",
+        title="校园天气插件",
         version="0.1.0",
-        description="为校园 Agent 提供标准化的当前天气、逐小时预报和户外活动评估。",
+        description="为中国大学生校园 Agent 提供中文的当前天气、逐小时预报和户外活动评估。",
         lifespan=lifespan,
     )
     app.include_router(router)
 
-    @app.get("/health", tags=["system"])
+    @app.get("/health", tags=["系统"])
     async def health() -> dict[str, str]:
         return {"status": "ok"}
 

@@ -9,6 +9,7 @@ from weather_plugin.models import (
     HourlyWeather,
     WeatherForecastResponse,
     WeatherLocation,
+    parse_activity_kind,
 )
 from weather_plugin.service import WeatherService
 
@@ -63,6 +64,10 @@ def make_point(at: datetime, **overrides: object) -> HourlyWeather:
     }
     values.update(overrides)
     return HourlyWeather(**values)
+
+
+def test_chinese_activity_alias_is_supported() -> None:
+    assert parse_activity_kind("跑步").value == "running"
 
 
 @pytest.mark.asyncio

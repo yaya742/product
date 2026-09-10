@@ -13,11 +13,12 @@ from .models import (
     CurrentWeatherResponse,
     WeatherForecastResponse,
     WeatherLocation,
+    parse_activity_kind,
 )
 from .providers.base import WeatherProviderError
 from .service import WeatherService
 
-router = APIRouter(prefix="/api/weather", tags=["weather"])
+router = APIRouter(prefix="/api/weather", tags=["天气"])
 
 
 def _location(
@@ -81,14 +82,18 @@ async def evaluate_outdoor_activity(
     longitude: Annotated[float, Query(ge=-180, le=180)],
     start: datetime,
     end: datetime,
-    activity: ActivityKind = ActivityKind.SPORTS,
+    activity: str = ActivityKind.SPORTS.value,
     timezone: Annotated[str, Query(min_length=1, max_length=64)] = "",
 ) -> ActivityEvaluation:
     location = _location(latitude, longitude, timezone, request)
     try:
+        activity_kind = parse_activity_kind(activity)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    try:
         return await _service(request).evaluate_outdoor_activity(
             location,
-            activity,
+            activity_kind,
             start,
             end,
         )
