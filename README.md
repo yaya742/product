@@ -13,7 +13,7 @@
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
-pip install -e .
+pip install -e ".[dev]"
 uvicorn weather_plugin.main:app --reload
 ```
 
