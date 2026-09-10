@@ -1,0 +1,107 @@
+from datetime import datetime, timedelta, timezone
+
+import pytest
+
+from weather_plugin.models import (
+    ActivityKind,
+    CurrentWeather,
+    CurrentWeatherResponse,
+    HourlyWeather,
+    WeatherForecastResponse,
+    WeatherLocation,
+)
+from weather_plugin.service import WeatherService
+
+
+class FakeProvider:
+    source = "fake"
+
+    def __init__(self, points: list[HourlyWeather]) -> None:
+        self.points = points
+        self.forecast_calls = 0
+
+    async def get_current(self, location: WeatherLocation) -> CurrentWeatherResponse:
+        now = datetime.now(timezone.utc)
+        return CurrentWeatherResponse(
+            source=self.source,
+            fetched_at=now,
+            location=location,
+            current=CurrentWeather(
+                observed_at=now,
+                temperature_c=20,
+                feels_like_c=20,
+                humidity_percent=50,
+                precipitation_mm=0,
+                precipitation_probability_percent=0,
+                wind_speed_mps=1,
+                weather_code="0",
+            ),
+        )
+
+    async def get_forecast(self, location: WeatherLocation, hours: int) -> WeatherForecastResponse:
+        self.forecast_calls += 1
+        return WeatherForecastResponse(
+            source=self.source,
+            fetched_at=datetime.now(timezone.utc),
+            location=location,
+            hours=self.points[:hours],
+        )
+
+
+def make_point(at: datetime, **overrides: object) -> HourlyWeather:
+    values = {
+        "forecast_time": at,
+        "temperature_c": 20,
+        "feels_like_c": 20,
+        "humidity_percent": 50,
+        "precipitation_mm": 0,
+        "precipitation_probability_percent": 0,
+        "wind_speed_mps": 2,
+        "weather_code": "0",
+        "condition_text": "晴",
+        "precipitation_type": "none",
+    }
+    values.update(overrides)
+    return HourlyWeather(**values)
+
+
+@pytest.mark.asyncio
+async def test_forecast_is_cached() -> None:
+    location = WeatherLocation(latitude=30, longitude=120, timezone="Asia/Shanghai")
+    start = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    provider = FakeProvider([make_point(start + timedelta(hours=index)) for index in range(4)])
+    service = WeatherService(provider)
+
+    await service.get_forecast(location, 4)
+    await service.get_forecast(location, 4)
+
+    assert provider.forecast_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_outdoor_activity_is_unsuitable_for_heavy_rain() -> None:
+    location = WeatherLocation(latitude=30, longitude=120, timezone="UTC")
+    start = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    provider = FakeProvider(
+        [
+            make_point(
+                start,
+                precipitation_mm=2,
+                precipitation_probability_percent=80,
+                weather_code="65",
+                condition_text="大雨",
+                precipitation_type="rain",
+            )
+        ]
+    )
+    service = WeatherService(provider)
+
+    result = await service.evaluate_outdoor_activity(
+        location,
+        ActivityKind.RUNNING,
+        start,
+        start + timedelta(hours=1),
+    )
+
+    assert result.status == "unsuitable"
+    assert result.forecast_hours_used == 1
