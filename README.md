@@ -23,6 +23,7 @@ uvicorn weather_plugin.main:app --reload
 
 ```text
 GET /api/weather/current?latitude=30.27&longitude=120.15&timezone=Asia/Shanghai
+GET /api/weather/current?latitude=30.27&longitude=120.15&timezone=Asia/Shanghai&source=gps&accuracy_m=35&captured_at=2026-09-10T18:00:00%2B08:00
 GET /api/weather/forecast?latitude=30.27&longitude=120.15&hours=48&timezone=Asia/Shanghai
 GET /api/weather/outdoor-activity?latitude=30.27&longitude=120.15&start=2026-09-10T18:00:00%2B08:00&end=2026-09-10T20:00:00%2B08:00&activity=跑步&timezone=Asia/Shanghai
 ```
@@ -30,6 +31,8 @@ GET /api/weather/outdoor-activity?latitude=30.27&longitude=120.15&start=2026-09-
 ## 设计约束
 
 - Android 只上传经纬度，不直接持有天气服务密钥。
+- Android 可同时上传 `source=gps`、`accuracy_m` 和 `captured_at`；定位超过 30 分钟时，接口会返回中文提醒。
+- `source` 支持 `gps`、`manual` 和 `campus_default`，GPS 拒绝时可退回手动或学校默认位置。
 - Provider 输出先转换为统一模型，Agent 不读取上游原始 JSON。
 - 当前天气缓存 5 分钟，预报缓存 30 分钟。
 - 户外活动建议由规则计算，模型只负责解释结果。

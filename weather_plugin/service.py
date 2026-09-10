@@ -95,19 +95,21 @@ class WeatherService:
         key = self._location_key("current", location)
         cached = await self.cache.get(key)
         if isinstance(cached, CurrentWeatherResponse):
-            return cached
+            return self._attach_location_metadata(cached, location)
         response = await self.provider.get_current(location)
-        await self.cache.set(key, response, self.current_cache_ttl_seconds)
-        return response
+        cacheable_response = response.model_copy(update={"warnings": []})
+        await self.cache.set(key, cacheable_response, self.current_cache_ttl_seconds)
+        return self._attach_location_metadata(response, location)
 
     async def get_forecast(self, location: WeatherLocation, hours: int) -> WeatherForecastResponse:
         key = self._location_key(f"forecast:{hours}", location)
         cached = await self.cache.get(key)
         if isinstance(cached, WeatherForecastResponse):
-            return cached
+            return self._attach_location_metadata(cached, location)
         response = await self.provider.get_forecast(location, hours)
-        await self.cache.set(key, response, self.forecast_cache_ttl_seconds)
-        return response
+        cacheable_response = response.model_copy(update={"warnings": []})
+        await self.cache.set(key, cacheable_response, self.forecast_cache_ttl_seconds)
+        return self._attach_location_metadata(response, location)
 
     async def evaluate_outdoor_activity(
         self,
@@ -159,6 +161,7 @@ class WeatherService:
             source=forecast.source,
             fetched_at=forecast.fetched_at,
             forecast_hours_used=len(relevant_hours),
+            warnings=forecast.warnings,
         )
 
     @staticmethod
@@ -209,6 +212,41 @@ class WeatherService:
     @staticmethod
     def _location_key(prefix: str, location: WeatherLocation) -> str:
         return f"{prefix}:{location.latitude:.4f}:{location.longitude:.4f}:{location.timezone}"
+
+    @classmethod
+    def _attach_location_metadata(
+        cls,
+        response: CurrentWeatherResponse | WeatherForecastResponse,
+        location: WeatherLocation,
+    ) -> CurrentWeatherResponse | WeatherForecastResponse:
+        response_location = response.location.model_copy(
+            update={
+                "source": location.source,
+                "accuracy_m": location.accuracy_m,
+                "captured_at": location.captured_at,
+            }
+        )
+        warnings = list(dict.fromkeys([*response.warnings, *cls._location_warnings(location)]))
+        return response.model_copy(update={"location": response_location, "warnings": warnings})
+
+    @staticmethod
+    def _location_warnings(location: WeatherLocation) -> list[str]:
+        warnings: list[str] = []
+        if location.accuracy_m is not None and location.accuracy_m > 1_000:
+            warnings.append(
+                f"当前定位精度约为 {location.accuracy_m:,.0f} 米，天气结果可能存在偏差。"
+            )
+        if location.captured_at is None:
+            return warnings
+
+        captured_at = WeatherService._with_timezone(location.captured_at, location.timezone)
+        now = datetime.now(captured_at.tzinfo or timezone.utc)
+        age_seconds = (now - captured_at).total_seconds()
+        if age_seconds > 1_800:
+            warnings.append("GPS 定位已超过 30 分钟，建议重新定位。")
+        elif age_seconds < -300:
+            warnings.append("GPS 定位时间异常，建议重新定位。")
+        return warnings
 
     @staticmethod
     def _with_timezone(value: datetime, timezone_name: str) -> datetime:

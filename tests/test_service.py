@@ -7,6 +7,7 @@ from weather_plugin.models import (
     CurrentWeather,
     CurrentWeatherResponse,
     HourlyWeather,
+    LocationSource,
     WeatherForecastResponse,
     WeatherLocation,
     parse_activity_kind,
@@ -81,6 +82,26 @@ async def test_forecast_is_cached() -> None:
     await service.get_forecast(location, 4)
 
     assert provider.forecast_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_stale_gps_location_returns_a_warning() -> None:
+    location = WeatherLocation(
+        latitude=30,
+        longitude=120,
+        timezone="UTC",
+        source=LocationSource.GPS,
+        accuracy_m=1_500,
+        captured_at=datetime.now(timezone.utc) - timedelta(minutes=31),
+    )
+    provider = FakeProvider([])
+    service = WeatherService(provider)
+
+    result = await service.get_current(location)
+
+    assert result.location.source == LocationSource.GPS
+    assert any("30 分钟" in warning for warning in result.warnings)
+    assert any("1,500 米" in warning for warning in result.warnings)
 
 
 @pytest.mark.asyncio

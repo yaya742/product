@@ -11,6 +11,7 @@ from .models import (
     ActivityEvaluation,
     ActivityKind,
     CurrentWeatherResponse,
+    LocationSource,
     WeatherForecastResponse,
     WeatherLocation,
     parse_activity_kind,
@@ -25,6 +26,9 @@ def _location(
     latitude: float,
     longitude: float,
     timezone: str,
+    source: LocationSource,
+    accuracy_m: float | None,
+    captured_at: datetime | None,
     request: Request,
 ) -> WeatherLocation:
     settings = request.app.state.weather_settings
@@ -32,6 +36,9 @@ def _location(
         latitude=latitude,
         longitude=longitude,
         timezone=timezone or settings.default_timezone,
+        source=source,
+        accuracy_m=accuracy_m,
+        captured_at=captured_at,
     )
 
 
@@ -52,8 +59,19 @@ async def get_current_weather(
     latitude: Annotated[float, Query(ge=-90, le=90)],
     longitude: Annotated[float, Query(ge=-180, le=180)],
     timezone: Annotated[str, Query(min_length=1, max_length=64)] = "",
+    source: LocationSource = LocationSource.GPS,
+    accuracy_m: Annotated[float | None, Query(gt=0, le=10_000)] = None,
+    captured_at: datetime | None = None,
 ) -> CurrentWeatherResponse:
-    location = _location(latitude, longitude, timezone, request)
+    location = _location(
+        latitude,
+        longitude,
+        timezone,
+        source,
+        accuracy_m,
+        captured_at,
+        request,
+    )
     try:
         return await _service(request).get_current(location)
     except WeatherProviderError as error:
@@ -67,8 +85,19 @@ async def get_weather_forecast(
     longitude: Annotated[float, Query(ge=-180, le=180)],
     hours: Annotated[int, Query(ge=1, le=240)] = 48,
     timezone: Annotated[str, Query(min_length=1, max_length=64)] = "",
+    source: LocationSource = LocationSource.GPS,
+    accuracy_m: Annotated[float | None, Query(gt=0, le=10_000)] = None,
+    captured_at: datetime | None = None,
 ) -> WeatherForecastResponse:
-    location = _location(latitude, longitude, timezone, request)
+    location = _location(
+        latitude,
+        longitude,
+        timezone,
+        source,
+        accuracy_m,
+        captured_at,
+        request,
+    )
     try:
         return await _service(request).get_forecast(location, hours)
     except WeatherProviderError as error:
@@ -84,8 +113,19 @@ async def evaluate_outdoor_activity(
     end: datetime,
     activity: str = ActivityKind.SPORTS.value,
     timezone: Annotated[str, Query(min_length=1, max_length=64)] = "",
+    source: LocationSource = LocationSource.GPS,
+    accuracy_m: Annotated[float | None, Query(gt=0, le=10_000)] = None,
+    captured_at: datetime | None = None,
 ) -> ActivityEvaluation:
-    location = _location(latitude, longitude, timezone, request)
+    location = _location(
+        latitude,
+        longitude,
+        timezone,
+        source,
+        accuracy_m,
+        captured_at,
+        request,
+    )
     try:
         activity_kind = parse_activity_kind(activity)
     except ValueError as error:

@@ -17,6 +17,14 @@ class ActivityKind(str, Enum):
     SPORTS = "sports"
 
 
+class LocationSource(str, Enum):
+    """How the app obtained the location used for a weather query."""
+
+    GPS = "gps"
+    MANUAL = "manual"
+    CAMPUS_DEFAULT = "campus_default"
+
+
 ACTIVITY_ALIASES = {
     "running": ActivityKind.RUNNING,
     "跑步": ActivityKind.RUNNING,
@@ -46,6 +54,9 @@ class WeatherLocation(BaseModel):
     latitude: float = Field(ge=-90, le=90)
     longitude: float = Field(ge=-180, le=180)
     timezone: str = Field(min_length=1, max_length=64)
+    source: LocationSource = LocationSource.GPS
+    accuracy_m: float | None = Field(default=None, gt=0, le=10_000)
+    captured_at: datetime | None = None
 
 
 class CurrentWeather(BaseModel):
@@ -112,3 +123,4 @@ class ActivityEvaluation(BaseModel):
     source: str
     fetched_at: datetime
     forecast_hours_used: int = Field(ge=1)
+    warnings: list[str] = Field(default_factory=list)
