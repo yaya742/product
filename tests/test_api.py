@@ -29,3 +29,12 @@ def test_timezone_is_optional_for_gps_clients() -> None:
     timezone_parameter = next(item for item in parameters if item["name"] == "timezone")
 
     assert timezone_parameter["required"] is False
+
+
+def test_post_endpoints_are_available_for_android() -> None:
+    with TestClient(create_app()) as client:
+        spec = client.get("/openapi.json").json()
+
+    assert "post" in spec["paths"]["/api/weather/current"]
+    assert "post" in spec["paths"]["/api/weather/forecast"]
+    assert "post" in spec["paths"]["/api/weather/outdoor-activity"]

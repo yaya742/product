@@ -12,8 +12,11 @@ from .models import (
     ActivityKind,
     CurrentWeatherResponse,
     LocationSource,
+    OutdoorActivityRequest,
+    WeatherForecastRequest,
     WeatherForecastResponse,
     WeatherLocation,
+    WeatherLocationRequest,
     parse_activity_kind,
 )
 from .providers.base import WeatherProviderError
@@ -44,6 +47,10 @@ def _location(
 
 def _service(request: Request) -> WeatherService:
     return request.app.state.weather_service
+
+
+def _payload_location(payload: WeatherLocationRequest, request: Request) -> WeatherLocation:
+    return payload.to_location(request.app.state.weather_settings.default_timezone)
 
 
 def _provider_error(error: WeatherProviderError) -> HTTPException:
@@ -78,6 +85,19 @@ async def get_current_weather(
         raise _provider_error(error) from error
 
 
+@router.post("/current", response_model=CurrentWeatherResponse)
+async def post_current_weather(
+    request: Request,
+    payload: WeatherLocationRequest,
+) -> CurrentWeatherResponse:
+    """Receive a GPS payload from the Android client."""
+
+    try:
+        return await _service(request).get_current(_payload_location(payload, request))
+    except WeatherProviderError as error:
+        raise _provider_error(error) from error
+
+
 @router.get("/forecast", response_model=WeatherForecastResponse)
 async def get_weather_forecast(
     request: Request,
@@ -100,6 +120,22 @@ async def get_weather_forecast(
     )
     try:
         return await _service(request).get_forecast(location, hours)
+    except WeatherProviderError as error:
+        raise _provider_error(error) from error
+
+
+@router.post("/forecast", response_model=WeatherForecastResponse)
+async def post_weather_forecast(
+    request: Request,
+    payload: WeatherForecastRequest,
+) -> WeatherForecastResponse:
+    """Receive a GPS payload and return an hourly forecast."""
+
+    try:
+        return await _service(request).get_forecast(
+            _payload_location(payload, request),
+            payload.hours,
+        )
     except WeatherProviderError as error:
         raise _provider_error(error) from error
 
@@ -136,6 +172,30 @@ async def evaluate_outdoor_activity(
             activity_kind,
             start,
             end,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    except WeatherProviderError as error:
+        raise _provider_error(error) from error
+
+
+@router.post("/outdoor-activity", response_model=ActivityEvaluation)
+async def post_evaluate_outdoor_activity(
+    request: Request,
+    payload: OutdoorActivityRequest,
+) -> ActivityEvaluation:
+    """Receive a GPS payload and evaluate an outdoor activity window."""
+
+    try:
+        activity_kind = parse_activity_kind(payload.activity)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    try:
+        return await _service(request).evaluate_outdoor_activity(
+            _payload_location(payload, request),
+            activity_kind,
+            payload.start,
+            payload.end,
         )
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error

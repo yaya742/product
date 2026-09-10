@@ -59,6 +59,43 @@ class WeatherLocation(BaseModel):
     captured_at: datetime | None = None
 
 
+class WeatherLocationRequest(BaseModel):
+    """GPS payload sent by the Android client."""
+
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+    timezone: str | None = Field(default=None, min_length=1, max_length=64)
+    source: LocationSource = LocationSource.GPS
+    accuracy_m: float | None = Field(default=None, gt=0, le=10_000)
+    captured_at: datetime | None = None
+
+    def to_location(self, default_timezone: str) -> WeatherLocation:
+        """Convert the mobile payload into the canonical location model."""
+
+        return WeatherLocation(
+            latitude=self.latitude,
+            longitude=self.longitude,
+            timezone=self.timezone or default_timezone,
+            source=self.source,
+            accuracy_m=self.accuracy_m,
+            captured_at=self.captured_at,
+        )
+
+
+class WeatherForecastRequest(WeatherLocationRequest):
+    """GPS payload plus the requested forecast length."""
+
+    hours: int = Field(default=48, ge=1, le=240)
+
+
+class OutdoorActivityRequest(WeatherLocationRequest):
+    """GPS payload plus the activity window and activity type."""
+
+    start: datetime
+    end: datetime
+    activity: str = "sports"
+
+
 class CurrentWeather(BaseModel):
     """Normalized current conditions."""
 

@@ -6,6 +6,8 @@
 - 逐小时预报：`GET /api/weather/forecast`
 - 户外活动评估：`GET /api/weather/outdoor-activity`
 
+Android GPS 客户端建议使用对应的 `POST` 接口，把经纬度、定位精度和定位时间放在 JSON 请求体中。原有 `GET` 接口仍然保留，方便调试。
+
 默认使用 Open-Meteo，适合本地开发和接口联调。正式环境可设置 `WEATHER_PROVIDER=qweather`，并配置和风天气专用 API Host 与 API Key；和风天气不可用时会自动回退到 Open-Meteo。
 
 ## 本地运行
@@ -27,6 +29,20 @@ GET /api/weather/current?latitude=30.27&longitude=120.15&timezone=Asia/Shanghai&
 GET /api/weather/forecast?latitude=30.27&longitude=120.15&hours=48&timezone=Asia/Shanghai
 GET /api/weather/outdoor-activity?latitude=30.27&longitude=120.15&start=2026-09-10T18:00:00%2B08:00&end=2026-09-10T20:00:00%2B08:00&activity=跑步&timezone=Asia/Shanghai
 ```
+
+Android 当前天气请求：
+
+```json
+{
+  "latitude": 30.27,
+  "longitude": 120.15,
+  "source": "gps",
+  "accuracy_m": 35,
+  "captured_at": "2026-09-10T18:00:00+08:00"
+}
+```
+
+发送到：`POST /api/weather/current`
 
 ## 设计约束
 

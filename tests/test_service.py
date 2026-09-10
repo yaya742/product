@@ -10,6 +10,7 @@ from weather_plugin.models import (
     LocationSource,
     WeatherForecastResponse,
     WeatherLocation,
+    WeatherLocationRequest,
     parse_activity_kind,
 )
 from weather_plugin.service import WeatherService
@@ -69,6 +70,20 @@ def make_point(at: datetime, **overrides: object) -> HourlyWeather:
 
 def test_chinese_activity_alias_is_supported() -> None:
     assert parse_activity_kind("跑步").value == "running"
+
+
+def test_gps_payload_uses_default_timezone() -> None:
+    payload = WeatherLocationRequest(
+        latitude=30,
+        longitude=120,
+        accuracy_m=35,
+        source=LocationSource.GPS,
+    )
+
+    location = payload.to_location("Asia/Shanghai")
+
+    assert location.timezone == "Asia/Shanghai"
+    assert location.accuracy_m == 35
 
 
 @pytest.mark.asyncio
