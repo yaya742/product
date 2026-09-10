@@ -7,8 +7,10 @@ from typing import AsyncIterator
 
 import httpx
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 
 from .config import Settings
+from .docs import get_chinese_docs
 from .providers import OpenMeteoProvider, QWeatherProvider, WeatherProvider
 from .router import router
 from .service import FallbackProvider, WeatherService
@@ -55,9 +57,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         title="校园天气插件",
         version="0.1.0",
         description="为中国大学生校园 Agent 提供中文的当前天气、逐小时预报和户外活动评估。",
+        docs_url="/swagger",
         lifespan=lifespan,
     )
     app.include_router(router)
+
+    @app.get("/docs", include_in_schema=False)
+    async def chinese_docs() -> HTMLResponse:
+        return get_chinese_docs()
 
     @app.get("/health", tags=["系统"])
     async def health() -> dict[str, str]:

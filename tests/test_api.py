@@ -38,3 +38,14 @@ def test_post_endpoints_are_available_for_android() -> None:
     assert "post" in spec["paths"]["/api/weather/current"]
     assert "post" in spec["paths"]["/api/weather/forecast"]
     assert "post" in spec["paths"]["/api/weather/outdoor-activity"]
+
+
+def test_docs_page_is_chinese_and_swagger_is_preserved() -> None:
+    with TestClient(create_app()) as client:
+        chinese_docs = client.get("/docs")
+        swagger_docs = client.get("/swagger")
+
+    assert chinese_docs.status_code == 200
+    assert "校园天气插件" in chinese_docs.text
+    assert "查询当前天气" in chinese_docs.text
+    assert swagger_docs.status_code == 200
