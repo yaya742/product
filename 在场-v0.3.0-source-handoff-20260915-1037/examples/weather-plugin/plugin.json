@@ -1,0 +1,128 @@
+{
+  "apiVersion": 1,
+  "id": "weather",
+  "version": "1.0.0",
+  "displayName": "天气",
+  "description": "通过宿主受控网络通道读取天气、逐小时预报和户外活动建议。",
+  "entry": "index.mjs",
+  "capabilities": [
+    {
+      "name": "weather.lookup",
+      "displayName": "查询天气",
+      "description": "读取指定地点未来几天的天气预报。",
+      "version": "1.0.0",
+      "effect": "read",
+      "requiredScopes": ["weather:read"],
+      "subjects": ["self"],
+      "worlds": ["real"],
+      "timeoutMs": 15000,
+      "maxBytes": 80000,
+      "supportsIdempotency": false,
+      "supportsInspect": false,
+      "supportsCancel": false,
+      "inputSchema": {
+        "type": "object",
+        "required": ["days", "location"],
+        "properties": {
+          "days": { "type": "integer", "minimum": 1, "maximum": 7 },
+          "location": { "type": "string", "enum": ["current", "Hangzhou"] },
+          "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+          "longitude": { "type": "number", "minimum": -180, "maximum": 180 },
+          "locationLabel": { "type": "string", "maxLength": 160 },
+          "locationSource": { "type": "string", "enum": ["windows_location", "manual", "reference"] },
+          "accuracy_m": { "type": "number", "minimum": 0, "maximum": 100000 }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": ["location", "timeZone", "forecast"],
+        "properties": {
+          "location": { "type": "string" },
+          "timeZone": { "type": "string" },
+          "forecast": { "type": "object" }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "weather.forecast",
+      "displayName": "逐小时天气",
+      "description": "读取指定地点未来一段时间的逐小时天气。",
+      "version": "1.0.0",
+      "effect": "read",
+      "requiredScopes": ["weather:read"],
+      "subjects": ["self"],
+      "worlds": ["real"],
+      "timeoutMs": 15000,
+      "maxBytes": 100000,
+      "supportsIdempotency": false,
+      "supportsInspect": false,
+      "supportsCancel": false,
+      "inputSchema": {
+        "type": "object",
+        "required": ["hours"],
+        "properties": {
+          "hours": { "type": "integer", "minimum": 1, "maximum": 240 },
+          "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+          "longitude": { "type": "number", "minimum": -180, "maximum": 180 },
+          "timeZone": { "type": "string", "maxLength": 100 }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": ["location", "timeZone", "hourly"],
+        "properties": {
+          "location": { "type": "string" },
+          "timeZone": { "type": "string" },
+          "hourly": { "type": "object" }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "weather.outdoor_activity",
+      "displayName": "户外活动建议",
+      "description": "基于降水、温度和风速给出户外活动建议，并明确不确定性。",
+      "version": "1.0.0",
+      "effect": "read",
+      "requiredScopes": ["weather:read"],
+      "subjects": ["self"],
+      "worlds": ["real"],
+      "timeoutMs": 15000,
+      "maxBytes": 80000,
+      "supportsIdempotency": false,
+      "supportsInspect": false,
+      "supportsCancel": false,
+      "inputSchema": {
+        "type": "object",
+        "required": ["hours"],
+        "properties": {
+          "hours": { "type": "integer", "minimum": 1, "maximum": 48 },
+          "activity": { "type": "string", "maxLength": 80 },
+          "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+          "longitude": { "type": "number", "minimum": -180, "maximum": 180 },
+          "timeZone": { "type": "string", "maxLength": 100 }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": ["activity", "status", "statusText", "reasons"],
+        "properties": {
+          "activity": { "type": "string" },
+          "status": { "type": "string", "enum": ["go", "caution", "avoid", "unknown"] },
+          "statusText": { "type": "string" },
+          "reasons": { "type": "array", "items": { "type": "string" } },
+          "window": { "type": "object" }
+        },
+        "additionalProperties": false
+      }
+    }
+  ],
+  "egressHosts": ["api.open-meteo.com"],
+  "platforms": ["win32", "darwin", "linux"],
+  "offline": "unsupported",
+  "license": "MIT"
+}
