@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from weather_plugin.agent import build_weather_card, get_agent_manifest
 from weather_plugin.models import (
     ActivityKind,
     CurrentWeather,
@@ -146,3 +147,44 @@ async def test_outdoor_activity_is_unsuitable_for_heavy_rain() -> None:
 
     assert result.status == "unsuitable"
     assert result.forecast_hours_used == 1
+
+
+def test_weather_card_uses_map_style_metadata_and_normalized_data() -> None:
+    now = datetime.now(timezone.utc)
+    location = WeatherLocation(latitude=30, longitude=120, timezone="UTC")
+    current = CurrentWeatherResponse(
+        source="fake",
+        fetched_at=now,
+        location=location,
+        current=CurrentWeather(
+            observed_at=now,
+            temperature_c=20,
+            feels_like_c=20,
+            humidity_percent=50,
+            precipitation_mm=0,
+            precipitation_probability_percent=0,
+            wind_speed_mps=1,
+            weather_code="0",
+            condition_text="晴",
+        ),
+    )
+    forecast = WeatherForecastResponse(
+        source="fake",
+        fetched_at=now,
+        location=location,
+        hours=[make_point(now + timedelta(hours=index)) for index in range(3)],
+    )
+
+    card = build_weather_card(current, forecast, hours=2)
+
+    assert card.schema_version == "weather-card/v1"
+    assert card.kind == "weather"
+    assert len(card.forecast) == 2
+    assert [action.id for action in card.actions] == ["refresh", "forecast"]
+
+
+def test_agent_manifest_requires_review_before_enablement() -> None:
+    manifest = get_agent_manifest()
+
+    assert manifest.trust == "untrusted_disabled"
+    assert manifest.location_permission == "location:read"

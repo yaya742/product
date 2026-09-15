@@ -6,6 +6,16 @@
 - 逐小时预报：`GET /api/weather/forecast`
 - 户外活动评估：`GET /api/weather/outdoor-activity`
 
+Agent 接入契约：
+
+- 插件清单：`GET /api/weather/manifest`
+- Agent 天气卡片：`GET /api/weather/card`
+- Provider 能力：`weather.lookup`、`weather.outdoor_activity`
+- 权限：`weather:read` 和复用地图的 `location:read`
+- 卡片协议：`weather-card/v1`，使用与地图卡片相同的内嵌展示方式
+
+清单默认标记为 `untrusted_disabled`，Agent 审核并允许插件后才能启用。天气插件不会自行申请 GPS；客户端应复用地图定位服务，把本轮经纬度、精度和定位时间传入能力调用。
+
 Android GPS 客户端建议使用对应的 `POST` 接口，把经纬度、定位精度和定位时间放在 JSON 请求体中。原有 `GET` 接口仍然保留，方便调试。
 
 默认使用 Open-Meteo，适合本地开发和接口联调。正式环境可设置 `WEATHER_PROVIDER=qweather`，并配置和风天气专用 API Host 与 API Key；和风天气不可用时会自动回退到 Open-Meteo。

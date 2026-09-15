@@ -7,6 +7,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, Request
 
+from .agent import AgentPluginManifest, WeatherCard, build_weather_card, get_agent_manifest
 from .models import (
     ActivityEvaluation,
     ActivityKind,
@@ -23,6 +24,13 @@ from .providers.base import WeatherProviderError
 from .service import WeatherService
 
 router = APIRouter(prefix="/api/weather", tags=["天气"])
+
+
+@router.get("/manifest", response_model=AgentPluginManifest)
+async def get_agent_plugin_manifest() -> AgentPluginManifest:
+    """Return the review-required capability manifest for Zaichang Agent."""
+
+    return get_agent_manifest()
 
 
 def _location(
@@ -58,6 +66,37 @@ def _provider_error(error: WeatherProviderError) -> HTTPException:
         status_code=error.status_code,
         detail={"code": error.code, "message": error.message, "retryable": error.retryable},
     )
+
+
+@router.get("/card", response_model=WeatherCard)
+async def get_weather_card(
+    request: Request,
+    latitude: Annotated[float, Query(ge=-90, le=90)],
+    longitude: Annotated[float, Query(ge=-180, le=180)],
+    hours: Annotated[int, Query(ge=1, le=240)] = 12,
+    timezone: Annotated[str | None, Query(min_length=1, max_length=64)] = None,
+    source: LocationSource = LocationSource.GPS,
+    accuracy_m: Annotated[float | None, Query(gt=0, le=10_000)] = None,
+    captured_at: datetime | None = None,
+) -> WeatherCard:
+    """Return one inline-card payload for an Agent weather lookup."""
+
+    location = _location(
+        latitude,
+        longitude,
+        timezone,
+        source,
+        accuracy_m,
+        captured_at,
+        request,
+    )
+    try:
+        service = _service(request)
+        current = await service.get_current(location)
+        forecast = await service.get_forecast(location, hours)
+        return build_weather_card(current, forecast, hours=hours)
+    except WeatherProviderError as error:
+        raise _provider_error(error) from error
 
 
 @router.get("/current", response_model=CurrentWeatherResponse)

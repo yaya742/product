@@ -56,7 +56,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(
         title="校园天气插件",
         version="0.1.0",
-        description="为中国大学生校园 Agent 提供中文的当前天气、逐小时预报和户外活动评估。",
+        description="为中国大学生校园 Agent 提供中文的当前天气、逐小时预报、户外活动评估和 Agent 插件清单。",
         docs_url="/swagger",
         lifespan=lifespan,
     )

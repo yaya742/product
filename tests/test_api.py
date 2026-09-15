@@ -49,3 +49,27 @@ def test_docs_page_is_chinese_and_swagger_is_preserved() -> None:
     assert "校园天气插件" in chinese_docs.text
     assert "查询当前天气" in chinese_docs.text
     assert swagger_docs.status_code == 200
+
+
+def test_agent_manifest_matches_map_style_contract() -> None:
+    with TestClient(create_app()) as client:
+        response = client.get("/api/weather/manifest")
+
+    assert response.status_code == 200
+    manifest = response.json()
+    assert manifest["protocol"] == "zaichang-capability-v1"
+    assert manifest["trust"] == "untrusted_disabled"
+    assert manifest["ui"] == {
+        "cardKind": "weather",
+        "schemaVersion": "weather-card/v1",
+        "styleReference": "map-card",
+        "inline": True,
+    }
+    capabilities = {item["name"]: item for item in manifest["capabilities"]}
+    assert set(capabilities) == {"weather.lookup", "weather.outdoor_activity"}
+    assert capabilities["weather.lookup"]["requiredScopes"] == [
+        "weather:read",
+        "location:read",
+    ]
+    assert capabilities["weather.lookup"]["method"] == "GET"
+    assert capabilities["weather.lookup"]["endpointPath"] == "/api/weather/card"
