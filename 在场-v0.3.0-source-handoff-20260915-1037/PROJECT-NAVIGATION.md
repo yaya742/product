@@ -138,7 +138,7 @@ L1 使命/受保护原则只在 `project-foundations`；L2 当前策略在本节
 | 校园资料 | 按域/source/institution/term 合并，full/partial/failed/冲突；显式目录的 zju 读取器桥 | 合成导入/受限子进程/状态测试；本轮没有真实账号、目录或同步 smoke |
 | 地图 V2 | 当前二维组件、533 栋建筑、608 个可搜索地点（含核心地标与官方名称别名）、25 栋有可路由入口；运行入口已移除历史地图资源 | 22 项核心测试、覆盖审计与真实 Electron 地图回归；未知入口和低精度测试有明确失败状态 |
 | Windows 位置 | 系统位置桥；短生命周期、取消、不保存轨迹；地图与天气使用独立请求实例，互不取消 | 本轮天气 GPS 链路以合成定位回归验证；真实 Electron 已验收定位开关，不触发系统隐私设置；历史 `native-location.json` 为独立真机证据，不作本轮再验证 |
-| 接口管理器 | 已登记 Provider 的统一目录、中文说明、启停、权限/出站范围和持久化；设置页支持第三方 ZIP 插件安装、版本升级、待重启卸载；插件入口进独立进程，网络由宿主中转；插件清单可声明并由宿主校验 Agent-facing 输入/输出 schema，坏升级自动回滚上一已知版本 | `test:interfaces` 2/2、`test:plugins` 8/8、构建通过；示例天气 ZIP 可由 `npm run package:weather` 生成并通过清单检查；真实 Electron 尚未用真实插件包执行 UI 安装 |
+| 接口管理器 | 已登记 Provider 的统一目录、中文说明、启停、权限/出站范围和持久化；设置页支持第三方 ZIP 插件安装、版本升级、待重启卸载；插件入口进独立进程，网络由宿主中转；插件清单可声明并由宿主校验 Agent-facing 输入/输出 schema，坏升级自动回滚上一已知版本 | `test:interfaces` 2/2、`test:plugins` 8/8、构建通过；示例天气 ZIP 可由 `npm run package:weather` 生成并通过清单检查；校园账号取消登录的真实 Electron 回归已覆盖，真实天气插件包仍未执行 UI 安装 |
 | 源码冷启动 | 桌面快捷方式已改用隐藏的 `scripts/start-dev.vbs`，由 `scripts/start-dev.cmd` 保留手动诊断入口；启动器使用本机 Node.js，Vite 监听 5173（被占用时传递实际端口），Electron 通过 `ZAICHANG_DEV_SERVER_URL` 加载，源码资料写入 `%LOCALAPPDATA%\Zaichang\source-dev` | 已从桌面快捷方式冷启动并查看真实 Electron 首页；已修改首页文案验证 HMR 即时更新，再恢复原文；旧 `.cmd` 换行问题已修复；本次需确认隐藏启动和缓存隔离 |
 | 悬停控件 | `tokens.css` 的 `--control-hover` / `--control-hover-text`，由 `style.css`、`refinements.css` 与最终的 `harness.css` 统一应用于图标、建议和次要按钮 | 用户反馈后改为 `#454745` 炭灰悬停并使用浅色前景；`scripts/check-theme.mjs` 已在真实 Electron 浅色主题中通过悬停断言并生成截图；关闭按钮红色语义保留 |
 | 天气 | 天气已移出 `builtin.ts`，作为可安装的 `weather` 插件提供 `weather.lookup`、`weather.forecast`、`weather.outdoor_activity`；Agent 入口动态解析已安装能力；宿主负责 Windows 定位和权限，插件通过受控 Open-Meteo 通道取数 | `test:weather-gps` 3/3、`test:plugins` 8/8、构建通过；打包/清单检查通过；未做真实天气网络 smoke，未做真实 Electron 插件 UI 安装 |
@@ -295,11 +295,14 @@ L1 使命/受保护原则只在 `project-foundations`；L2 当前策略在本节
 | [src/main/capabilities/](src/main/capabilities/) | 受审核 Provider/Broker/Recipe、既有适配与扩展 Ports | 本轮创建，陌生/恶意扩展验证 |
 | [src/main/testBoundary.ts](src/main/testBoundary.ts) | App 与 Store 的隔离测试目录校验 | 本轮创建 |
 | [src/renderer/HarnessViews.tsx](src/renderer/HarnessViews.tsx) | 本轮范围、来源原文、条件理解、反馈、目标、回执与来源授权 | 本轮创建，实机合成操作/看图 |
+| [src/renderer/SettingsPanel.tsx](src/renderer/SettingsPanel.tsx) | 连接、校园资料、接口与第三方插件设置；账号连接反馈依据后端状态显示 | 本轮修复校园账号取消登录的成功误报，真实 Electron 回归覆盖 |
+| [src/renderer/campus-account-feedback.ts](src/renderer/campus-account-feedback.ts) | 将校园账号连接结果转换为前台可读状态提示 | 本轮新增；纯函数回归 3/3 |
 | [src/renderer/harness.css](src/renderer/harness.css) | 上述状态的中性色、窄窗与可读性样式 | 本轮创建，浅深色复查 |
 | [tests/harness/](tests/harness/) | 独立 fixtures、94 场景适配、协议/隐私/迁移/故障/扩展、heldout 语料与真实模型 runner | 本轮创建；脚本语义与真实模型分开 |
 | [tests/harness/conversation-quality-corpus.json](tests/harness/conversation-quality-corpus.json) | 小朋友/长辈、情绪倾听、纠正、隐私草稿、一步选择和反工程复述的合成评估语料 | 本轮新增；不含真实用户资料 |
 | [tests/trajectory-validation.test.mjs](tests/trajectory-validation.test.mjs) | 32 条人本协作开发轨迹的机制边界、not_run 层与 94 场景保留负控 | 本轮新增；不调用模型 |
 | [tests/harness-ui.mjs](tests/harness-ui.mjs) | 原 Electron 中的记忆按需展开、范围、目标、回执、反馈与临时输入闭环 | 本轮创建；round22 已复核 |
+| [tests/settings-panel.test.ts](tests/settings-panel.test.ts) | 校园账号连接反馈的未完成、已验证和待验证状态回归 | 本轮新增；3/3 |
 | [scripts/assemble-visual-audit.mjs](scripts/assemble-visual-audit.mjs) | 汇总桌面、连接、地图与 Harness 截图/报告，逐页标记视觉审核状态 | 本轮创建；round22 已复核 |
 | [scripts/test-environment.mjs](scripts/test-environment.mjs) | 每次新建隔离资料目录，清理外部源环境入口 | 本轮创建 |
 | [scripts/test-harness.mjs](scripts/test-harness.mjs) | 编译、运行分层套件并由实际 TAP 生成报告 | 本轮创建 |
