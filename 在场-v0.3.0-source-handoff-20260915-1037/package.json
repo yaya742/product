@@ -24,6 +24,7 @@
     "test:deepseek:vision": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run node scripts/probe-deepseek-vision.mjs",
     "test": "node scripts/test.mjs",
     "test:desktop": "node tests/desktop.mjs",
+    "test:cold-start": "node tests/cold-start.mjs",
     "test:connection": "node tests/connection.mjs",
     "test:multimodal": "node tests/multimodal-ui.mjs",
     "test:multimodal:live": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run node tests/multimodal-ui.mjs --live",

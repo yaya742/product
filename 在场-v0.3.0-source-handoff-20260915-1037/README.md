@@ -42,6 +42,8 @@
 
 源码测试版可直接双击桌面的“在场（源码冷启动版）”快捷方式启动。该入口会在后台切换到源码目录、使用本机 Node.js 启动 Vite/Electron，并保留前端实时热更新；开发资料单独保存在 `%LOCALAPPDATA%\Zaichang\source-dev` 中，不会与已安装版抢占缓存，也不会被 Vite 纳入源码监听。如果默认端口被占用，会把实际端口传给 Electron。桌面便携版入口已更新为本轮重新打包的版本，旧文件保留为日期备份。
 
+冷启动回归可运行 `npm run test:cold-start`。若启动页提示密钥不可读取，请在“连接与偏好”中重新输入并保存；应用会在发送前明确拦截，不再显示泛化的“处理中断”无回应。
+
 图文输入已接入当前 DeepSeek 官网多模态模型；语音采集、PDF/压缩包解析、跨设备同步、学习/健康设备、邮件、钉钉及外部预约仍没有实际服务连接。独立模块材料与具体证据边界以 [项目导航](PROJECT-NAVIGATION.md#status) 为准。
 
 给后续开发者的模型身份约定：当前调用 DeepSeek 官方 `https://api.deepseek.com/chat/completions`，请求模型 ID 固定为 `deepseek-flash`，截至 2026-09-13 官方对应 **DeepSeek-V4.1-Flash** 原生多模态模型。旧 `deepseek-v4-flash` 只是已退役 V4 的兼容名，不是本项目的请求 ID。完整调用契约和复现命令见 [AGENTS](AGENTS.md#当前官网调用契约2026-09-13-核对)。
