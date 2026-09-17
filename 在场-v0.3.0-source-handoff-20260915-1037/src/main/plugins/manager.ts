@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
+import { spawn, spawnSync, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { createInterface, type Interface as ReadlineInterface } from 'node:readline';
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -402,8 +402,16 @@ export class ExternalPluginProvider implements CapabilityProvider {
       !child || child.exitCode !== null
         ? Promise.resolve()
         : new Promise<void>((resolve) => {
-            child.once('exit', () => resolve());
-            setTimeout(resolve, 1000);
+            let settled = false;
+            const finish = () => {
+              if (settled) return;
+              settled = true;
+              clearTimeout(timer);
+              resolve();
+            };
+            const timer = setTimeout(finish, 3000);
+            child.once('exit', finish);
+            child.once('close', finish);
           });
     this.stop(new Error('插件进程已关闭。'));
     return exited;
@@ -547,7 +555,19 @@ export class ExternalPluginProvider implements CapabilityProvider {
     for (const pending of this.pending.values()) pending.reject(reason);
     this.pending.clear();
     this.calls.clear();
-    if (child && child.exitCode === null && child.signalCode === null) child.kill();
+    if (child && child.exitCode === null && child.signalCode === null) {
+      if (process.platform === 'win32' && child.pid) {
+        // Electron-based plugin runners may leave utility descendants alive;
+        // terminate only this runner's process tree before its package is
+        // removed or replaced.
+        spawnSync('taskkill', ['/pid', String(child.pid), '/t', '/f'], {
+          windowsHide: true,
+          stdio: 'ignore',
+        });
+      } else {
+        child.kill();
+      }
+    }
   }
 }
 

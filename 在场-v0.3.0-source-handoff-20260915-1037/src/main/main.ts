@@ -140,6 +140,13 @@ function missingKeyError() {
     ? '已保存的 DeepSeek API Key 无法读取，请打开连接设置重新输入并保存。'
     : '请先打开连接设置，填写 DeepSeek API Key 后再发送。';
 }
+async function verifyDeepSeekConnection(apiKey: string, signal: AbortSignal) {
+  await createModelClient(apiKey, DEEPSEEK_MODEL).complete(
+    [{ role: 'user', content: '请只回复：连接成功。' }],
+    [],
+    signal,
+  );
+}
 function state() {
   const key = getKey();
   const snapshot = store.state(!!key);
@@ -375,7 +382,7 @@ app.whenReady().then(async () => {
     return harness.start(input.sessionId, input.content, input.controls, input.image);
   });
   handle('stop', () => harness.stop());
-  handle('settings:save', (value) => {
+  handle('settings:save', async (value) => {
     const { apiKey, ...settings } = settingsSchema.parse(value);
     const disablingOnly =
       !apiKey &&
@@ -390,7 +397,24 @@ app.whenReady().then(async () => {
           ? '已保存的 DeepSeek API Key 无法读取，请重新输入并保存。'
           : '先填写 DeepSeek API Key，再开始连接。',
       );
-    if (apiKey) saveKey(apiKey);
+    if (apiKey && !usingLunaTestTransport()) {
+      connectionController?.abort();
+      const controller = new AbortController();
+      connectionController = controller;
+      try {
+        await verifyDeepSeekConnection(apiKey, AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]));
+      } catch (error) {
+        throw new Error(friendlyError(error));
+      } finally {
+        if (connectionController === controller) connectionController = undefined;
+      }
+      // A key is persisted only after the provider has answered. The UI's
+      // “连接 DeepSeek” action therefore cannot report success for a merely
+      // syntactically valid or mistyped key.
+      saveKey(apiKey);
+    } else if (apiKey) {
+      saveKey(apiKey);
+    }
     store.saveSettings(settings as Partial<Settings>);
     return state();
   });
@@ -403,11 +427,7 @@ app.whenReady().then(async () => {
     try {
       const apiKey = input.apiKey || getKey();
       if (!apiKey) throw new Error(missingKeyError());
-      await createModelClient(apiKey, DEEPSEEK_MODEL).complete(
-        [{ role: 'user', content: '请只回复：连接成功。' }],
-        [],
-        AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]),
-      );
+      await verifyDeepSeekConnection(apiKey, AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]));
       return usingLunaTestTransport() ? 'GPT‑5.6‑Luna 临时代测已响应。' : 'DeepSeek 已响应。';
     } catch (e) {
       throw new Error(friendlyError(e));

@@ -18,6 +18,13 @@ try {
   app = await electron.launch({ args: [base], env, timeout: 30000 });
   let page = await app.firstWindow();
   await page.getByRole('heading', { name: '今天，从哪件事开始？' }).waitFor();
+  await app.evaluate(() => {
+    globalThis.fetch = async () => new Response(
+      'data: ' + JSON.stringify({ choices: [{ delta: { content: '连接成功。' }, finish_reason: 'stop' }] }) + '\n\n' +
+      'data: [DONE]\n\n',
+      { headers: { 'content-type': 'text/event-stream' } },
+    );
+  });
   const saved = await page.evaluate(() =>
     window.zaichang.saveSettings({ mode: 'deepseek', apiKey: 'sk-cold-start-fixture-123456' }),
   );
@@ -73,16 +80,16 @@ try {
           { headers: { 'content-type': 'text/event-stream' } },
         );
       }
-      return sse('冷启动正常');
+      return sse('我可以正常回答你的问题。');
     };
   });
   await page.evaluate(() => window.zaichang.saveSettings({ mode: 'deepseek', apiKey: 'sk-cold-start-fixture-123456' }));
-  await input.fill('冷启动成功链路验证');
+  await input.fill('你能为我做什么');
   await page.getByRole('button', { name: '发送', exact: true }).click();
-  await page.getByText('冷启动正常', { exact: true }).waitFor({ timeout: 60000 });
+  await page.getByText('我可以正常回答你的问题。', { exact: true }).waitFor({ timeout: 60000 });
   assert.equal(await page.getByText('这次处理中断了，剩余事项未完成。已有回执的操作可在安排中核对。', { exact: true }).count(), 0);
   console.log('冷启动回归通过：无效密钥会在启动页和发送前显示可操作提示，不再生成泛化无回应错误。');
-  console.log('冷启动完整链路通过：重新保存密钥后可完成控制解析、Hermes 启动和模型回复。');
+  console.log('冷启动完整链路通过：重新保存密钥后，“你能为我做什么”可完成控制解析、Hermes 启动和模型回复。');
 } finally {
   if (app) await app.close();
 }

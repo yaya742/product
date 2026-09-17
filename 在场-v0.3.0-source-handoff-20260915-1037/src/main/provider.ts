@@ -96,24 +96,31 @@ export class ProviderError extends Error {
   }
 }
 export function friendlyError(e: unknown): string {
-  if (e instanceof ProviderError) return e.message;
-  if (e instanceof Error && (e.name === 'AbortError' || e.name === 'TimeoutError'))
-    return '请求已停止或超时，请稍后重试。';
-  if (e instanceof Error && e.name === 'HermesRunError')
-    return 'Agent 运行引擎未完成本轮处理，请重试。若连续出现，请重新启动源码冷启动版。';
-  if (e instanceof TypeError)
-    return '在场内部初始化失败，请完全退出后重新启动源码冷启动版。';
   const diagnostic = e && typeof e === 'object' && 'diagnostic' in e
     ? (e as { diagnostic?: unknown }).diagnostic
     : undefined;
-  if (diagnostic && typeof diagnostic === 'object') {
-    const value = diagnostic as Record<string, unknown>;
-    const errorCode = typeof value.errorCode === 'string' ? value.errorCode : '';
-    if (errorCode === 'authentication') return 'DeepSeek API Key 无效，请在连接设置中更新后重试。';
-    if (errorCode === 'quota') return 'DeepSeek 账户余额不足，请充值后重试。';
-    if (errorCode === 'protocol') return 'DeepSeek 未接受 Agent 的工具调用请求，请检查模型配置后重试。';
-    if (value.code === 'engine_incomplete') return 'Agent 运行引擎未完成本轮处理，请重试。若连续出现，请检查运行时安装和模型兼容性。';
+  const details = diagnostic && typeof diagnostic === 'object'
+    ? diagnostic as Record<string, unknown>
+    : undefined;
+  const errorCode = typeof details?.errorCode === 'string' ? details.errorCode : '';
+  const engineCode = typeof details?.code === 'string' ? details.code : '';
+  if (e instanceof ProviderError) return e.message;
+  if (e instanceof Error && (e.name === 'AbortError' || e.name === 'TimeoutError'))
+    return '请求已停止或超时，请稍后重试。';
+  if (errorCode === 'authentication') return 'DeepSeek API Key 无效，请在连接设置中更新后重试。';
+  if (errorCode === 'quota') return 'DeepSeek 账户余额不足，请充值后重试。';
+  if (errorCode === 'protocol') return 'DeepSeek 未接受 Agent 的工具调用请求，请检查模型配置后重试。';
+  if (errorCode === 'network') return '无法连接 DeepSeek，请检查网络、代理或 API 地址后重试。';
+  if (errorCode === 'timeout') return '连接 DeepSeek 超时，请检查网络或代理后重试。';
+  if (e instanceof Error && e.name === 'HermesRunError') {
+    if (engineCode === 'PermissionError')
+      return 'Agent 运行环境未能读取所需组件，请完全退出后重新启动源码冷启动版。';
+    if (engineCode === 'TypeError')
+      return 'Agent 运行组件初始化失败，请完全退出后重新启动源码冷启动版。';
+    return 'Agent 运行引擎未完成本轮处理，请重新打开在场后重试。';
   }
+  if (e instanceof TypeError)
+    return '在场内部初始化失败，请完全退出后重新启动源码冷启动版。';
   return '这次处理中断了，剩余事项未完成。已有回执的操作可在安排中核对。';
 }
 export async function readSSE(response: Response, onData: (data: string) => void, signal?: AbortSignal) {
@@ -373,6 +380,12 @@ export class DeepSeekClient {
             return;
           }
           if (outputLimited) return;
+          if (choice.finish_reason === 'content_filter')
+            throw new ProviderError('DeepSeek 未返回这次答复，请换一种表达后重试。', false, 'content_filter');
+          if (choice.finish_reason === 'insufficient_system_resource')
+            throw new ProviderError('DeepSeek 当前推理资源不足，请稍后重试。', true, 'provider_busy');
+          if (choice.finish_reason === 'aborted')
+            throw new ProviderError('DeepSeek 中止了本次回复，请重试。', true, 'provider_aborted');
           if (choice.finish_reason && !['stop', 'tool_calls'].includes(choice.finish_reason))
             throw new ProviderError('模型没有正常完成回复，请缩小问题后重试。');
           if (choice.finish_reason) complete = true;

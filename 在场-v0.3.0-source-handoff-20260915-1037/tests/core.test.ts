@@ -4,7 +4,7 @@ import { mkdtempSync } from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { Store } from '../src/main/store';
-import { DeepSeekClient, ProviderError, type Completion, type WireMessage } from '../src/main/provider';
+import { DeepSeekClient, ProviderError, friendlyError, type Completion, type WireMessage } from '../src/main/provider';
 import { Harness } from '../src/main/harness';
 import { ZjuAdapter } from '../src/main/zjuAdapter';
 import { ToolRegistry, type ToolContext } from '../src/main/tools';
@@ -219,6 +219,25 @@ test('provider transport failure is surfaced as a retryable network error', asyn
     () => client.complete([], [], new AbortController().signal),
     (error) => error instanceof ProviderError && error.code === 'network' && error.retryable && error.message.includes('无法连接 DeepSeek') && !error.message.includes('secret'),
   );
+});
+test('Hermes diagnostic is actionable and provider terminal reasons are not hidden as a generic interruption', async () => {
+  const engineError = Object.assign(new Error('internal'), {
+    name: 'HermesRunError',
+    diagnostic: { code: 'engine_incomplete', errorCode: 'network' },
+  });
+  assert.match(friendlyError(engineError), /无法连接 DeepSeek/);
+  for (const [finish_reason, code] of [
+    ['content_filter', 'content_filter'],
+    ['insufficient_system_resource', 'provider_busy'],
+    ['aborted', 'provider_aborted'],
+  ] as const) {
+    const client = new DeepSeekClient('test-key', 'deepseek-flash', (async () =>
+      stream([{ choices: [{ delta: {}, finish_reason }] }])) as typeof fetch);
+    await assert.rejects(
+      () => client.complete([], [], new AbortController().signal),
+      (error) => error instanceof ProviderError && error.code === code,
+    );
+  }
 });
 test('分身权限是主代理的只读子集，关闭的天气和记忆不能调用', async () => {
   const store = new Store(':memory:');
