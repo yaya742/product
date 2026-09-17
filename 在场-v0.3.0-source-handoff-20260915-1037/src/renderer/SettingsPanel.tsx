@@ -371,23 +371,32 @@ export function SettingsPanel({ state, busy, onState, onClose, notify, onClear, 
               <div className="plugin-manager-heading">
                 <div>
                   <strong>第三方插件</strong>
-                  <small>安装、升级和卸载都在重启在场后生效</small>
+                  <small>只接受在场插件 ZIP 包 · 变更在重启在场后生效</small>
                 </div>
                 <button
                   className="subtle-button"
                   disabled={busy || !!pending || !!interfacePending}
                   onClick={() =>
                     void perform('plugin-install', async () => {
-                      onState(await api.installPlugin());
-                      setFeedback({ action: 'plugin-install', text: '插件已安装，重启在场后生效' });
+                      const next = await api.installPlugin();
+                      onState(next);
+                      const pendingPlugin = next.plugins.find((plugin) => plugin.lifecycle === 'pending_install');
+                      setFeedback({
+                        action: 'plugin-install',
+                        text: pendingPlugin
+                          ? `已识别并导入“${pendingPlugin.displayName}” v${pendingPlugin.version}，重启在场后可在接口中启用`
+                          : '未导入插件包，当前没有改变',
+                      });
                     })
                   }
                 >
                   {pending === 'plugin-install' ? <LoaderCircle size={13} className="spin" /> : <Download size={13} />}
-                  安装插件
+                  导入插件包
                 </button>
               </div>
-              <p className="plugin-manager-note">选择第三方插件 ZIP 包即可安装；插件默认停用，启用前请确认来源和权限。</p>
+              <p className="plugin-manager-note">
+                选择后会先识别插件名称、版本、能力、权限和网络范围，再由你确认；普通 ZIP、文档压缩包或安装程序会被拒绝。插件默认停用。
+              </p>
               {state.plugins?.length ? (
                 <div className="plugin-list">
                   {state.plugins.map((plugin) => (
@@ -407,8 +416,17 @@ export function SettingsPanel({ state, busy, onState, onClose, notify, onClear, 
                             disabled={busy || !!pending || !!interfacePending}
                             onClick={() =>
                               void perform('plugin-upgrade', async () => {
-                                onState(await api.upgradePlugin(plugin.id));
-                                setFeedback({ action: 'plugin-upgrade', text: '升级包已安装，重启在场后生效' });
+                                const next = await api.upgradePlugin(plugin.id);
+                                onState(next);
+                                const pendingPlugin = next.plugins.find(
+                                  (item) => item.id === plugin.id && item.lifecycle === 'pending_upgrade',
+                                );
+                                setFeedback({
+                                  action: 'plugin-upgrade',
+                                  text: pendingPlugin
+                                    ? `“${pendingPlugin.displayName}”升级包已识别，重启在场后切换到 v${pendingPlugin.pendingVersion ?? pendingPlugin.version}`
+                                    : '未升级插件包，当前没有改变',
+                                });
                               })
                             }
                           >

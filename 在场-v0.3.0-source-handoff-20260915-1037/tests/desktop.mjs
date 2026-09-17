@@ -94,6 +94,26 @@ try {
   await shot('04a-campus-connector.png');
   report.checks.push('校园个人信息连接器以单一资料行呈现；取消登录不会显示虚假的成功状态');
   await page.getByRole('button', { name: '返回连接', exact: true }).click();
+  await page.getByRole('tab', { name: '接口', exact: true }).click();
+  await page.getByText('只接受在场插件 ZIP 包 · 变更在重启在场后生效', { exact: true }).waitFor();
+  await app.evaluate(({ dialog }, packagePath) => {
+    dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [packagePath] });
+    dialog.showMessageBox = async (_window, options) => {
+      globalThis.__zaichangPluginConfirmation = options;
+      return { response: 0 };
+    };
+  }, path.join(base, 'artifacts', 'weather-plugin.zip'));
+  await page.getByRole('button', { name: '导入插件包', exact: true }).click();
+  await page.getByText('未导入插件包，当前没有改变', { exact: true }).waitFor();
+  await page.getByText('普通 ZIP、文档压缩包或安装程序会被拒绝', { exact: false }).waitFor();
+  const pluginConfirmation = await app.evaluate(() => globalThis.__zaichangPluginConfirmation);
+  assert.equal(pluginConfirmation.message, '已识别为在场插件“天气”');
+  assert.match(pluginConfirmation.detail, /版本：v/);
+  assert.match(pluginConfirmation.detail, /能力：/);
+  assert.match(pluginConfirmation.detail, /网络：/);
+  await page.getByText('未导入插件包，当前没有改变', { exact: true }).scrollIntoViewIfNeeded();
+  await shot('04-plugin-manager.png');
+  report.checks.push('插件导入入口明确标为插件包；取消选择不会显示安装成功');
   await page.getByRole('tab', { name: '偏好', exact: true }).click();
   const panelColors = await page.evaluate(() => {
     const pick = (selector, pseudo) => {

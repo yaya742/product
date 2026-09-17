@@ -4,7 +4,7 @@ import { deflateRawSync } from 'node:zlib';
 import { mkdtempSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { inspectPluginArchive, PluginManager } from '../src/main/plugins/manager';
+import { inspectPluginArchive, inspectPluginArchivePreview, PluginManager } from '../src/main/plugins/manager';
 import { CapabilityBroker, type CapabilityProvider } from '../src/main/capabilities/broker';
 
 function zip(files: Record<string, string>) {
@@ -208,6 +208,48 @@ test('plugin archive preserves Agent-facing input and output schemas', () => {
       additionalProperties: false,
     });
     assert.equal(input.capabilities[0].outputSchema?.type, 'object');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('plugin preview exposes a safe install-review summary', () => {
+  const root = mkdtempSync(path.join(os.tmpdir(), 'zaichang-plugin-'));
+  try {
+    const preview = inspectPluginArchivePreview(packageFile(root, '1.0.0'));
+    assert.deepEqual(preview, {
+      id: 'demo.plugin',
+      displayName: '示例插件',
+      description: '插件生命周期测试。',
+      version: '1.0.0',
+      capabilities: [
+        {
+          name: 'demo.plugin.lookup',
+          displayName: '查询示例',
+          description: '读取示例。',
+          effect: 'read',
+          requiredScopes: [],
+          timeoutMs: 1000,
+          maxBytes: 4000,
+        },
+      ],
+      egressHosts: [],
+      platforms: ['win32'],
+      offline: 'unsupported',
+      license: 'MIT',
+    });
+    assert.equal('inputSchema' in preview.capabilities[0], false);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('plugin inspection rejects an ordinary ZIP without the plugin marker', () => {
+  const root = mkdtempSync(path.join(os.tmpdir(), 'zaichang-plugin-'));
+  try {
+    const ordinaryZip = path.join(root, 'documents.zip');
+    writeFileSync(ordinaryZip, zip({ 'readme.txt': '这不是插件。' }));
+    assert.throws(() => inspectPluginArchive(ordinaryZip), /plugin\.json/);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

@@ -138,10 +138,10 @@ L1 使命/受保护原则只在 `project-foundations`；L2 当前策略在本节
 | 校园资料 | 按域/source/institution/term 合并，full/partial/failed/冲突；显式目录的 zju 读取器桥 | 合成导入/受限子进程/状态测试；本轮没有真实账号、目录或同步 smoke |
 | 地图 V2 | 当前二维组件、533 栋建筑、608 个可搜索地点（含核心地标与官方名称别名）、25 栋有可路由入口；运行入口已移除历史地图资源 | 22 项核心测试、覆盖审计与真实 Electron 地图回归；未知入口和低精度测试有明确失败状态 |
 | Windows 位置 | 系统位置桥；短生命周期、取消、不保存轨迹；地图与天气使用独立请求实例，互不取消 | 本轮天气 GPS 链路以合成定位回归验证；真实 Electron 已验收定位开关，不触发系统隐私设置；历史 `native-location.json` 为独立真机证据，不作本轮再验证 |
-| 接口管理器 | 已登记 Provider 的统一目录、中文说明、启停、权限/出站范围和持久化；设置页支持第三方 ZIP 插件安装、版本升级、待重启卸载；插件入口进独立进程，网络由宿主中转；插件清单可声明并由宿主校验 Agent-facing 输入/输出 schema，坏升级自动回滚上一已知版本 | `test:interfaces` 2/2、`test:plugins` 8/8、构建通过；示例天气 ZIP 可由 `npm run package:weather` 生成并通过清单检查；校园账号取消登录的真实 Electron 回归已覆盖，真实天气插件包仍未执行 UI 安装 |
+| 接口管理器 | 已登记 Provider 的统一目录、中文说明、启停、权限/出站范围和持久化；设置页支持第三方 ZIP 插件导入、版本升级、待重启卸载；导入先验证 `plugin.json` 并确认名称/版本/能力/权限/网络摘要，普通 ZIP 在宿主层拒绝；插件入口进独立进程，网络由宿主中转；插件清单可声明并由宿主校验 Agent-facing 输入/输出 schema，坏升级自动回滚上一已知版本 | `test:interfaces` 2/2、`test:plugins` 10/10、构建通过；示例天气 ZIP 可由 `npm run package:weather` 生成并通过清单检查；真实 Electron 已覆盖取消校园登录和取消插件导入不报成功，真实天气插件包仍未执行 UI 安装 |
 | 源码冷启动 | 桌面快捷方式已改用隐藏的 `scripts/start-dev.vbs`，由 `scripts/start-dev.cmd` 保留手动诊断入口；启动器使用本机 Node.js，Vite 监听 5173（被占用时传递实际端口），Electron 通过 `ZAICHANG_DEV_SERVER_URL` 加载，源码资料写入 `%LOCALAPPDATA%\Zaichang\source-dev` | 已从桌面快捷方式冷启动并查看真实 Electron 首页；已修改首页文案验证 HMR 即时更新，再恢复原文；旧 `.cmd` 换行问题已修复；本次需确认隐藏启动和缓存隔离 |
 | 悬停控件 | `tokens.css` 的 `--control-hover` / `--control-hover-text`，由 `style.css`、`refinements.css` 与最终的 `harness.css` 统一应用于图标、建议和次要按钮 | 用户反馈后改为 `#454745` 炭灰悬停并使用浅色前景；`scripts/check-theme.mjs` 已在真实 Electron 浅色主题中通过悬停断言并生成截图；关闭按钮红色语义保留 |
-| 天气 | 天气已移出 `builtin.ts`，作为可安装的 `weather` 插件提供 `weather.lookup`、`weather.forecast`、`weather.outdoor_activity`；Agent 入口动态解析已安装能力；宿主负责 Windows 定位和权限，插件通过受控 Open-Meteo 通道取数 | `test:weather-gps` 3/3、`test:plugins` 8/8、构建通过；打包/清单检查通过；未做真实天气网络 smoke，未做真实 Electron 插件 UI 安装 |
+| 天气 | 天气已移出 `builtin.ts`，作为可安装的 `weather` 插件提供 `weather.lookup`、`weather.forecast`、`weather.outdoor_activity`；Agent 入口动态解析已安装能力；宿主负责 Windows 定位和权限，插件通过受控 Open-Meteo 通道取数 | `test:weather-gps` 3/3、`test:plugins` 10/10、构建通过；打包/清单检查通过；未做真实天气网络 smoke，未做真实 Electron 插件 UI 安装 |
 | DeepSeek | 当前官网提供方为 DeepSeek，端点 `https://api.deepseek.com/chat/completions`，唯一请求 ID `deepseek-flash`；2026-09-13 官方映射为 **DeepSeek-V4.1-Flash** 原生多模态模型；旧设置、renderer 和评估环境变量不能覆盖，不使用 V4/Pro/chat/reasoner 兼容名；SSE/tool calls、thinking/strict、text+image 同消息；图片本机缩放/转 JPEG 后仅随当前用户消息进入模型，不进入文字记忆提取；Key 在仓库外由 Windows DPAPI 保护 | 历史官网直连与旧入口Electron图文验证成功；新的Hermes图文传输已通过合成引擎检查，最新Electron真实图文尚待余额恢复后复测。历史请求均为 `deepseek-flash`、1 text part + 1 JPEG image part，模型正确把右侧视觉位置用于文字条件和日常提醒；官方改映射时须重新核对与重跑真实验收，仍不是通用视觉正确率证据 |
 | 陌生扩展 | BorrowedDeviceProvider + Recipe 经通用主路径接入与撤权，恶意 manifest/网络/泄漏被拒绝 | 只在隔离 fixtures 注册，不随 App 自动启用，不是 OS 沙箱 |
 | 未来公共接口 | Observation/Sync/RulePack/Watch/Entity/StorageProtection 等实际校验、版本/冲突、拒绝与模拟路径 | X01–X16 对应受控场景；真实媒体采集、跨设备账号、健康/学习设备与通知服务未连接 |
@@ -223,7 +223,7 @@ L1 使命/受保护原则只在 `project-foundations`；L2 当前策略在本节
 | [src/main/mapService.ts](src/main/mapService.ts) | 当前 OSM 地点查询、多入口步行最短路与失败状态；无历史地图依赖 | 当前实现；回归验证 |
 | [src/main/store.ts](src/main/store.ts) | SQLite 持久化承载 D2/D3/D5/D7；不是语义所有者总和 | 全读 |
 | [src/main/interfaces/manager.ts](src/main/interfaces/manager.ts) | 已登记接口的目录、启停、状态/权限投影和状态持久化 | 本轮新建；由 RuntimeCoordinator 接入 |
-| [src/main/plugins/manager.ts](src/main/plugins/manager.ts) | 第三方 ZIP 清单校验、路径安全、版本注册表、待重启安装/升级/卸载、Agent-facing schema 校验及坏升级回滚 | 本轮新建/修订；`test:plugins` 8/8 |
+| [src/main/plugins/manager.ts](src/main/plugins/manager.ts) | 第三方 ZIP 清单校验、路径安全、版本注册表、安装前预览、待重启安装/升级/卸载、Agent-facing schema 校验及坏升级回滚 | 本轮新建/修订；`test:plugins` 10/10 |
 | [src/main/plugins/weather-adapter.ts](src/main/plugins/weather-adapter.ts) | 宿主侧天气插件适配：在位置权限通过后注入标准坐标，不让天气插件依赖 Windows API | 本轮新增；`test:weather-gps` 3/3 |
 | [src/main/plugins/runner.ts](src/main/plugins/runner.ts) | 插件入口独立进程与宿主 JSON-RPC/受控网络请求协议 | 本轮新建；runner 协议测试通过 |
 | [src/main/demo.ts](src/main/demo.ts) | 标注为本地体验的合成响应/步骤，不是实际模型调查 | 全读 |
@@ -283,7 +283,7 @@ L1 使命/受保护原则只在 `project-foundations`；L2 当前策略在本节
 | [tests/map-v2.test.ts](tests/map-v2.test.ts) | 图算法、源拓扑、特殊几何、定位与异步状态的独立测试 | 当前实现；回归验证 |
 | [tests/map-browser-server.ts](tests/map-browser-server.ts) | 浏览器视觉验证后备工具；账户/定位用测试桥，不替代桌面验收，不随包发布 | 既有地图代码；回归验证 |
 | [tests/interface-manager.test.ts](tests/interface-manager.test.ts) | 接口目录、启停、持久化、默认天气状态和 schema 脱敏测试 | 本轮新建；`test:interfaces` |
-| [tests/plugin-manager.test.ts](tests/plugin-manager.test.ts)、[tests/plugin-runtime.test.ts](tests/plugin-runtime.test.ts) | 插件安装/升级/卸载的重启语义、路径与版本校验、Agent-facing schema、坏升级回滚、独立 runner 和宿主网络中转协议 | 本轮新建/修订；`test:plugins` 8/8 |
+| [tests/plugin-manager.test.ts](tests/plugin-manager.test.ts)、[tests/plugin-runtime.test.ts](tests/plugin-runtime.test.ts) | 插件安装/升级/卸载的重启语义、路径与版本校验、安装预览摘要、普通 ZIP 拒绝、Agent-facing schema、坏升级回滚、独立 runner 和宿主网络中转协议 | 本轮新建/修订；`test:plugins` 10/10 |
 | [tests/weather-gps.test.ts](tests/weather-gps.test.ts) | 天气插件当前位置注入、定位失败不回退、位置权限随天气设置联动测试 | 本轮新建/修订；`test:weather-gps` 3/3 |
 | [scripts/harness-regression.mjs](scripts/harness-regression.mjs) | 原有 Harness 回归工具；本轮按现有文件补齐索引 | 清点 |
 | [HARNESS-IMPLEMENTATION.md](HARNESS-IMPLEMENTATION.md) | 入口、迁移、删除屏障、恢复及四类验收证据 | 本轮创建 |

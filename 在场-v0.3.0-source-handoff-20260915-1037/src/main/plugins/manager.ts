@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writ
 import path from 'node:path';
 import { inflateRawSync } from 'node:zlib';
 import { z } from 'zod';
-import type { InstalledPlugin, PluginLifecycle } from '../../shared/plugins';
+import type { InstalledPlugin, PluginLifecycle, PluginPackagePreview } from '../../shared/plugins';
 import type { InterfaceTrust } from '../../shared/interfaces';
 import type {
   CapabilityDefinition,
@@ -316,6 +316,29 @@ export function inspectPluginArchive(file: string): PluginManifestInput {
   return parsed.data;
 }
 
+export function inspectPluginArchivePreview(file: string): PluginPackagePreview {
+  const manifest = inspectPluginArchive(file);
+  return {
+    id: manifest.id,
+    displayName: manifest.displayName,
+    description: manifest.description,
+    version: manifest.version,
+    capabilities: manifest.capabilities.map((capability) => ({
+      name: capability.name,
+      displayName: capability.displayName,
+      description: capability.description,
+      effect: capability.effect,
+      requiredScopes: [...capability.requiredScopes],
+      timeoutMs: capability.timeoutMs,
+      maxBytes: capability.maxBytes,
+    })),
+    egressHosts: [...manifest.egressHosts],
+    platforms: [...manifest.platforms],
+    offline: manifest.offline,
+    license: manifest.license,
+  };
+}
+
 function emptyRegistry(): RegistryFile {
   return { version: 1, plugins: {} };
 }
@@ -585,6 +608,10 @@ export class PluginManager {
         error: this.runtimeErrors.get(record.id),
       };
     });
+  }
+
+  previewArchive(file: string) {
+    return inspectPluginArchivePreview(file);
   }
 
   installFromArchive(file: string, expectedId?: string) {
