@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { appendFileSync } from 'node:fs';
 import { createModelClient, usingLunaTestTransport, type ModelClient } from './model-selection';
 import { runHermes, type HermesRun } from './runtime/hermes';
 import { localCloudRestriction, parseTurnControls } from './runtime/turn-controls';
@@ -30,6 +31,24 @@ import type { RunSession } from './runtime/coordinator';
 import { splitUserInput, type InputControls } from './runtime/policy';
 import { bindModelSemantics } from './memory/model';
 import { MemoryService, type MemoryContext } from './memory/service';
+
+function debugHarnessFailure(label: string, error: unknown) {
+  if (process.env.ZAICHANG_DEBUG_ERRORS !== '1') return;
+  const value = error as { name?: unknown; message?: unknown; code?: unknown };
+  const diagnostic = {
+    name: typeof value?.name === 'string' ? value.name : typeof error,
+    code: typeof value?.code === 'string' ? value.code : undefined,
+    message: error instanceof ProviderError || error instanceof HarnessError
+      ? error.message
+      : undefined,
+  };
+  const line = '[在场] ' + label + ' ' + JSON.stringify(diagnostic) + '\n';
+  console.error(line.trim());
+  const logPath = process.env.ZAICHANG_DEBUG_LOG;
+  if (logPath) {
+    try { appendFileSync(logPath, line, 'utf8'); } catch { /* diagnostics must never affect a run */ }
+  }
+}
 
 function summarizeInterpretation(value: InterpretationProposal) {
   const hasListen = value.fragments.some((fragment) => fragment.intents.includes('listen'));
@@ -214,6 +233,7 @@ export class Harness {
       if (!run.ephemeral) this.emit({ type: 'conversations', conversations: this.store.conversations() });
       await this.run(run, user, message, controller);
     })().catch(error => {
+      debugHarnessFailure('harness.start failed', error);
       message.status = controller.signal.aborted ? 'cancelled' : 'error';
       message.content = error instanceof HarnessError ? error.message
         : controller.signal.aborted ? '已停止，刚才的内容没有保存。'
@@ -930,6 +950,7 @@ export class Harness {
       this.queueCurrentMemory(run);
       message.status = 'done';
     } catch (error) {
+      debugHarnessFailure('harness.run failed', error);
       for (const child of message.contextReceipt?.delegations || []) if (['queued', 'running'].includes(child.status)) child.status = controller.signal.aborted ? 'cancelled' : 'failed';
       message.status = run.privacyResult ? 'done' : controller.signal.aborted ? 'cancelled' : 'error';
       const reason = this.boundaryChanged
