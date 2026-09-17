@@ -30,7 +30,7 @@
 
 ## 资料与连接
 
-在“连接与偏好”中填写 DeepSeek 密钥并连接。API Key 由 Electron safeStorage 在 Windows 上加密保管，renderer 只能得到是否已保存。聊天数据库暂未整体加密；连接模型时只发送本轮允许使用的资料。可以导出或清空本地资料。删除会清理本机相关来源和派生链，但不撤回外部导出、已发送的模型请求或已发生的外部动作；旧备份恢复必须应用最新删除屏障。
+在“连接与偏好”中填写 DeepSeek 密钥并连接。API Key 由 Electron safeStorage 在 Windows 上加密保管，renderer 只能得到是否已保存。如果设置页显示“已保存密钥无法读取，请重新输入”，说明旧密钥文件已损坏或不属于当前 Windows 用户；请只在本机设置页重新输入有效 Key，不要把 Key 发给 Agent。聊天数据库暂未整体加密；连接模型时只发送本轮允许使用的资料。可以导出或清空本地资料。删除会清理本机相关来源和派生链，但不撤回外部导出、已发送的模型请求或已发生的外部动作；旧备份恢复必须应用最新删除屏障。
 
 本项目开发和后续 agent 共用的 DeepSeek 凭据保存在仓库外，由当前 Windows 用户的 DPAPI 加密。`npm run deepseek:check` 只检查是否可用，不显示 Key；`npm run deepseek:run -- <command> [args...]` 只向该命令的进程树临时注入。带真实模型启动桌面开发版可用 `npm run dev:deepseek`，已授权的真实评估可用 `npm run eval:harness:live:project`（仅该专用入口开启 live 评估门禁）。不要对不受信的脚本使用该包装器。
 
@@ -40,7 +40,7 @@
 
 仓库自带天气插件示例。开发时运行 `npm run package:weather` 生成 `artifacts/weather-plugin.zip`，然后在设置页安装并启用；生产环境不会把天气能力偷偷作为内置 Provider 注册。
 
-源码测试版可直接双击桌面的“在场（源码冷启动版）”快捷方式启动。该入口会在后台切换到源码目录、使用本机 Node.js 启动 Vite/Electron，并保留前端实时热更新；开发资料单独保存在 `%LOCALAPPDATA%\Zaichang\source-dev` 中，不会与已安装版抢占缓存，也不会被 Vite 纳入源码监听。如果默认端口被占用，会把实际端口传给 Electron。
+源码测试版可直接双击桌面的“在场（源码冷启动版）”快捷方式启动。该入口会在后台切换到源码目录、使用本机 Node.js 启动 Vite/Electron，并保留前端实时热更新；开发资料单独保存在 `%LOCALAPPDATA%\Zaichang\source-dev` 中，不会与已安装版抢占缓存，也不会被 Vite 纳入源码监听。如果默认端口被占用，会把实际端口传给 Electron。桌面便携版入口已更新为本轮重新打包的版本，旧文件保留为日期备份。
 
 图文输入已接入当前 DeepSeek 官网多模态模型；语音采集、PDF/压缩包解析、跨设备同步、学习/健康设备、邮件、钉钉及外部预约仍没有实际服务连接。独立模块材料与具体证据边界以 [项目导航](PROJECT-NAVIGATION.md#status) 为准。
 
@@ -48,7 +48,7 @@
 
 ## 开发与验证
 
-源码开发需要 Node.js 24+、Git 与 uv；Hermes 安装器固定 Python 3.13 和上游依赖锁。后续成品将带上独立 Python/Hermes 资源，不要求用户另装开发环境。依赖按锁文件安装；先读 [AGENTS](AGENTS.md) 与 [项目导航](PROJECT-NAVIGATION.md)。
+源码开发需要 Node.js 24+、Git 与 uv；Hermes 安装器固定 Python 3.13.15 和上游依赖锁，并会自动查找 Windows 用户级 Python Scripts 中的 `uv.exe`。后续成品将带上独立 Python/Hermes 资源，不要求用户另装开发环境。依赖按锁文件安装；先读 [AGENTS](AGENTS.md) 与 [项目导航](PROJECT-NAVIGATION.md)。
 
 ```powershell
 npm ci

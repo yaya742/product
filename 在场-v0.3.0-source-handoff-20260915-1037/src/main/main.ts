@@ -80,18 +80,26 @@ let window: BrowserWindow | undefined,
   harness: Harness,
   zju: ZjuAdapter,
   map: CampusMapAdapter,
-  keyPath = '';
+  keyPath = '',
+  invalidStoredKey = false;
 let closing = false;
 let connectionController: AbortController | undefined;
 function getKey() {
-  if (projectDeepSeekKey) return projectDeepSeekKey;
+  if (projectDeepSeekKey) {
+    invalidStoredKey = false;
+    return projectDeepSeekKey;
+  }
   if (existsSync(keyPath)) {
     try {
-      return safeStorage.decryptString(readFileSync(keyPath));
+      const key = safeStorage.decryptString(readFileSync(keyPath));
+      invalidStoredKey = false;
+      return key;
     } catch {
-      // A corrupt local app key falls back to no credential.
+      // Keep the app usable, but expose that this is a recoverable credential issue.
+      invalidStoredKey = true;
     }
   }
+  if (!existsSync(keyPath)) invalidStoredKey = false;
   return '';
 }
 function saveKey(key: string) {
@@ -101,13 +109,29 @@ function saveKey(key: string) {
   )
     throw new Error('系统密钥保护暂不可用，API Key 未保存。');
   writeFileSync(keyPath, safeStorage.encryptString(key), { mode: 0o600 });
+  invalidStoredKey = false;
 }
 function deleteKey() {
   if (existsSync(keyPath)) unlinkSync(keyPath);
   projectDeepSeekKey = '';
+  invalidStoredKey = false;
+}
+function missingKeyError() {
+  return invalidStoredKey
+    ? '已保存的 DeepSeek API Key 无法读取，请打开连接设置重新输入并保存。'
+    : '请先打开连接设置，填写 DeepSeek API Key 后再发送。';
 }
 function state() {
-  return { ...store.state(!!getKey()), campusConnector: zju.describe() };
+  const key = getKey();
+  const snapshot = store.state(!!key);
+  return {
+    ...snapshot,
+    settings: {
+      ...snapshot.settings,
+      keyStatus: invalidStoredKey ? 'invalid' : key ? 'available' : 'missing',
+    },
+    campusConnector: zju.describe(),
+  };
 }
 function pluginPreviewDetail(preview: PluginPackagePreview) {
   const effectText = (effect: PluginPackagePreview['capabilities'][number]['effect']) => {
@@ -248,6 +272,10 @@ app.whenReady().then(async () => {
     undefined,
     zju,
     map,
+    () => {
+      const key = getKey();
+      return invalidStoredKey ? 'invalid' : key ? 'available' : 'missing';
+    },
   );
   store.runtime.connect({ location: weatherLocation });
   const controls = new NativeControls(store, harness);
@@ -323,6 +351,8 @@ app.whenReady().then(async () => {
       })
       .strict()
       .parse(value);
+    if (store.settings().mode === 'deepseek' && !getKey() && !usingLunaTestTransport())
+      throw new Error(missingKeyError());
     return harness.start(input.sessionId, input.content, input.controls, input.image);
   });
   handle('stop', () => harness.stop());
@@ -336,7 +366,11 @@ app.whenReady().then(async () => {
       );
     if (!disablingOnly) noRun();
     if (settings.mode === 'deepseek' && !(apiKey || getKey()) && !usingLunaTestTransport())
-      throw new Error('先填写 DeepSeek API Key，再开始连接。');
+      throw new Error(
+        invalidStoredKey
+          ? '已保存的 DeepSeek API Key 无法读取，请重新输入并保存。'
+          : '先填写 DeepSeek API Key，再开始连接。',
+      );
     if (apiKey) saveKey(apiKey);
     store.saveSettings(settings as Partial<Settings>);
     return state();
@@ -348,7 +382,9 @@ app.whenReady().then(async () => {
     const controller = new AbortController();
     connectionController = controller;
     try {
-      await createModelClient(input.apiKey || getKey(), DEEPSEEK_MODEL).complete(
+      const apiKey = input.apiKey || getKey();
+      if (!apiKey) throw new Error(missingKeyError());
+      await createModelClient(apiKey, DEEPSEEK_MODEL).complete(
         [{ role: 'user', content: '请只回复：连接成功。' }],
         [],
         AbortSignal.any([controller.signal, AbortSignal.timeout(20000)]),

@@ -111,6 +111,14 @@ DeepSeek 参数依据 [Tool Calls](https://api-docs.deepseek.com/guides/tool_cal
 
 本轮没有改变现有地图视觉系统、技术栈或受保护原则。已用真实 DeepSeek 做有界的人类体验样本，观察到回复长度、情绪承接、隐私草稿和工具轮重复的方向性改善；仍待独立人类复核：真实对外草稿在不同受众下的长期理解、学生是否会使用撤销/纠正入口，以及跨设备/真实通知服务的体验。
 
+### 0.3.0 连接失败与源码冷启动恢复增量（2026-09-17）
+
+本轮处理了用户反馈的“配置 API Key 后仍显示处理中断”。实际阻断分成两层：源码版 Hermes Python 运行环境未安装，以及 `%LOCALAPPDATA%\\Zaichang\\source-dev` 中的 SQLite 资料库损坏；后者会在创建窗口前触发 `database disk image is malformed`。已安装并锁定 Hermes Python 3.13.15，保留损坏数据库及 WAL/SHM 的恢复副本后，让源码版重新生成健康数据库；原有 Windows DPAPI Key 文件未被删除或覆盖。
+
+此前 Key 文件存在但不能被当前用户解密，前台曾把它当作普通“未连接”，发送后又落到泛化中断文案。本轮为 Key 增加 `missing/available/invalid` 状态：设置页明确显示“已保存密钥无法读取，请重新输入”，发送前直接给出连接设置入口，避免空凭据进入 Hermes。隔离 Electron 实测新 Key 保存后 `hasKey=true`、`keyStatus=available`，密文不含明文；真实源码资料实测可启动并展示失效 Key 的恢复提示，截图见 [连接恢复提示](artifacts/review/round2/01-invalid-key-guidance.png)。
+
+证据边界：本机没有发现可迁移的有效 Key，因此本轮不能替用户重新输入密钥，也不能声称真实 DeepSeek 账户请求已成功；用户需在设置页本地重新输入自己的有效 Key，不要将密钥发送给 Agent。旧损坏资料仍可从本机恢复目录取回，新的连接链路和错误表达已通过构建及真实 Electron 操作检查。
+
 ### 0.3.2 全量界面回归与记忆页减法（本轮追加）
 
 用户明确指出：当“正在使用／待确认／已停用／原文依据／尚未核验”等工程分类并列出现时，用户要同时处理多个问题，视线没有一个自然落点。本次把这个反馈当作信息架构问题，而不是再加一层说明。

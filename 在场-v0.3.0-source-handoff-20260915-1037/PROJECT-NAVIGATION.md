@@ -2,6 +2,8 @@
 
 本文件是职责、当前策略、集成状态和实际文件索引的唯一维护位置。它不是学生运行时资料，也不是永久架构。检查日期：2026-09-15（Asia/Shanghai），应用 **0.3.0**。本次基线 HEAD 为 `08f95f633536fb119c5dd7c9206ccd3aa22ab81b`，工作区有大量此前未提交改动。
 
+**最新本地可运行性修复（2026-09-17）：** 已安装并锁定 Hermes Python 3.13.15；源码版 `%LOCALAPPDATA%\\Zaichang\\source-dev` 的损坏 SQLite 已保留副本并恢复为健康数据库，源码 Electron 可正常启动。检查发现该 profile 的 `deepseek-key.bin` 存在但无法由当前 Windows 用户解密，现已在状态 DTO、设置页和发送前分别显示可操作的“重新输入并保存”提示；没有发现可迁移的有效 Key，真实 DeepSeek 请求仍需用户在本机重新保存有效密钥后验证。恢复副本位于用户数据目录，不进入仓库。
+
 **本次正在实施理解与行动架构，尚未完成。** 当前进度见 [实施记录](UNDERSTANDING-ACTION-IMPLEMENTATION.md)。独自实施，后端搭建和测试通过后才使用两个前端设计技能。原生产 Harness 已切换 Hermes。DeepSeek 再次返回402后，用户指定使用 App Server 的 **GPT‑5.6‑Luna 临时代测**，生产默认不变；[代测契约与证据](LUNA-TEST-SUBSTITUTE.md)优先于下方旧轮次状态。
 
 **最新后端状态（2026-09-13）：** V65 会话不保存但明确本地登记的问题已修复，原例/相邻反例6/6、新表达7/7；统一后端 `backend-seal-after-multimodal` 23套248/248，早于Luna新增代码。Luna适配层5项机制、真实原生函数/续接/视觉三次请求、原Harness S01/S21两故事，以及真实Electron→IPC→Hermes→Luna图文全链均通过。图文实测 `gpt-5.6-luna/textParts=1/imageParts=1`，截图已查看；当前旧UI仍写DeepSeek，需在后端门槛通过后的前端阶段纠正，不能拿截图作为界面完成证据。其余记忆/独立委派/范围切换和最终后端回归继续验证。Luna输出上限只能由宿主完成后检查，账户费用未知；不能宣称协议和语义完全等同。
@@ -76,7 +78,7 @@ L1 使命/受保护原则只在 `project-foundations`；L2 当前策略在本节
 | 地图或定位 | `src/renderer/map/` → map IPC → `mapService.ts` / `mapLocation.ts` | 使用当前 OSM 资格与拓扑、旧响应失效、未知入口不画假线；地图 UI 不依赖模型 |
 | 新能力/媒体/跨设备 | `shared/harness.ts`、`capabilities/broker.ts` / `ports.ts` | 受审核 manifest/schema、权限、状态、模拟标签和取消；不自动执行第三方代码 |
 | 接口/插件管理 | `main/interfaces/manager.ts`、`main/plugins/manager.ts`、`main/plugins/runner.ts`、`capabilities/broker.ts`、`SettingsPanel.tsx` | 统一目录、启停、权限/出站范围、持久化；第三方 ZIP 包安装/升级/卸载先写用户目录，重启后切换；插件入口在独立进程运行，网络回到宿主受控通道 |
-| 源码冷启动与实时更新 | `scripts/start-dev.vbs`、`scripts/start-dev.cmd`、`scripts/dev.mjs`、`src/main/main.ts` | 桌面快捷方式通过隐藏的 Windows 启动器进入 Vite/Electron；开发服务器把实际端口传给 Electron，保留 Vite HMR；源码测试版使用 `%LOCALAPPDATA%\Zaichang\source-dev`，并忽略历史 `.dev-data`，避免与已安装版争抢缓存，也不让 Vite 监听 Electron 缓存 |
+| 源码冷启动与实时更新 | `scripts/start-dev.vbs`、`scripts/start-dev.cmd`、`scripts/dev.mjs`、`src/main/main.ts` | 桌面快捷方式通过隐藏的 Windows 启动器进入 Vite/Electron；开发服务器把实际端口传给 Electron，保留 Vite HMR；源码测试版使用 `%LOCALAPPDATA%\Zaichang\source-dev`，Hermes 安装器固定 Python 3.13.15；损坏 SQLite 已保留副本并恢复干净库，真实 Electron 可启动 |
 | 体验或全面设计 | 当前用户任务 → L1/L2 → 两个设计技能 → `App` / `SettingsPanel` / `HarnessViews` | 原输入、地图、草稿、来源、失败与恢复；实际截图必须打开查看 |
 | 迁移/回滚/验收 | `storage/repository.ts`、`harness-recover`、`test-environment` | 最新屏障先于旧记录迁移、新目录恢复、无生产凭据的可复现命令 |
 
@@ -142,7 +144,7 @@ L1 使命/受保护原则只在 `project-foundations`；L2 当前策略在本节
 | 源码冷启动 | 桌面快捷方式已改用隐藏的 `scripts/start-dev.vbs`，由 `scripts/start-dev.cmd` 保留手动诊断入口；启动器使用本机 Node.js，Vite 监听 5173（被占用时传递实际端口），Electron 通过 `ZAICHANG_DEV_SERVER_URL` 加载，源码资料写入 `%LOCALAPPDATA%\Zaichang\source-dev` | 已从桌面快捷方式冷启动并查看真实 Electron 首页；已修改首页文案验证 HMR 即时更新，再恢复原文；旧 `.cmd` 换行问题已修复；本次需确认隐藏启动和缓存隔离 |
 | 悬停控件 | `tokens.css` 的 `--control-hover` / `--control-hover-text`，由 `style.css`、`refinements.css` 与最终的 `harness.css` 统一应用于图标、建议和次要按钮 | 用户反馈后改为 `#454745` 炭灰悬停并使用浅色前景；`scripts/check-theme.mjs` 已在真实 Electron 浅色主题中通过悬停断言并生成截图；关闭按钮红色语义保留 |
 | 天气 | 天气已移出 `builtin.ts`，作为可安装的 `weather` 插件提供 `weather.lookup`、`weather.forecast`、`weather.outdoor_activity`；Agent 入口动态解析已安装能力；宿主负责 Windows 定位和权限，插件通过受控 Open-Meteo 通道取数 | `test:weather-gps` 3/3、`test:plugins` 10/10、构建通过；打包/清单检查通过；未做真实天气网络 smoke，未做真实 Electron 插件 UI 安装 |
-| DeepSeek | 当前官网提供方为 DeepSeek，端点 `https://api.deepseek.com/chat/completions`，唯一请求 ID `deepseek-flash`；2026-09-13 官方映射为 **DeepSeek-V4.1-Flash** 原生多模态模型；旧设置、renderer 和评估环境变量不能覆盖，不使用 V4/Pro/chat/reasoner 兼容名；SSE/tool calls、thinking/strict、text+image 同消息；图片本机缩放/转 JPEG 后仅随当前用户消息进入模型，不进入文字记忆提取；Key 在仓库外由 Windows DPAPI 保护 | 历史官网直连与旧入口Electron图文验证成功；新的Hermes图文传输已通过合成引擎检查，最新Electron真实图文尚待余额恢复后复测。历史请求均为 `deepseek-flash`、1 text part + 1 JPEG image part，模型正确把右侧视觉位置用于文字条件和日常提醒；官方改映射时须重新核对与重跑真实验收，仍不是通用视觉正确率证据 |
+| DeepSeek | 当前官网提供方为 DeepSeek，端点 `https://api.deepseek.com/chat/completions`，唯一请求 ID `deepseek-flash`；2026-09-13 官方映射为 **DeepSeek-V4.1-Flash** 原生多模态模型；旧设置、renderer 和评估环境变量不能覆盖，不使用 V4/Pro/chat/reasoner 兼容名；SSE/tool calls、thinking/strict、text+image 同消息；图片本机缩放/转 JPEG 后仅随当前用户消息进入模型，不进入文字记忆提取；Key 在仓库外由 Windows DPAPI 保护；状态 DTO 另区分 `missing/available/invalid` | 历史官网直连与旧入口Electron图文验证成功；本轮真实 Electron 确认源码 profile 的密钥文件无法解密，并已改为设置页/发送前的明确恢复提示。由于没有可迁移的有效 Key，本轮不能声称真实账户连接成功；重新保存有效 Key 后仍需做一次真实连接测试 |
 | 陌生扩展 | BorrowedDeviceProvider + Recipe 经通用主路径接入与撤权，恶意 manifest/网络/泄漏被拒绝 | 只在隔离 fixtures 注册，不随 App 自动启用，不是 OS 沙箱 |
 | 未来公共接口 | Observation/Sync/RulePack/Watch/Entity/StorageProtection 等实际校验、版本/冲突、拒绝与模拟路径 | X01–X16 对应受控场景；真实媒体采集、跨设备账号、健康/学习设备与通知服务未连接 |
 | 独立天气/个人信息/体育 | 保留 R3 用户报告，路径和真实协议缺口未补造 | 没有扫描无关项目或读取真实学生数据，不能用本产品内建适配替代其接入证明 |
@@ -390,7 +392,7 @@ L1 使命/受保护原则只在 `project-foundations`；L2 当前策略在本节
 | 有界运行与诚实失败 | `provider.ts`、`runtime/structured-result.ts`、`model-usage.ts` | thinking保持开启；结构格式重试有界；不把内部错误假说成网络错误；评测quota会停止批次 |
 | 交付与回退 | `setup-hermes`、`stage-hermes-runtime`、Repository迁移/恢复 | 固定上游锁、窄适配hash、Git跟踪文件打包；数据库版本5；旧备份恢复仍先应用最新屏障 |
 
-本次最后的验证记录仍区分离线机制、真实模型、真实UI与成品。新前端、独立人评、真正盲测、未连接外部服务均未冒称完成。当前阻塞是DeepSeek官方余额，而不是缺少已授权Key。
+本次最后的验证记录仍区分离线机制、真实模型、真实UI与成品。新前端、独立人评、真正盲测、未连接外部服务均未冒称完成。本机当前阻塞是旧 profile 的 DPAPI Key 无法解密；重新在设置页保存有效 Key 后，还需单独验证 DeepSeek 账号余额和真实请求。
 
 当前源码字节指纹于2026-09-13按已完成的离线构建/类型/机制验证更新；这只锁定本次工作区，不把缺失的真实重复、前端或成品体验验收改为通过。
 

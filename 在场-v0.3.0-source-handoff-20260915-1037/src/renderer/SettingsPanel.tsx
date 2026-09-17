@@ -195,9 +195,11 @@ export function SettingsPanel({ state, busy, onState, onClose, notify, onClear, 
               <div>
                 <h3>DeepSeek</h3>
                 <p>
-                  {state.settings.mode === 'deepseek' && state.settings.hasKey
-                    ? '已连接'
-                    : '连接后即可开始对话'}
+                  {state.settings.keyStatus === 'invalid'
+                    ? '已保存密钥无法读取，请重新输入'
+                    : state.settings.mode === 'deepseek' && state.settings.hasKey
+                      ? '已连接'
+                      : '连接后即可开始对话'}
                 </p>
               </div>
             </div>
@@ -207,7 +209,7 @@ export function SettingsPanel({ state, busy, onState, onClose, notify, onClear, 
                 type="password"
                 value={key}
                 autoComplete="off"
-                placeholder={state.settings.hasKey ? '已保存' : '输入密钥'}
+                placeholder={state.settings.keyStatus === 'invalid' ? '重新输入密钥' : state.settings.hasKey ? '已保存' : '输入密钥'}
                 onChange={(e) => {
                   setKey(e.target.value);
                   draft.current.apiKey = e.target.value;
