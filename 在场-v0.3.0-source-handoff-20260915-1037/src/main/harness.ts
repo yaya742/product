@@ -235,10 +235,13 @@ export class Harness {
     })().catch(error => {
       debugHarnessFailure('harness.start failed', error);
       message.status = controller.signal.aborted ? 'cancelled' : 'error';
-      message.content = error instanceof HarnessError ? error.message
+      const reason = error instanceof HarnessError ? error.message
         : controller.signal.aborted ? '已停止，刚才的内容没有保存。'
-        : error instanceof ProviderError ? error.message + ' 本次内容暂未保存。'
-        : '连接或资料范围检查未完成，内容暂未保存。可以重试，或先使用本轮范围设置。';
+        : error instanceof ProviderError ? error.message
+        : friendlyError(error);
+      message.content = controller.signal.aborted || reason.includes('暂未保存')
+        ? reason
+        : reason + ' 本次内容暂未保存。';
       this.emit({ type: 'message', message: structuredClone(message) });
     }).finally(() => {
       if (this.controller === controller) this.controller = undefined;

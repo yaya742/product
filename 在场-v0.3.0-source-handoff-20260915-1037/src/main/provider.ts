@@ -99,6 +99,10 @@ export function friendlyError(e: unknown): string {
   if (e instanceof ProviderError) return e.message;
   if (e instanceof Error && (e.name === 'AbortError' || e.name === 'TimeoutError'))
     return '请求已停止或超时，请稍后重试。';
+  if (e instanceof Error && e.name === 'HermesRunError')
+    return 'Agent 运行引擎未完成本轮处理，请重试。若连续出现，请重新启动源码冷启动版。';
+  if (e instanceof TypeError)
+    return '在场内部初始化失败，请完全退出后重新启动源码冷启动版。';
   const diagnostic = e && typeof e === 'object' && 'diagnostic' in e
     ? (e as { diagnostic?: unknown }).diagnostic
     : undefined;
@@ -253,39 +257,51 @@ export class DeepSeekClient {
     if (!this.key) throw new ProviderError('请先在连接中填写 DeepSeek API Key。');
     let response: Response | undefined;
     for (let attempt = 0; attempt < 2; attempt++) {
-      response = await this.fetcher(
-        options?.strict
-          ? this.capabilities.strictEndpoint
-          : this.capabilities.endpoint,
-        {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${this.key}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: this.model,
-            messages,
-            ...(tools.length
-              ? {
-                  tools: options?.strict
-                    ? tools.map((tool) => ({
-                        ...tool,
-                        function: {
-                          ...tool.function,
-                          strict: true,
-                          parameters: strictDialect(tool.function.parameters),
-                        },
-                      }))
-                    : tools,
-                }
-              : {}),
-            ...(options?.toolChoice ? { tool_choice: options.toolChoice } : {}),
-            stream: true,
-            stream_options: { include_usage: true },
-            max_tokens: options?.maxOutputTokens || 4096,
-            thinking: { type: options?.thinking || 'disabled' },
-          }),
-          signal: AbortSignal.any([signal, AbortSignal.timeout(90_000)]),
-        },
-      );
+      const requestSignal = AbortSignal.any([signal, AbortSignal.timeout(90_000)]);
+      try {
+        response = await this.fetcher(
+          options?.strict
+            ? this.capabilities.strictEndpoint
+            : this.capabilities.endpoint,
+          {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${this.key}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: this.model,
+              messages,
+              ...(tools.length
+                ? {
+                    tools: options?.strict
+                      ? tools.map((tool) => ({
+                          ...tool,
+                          function: {
+                            ...tool.function,
+                            strict: true,
+                            parameters: strictDialect(tool.function.parameters),
+                          },
+                        }))
+                      : tools,
+                  }
+                : {}),
+              ...(options?.toolChoice ? { tool_choice: options.toolChoice } : {}),
+              stream: true,
+              stream_options: { include_usage: true },
+              max_tokens: options?.maxOutputTokens || 4096,
+              thinking: { type: options?.thinking || 'disabled' },
+            }),
+            signal: requestSignal,
+          },
+        );
+      } catch (error) {
+        if (signal.aborted) throw error;
+        if (requestSignal.aborted)
+          throw new ProviderError('连接 DeepSeek 超时，请检查网络或代理后重试。', true, 'timeout');
+        // Fetch transport failures are plain TypeError/DOMException values and
+        // used to fall through to the generic “处理中断” message. Convert
+        // them at the provider boundary without exposing URLs, headers, keys,
+        // or user content.
+        throw new ProviderError('无法连接 DeepSeek，请检查网络、代理或 API 地址后重试。', true, 'network');
+      }
       if (response.ok) break;
       const status = response.status;
       await response.body?.cancel();
@@ -319,75 +335,83 @@ export class DeepSeekClient {
     let outputLimited = false;
     let usage: Completion['usage'];
     const calls = new Map<number, ToolCall>();
-    await readSSE(
-      response,
-      (data) => {
-        signal.throwIfAborted();
-        if (!data) return;
-        if (data === '[DONE]') {
-          complete = true;
-          return;
-        }
-        let chunk: {
-          choices?: {
-            delta?: {
-              content?: string;
-              reasoning_content?: string;
-              tool_calls?: { index: number; id?: string; function?: { name?: string; arguments?: string } }[];
-            };
-            finish_reason?: string;
-          }[];
-          error?: unknown;
-          usage?: Completion['usage'];
-        };
-        try {
-          chunk = JSON.parse(data);
-        } catch {
-          throw new ProviderError('DeepSeek 返回内容不完整，请重试。');
-        }
-        if (chunk.error) throw new ProviderError('DeepSeek 中断了本次请求，请重试。');
-        if (chunk.usage) usage = chunk.usage;
-        const choice = chunk.choices?.[0];
-        if (!choice) return;
-        if (choice.finish_reason === 'length') {
-          // Keep reading the separate usage frame, but never execute a partial
-          // tool call or promote this incomplete response to a completion.
-          outputLimited = true;
-          return;
-        }
-        if (outputLimited) return;
-        if (choice.finish_reason && !['stop', 'tool_calls'].includes(choice.finish_reason))
-          throw new ProviderError('模型没有正常完成回复，请缩小问题后重试。');
-        if (choice.finish_reason) complete = true;
-        const delta = choice.delta;
-        // Opaque protocol data is kept only in this bounded in-memory request chain, never serialized as memory or UI.
-        if (options?.thinking === 'enabled' && delta?.reasoning_content) {
-          reasoning += delta.reasoning_content;
-          if (reasoning.length > reasoningCharacterLimit) throw new ProviderError('模型协议状态超过本轮上限。', false, 'protocol_budget');
-        }
-        if (delta?.content) {
-          content += delta.content;
-          if (content.length > 64000) throw new ProviderError('回复达到本次长度上限。');
-          onText?.(delta.content);
-        }
-        for (const part of delta?.tool_calls || []) {
-          if (!Number.isInteger(part.index) || part.index < 0 || part.index > 7)
-            throw new ProviderError('本轮工具数量超出上限。');
-          const call = calls.get(part.index) || {
-            id: '',
-            type: 'function' as const,
-            function: { name: '', arguments: '' },
+    try {
+      await readSSE(
+        response,
+        (data) => {
+          signal.throwIfAborted();
+          if (!data) return;
+          if (data === '[DONE]') {
+            complete = true;
+            return;
+          }
+          let chunk: {
+            choices?: {
+              delta?: {
+                content?: string;
+                reasoning_content?: string;
+                tool_calls?: { index: number; id?: string; function?: { name?: string; arguments?: string } }[];
+              };
+              finish_reason?: string;
+            }[];
+            error?: unknown;
+            usage?: Completion['usage'];
           };
-          if (part.id) call.id = part.id;
-          if (part.function?.name && part.function.name !== call.function.name)
-            call.function.name += part.function.name;
-          if (part.function?.arguments) call.function.arguments += part.function.arguments;
-          if (call.function.arguments.length > 20000) throw new ProviderError('工具请求超出长度上限。');
-          calls.set(part.index, call);
-        }
-      },
-      signal,
-    );
+          try {
+            chunk = JSON.parse(data);
+          } catch {
+            throw new ProviderError('DeepSeek 返回内容不完整，请重试。');
+          }
+          if (chunk.error) throw new ProviderError('DeepSeek 中断了本次请求，请重试。');
+          if (chunk.usage) usage = chunk.usage;
+          const choice = chunk.choices?.[0];
+          if (!choice) return;
+          if (choice.finish_reason === 'length') {
+            // Keep reading the separate usage frame, but never execute a partial
+            // tool call or promote this incomplete response to a completion.
+            outputLimited = true;
+            return;
+          }
+          if (outputLimited) return;
+          if (choice.finish_reason && !['stop', 'tool_calls'].includes(choice.finish_reason))
+            throw new ProviderError('模型没有正常完成回复，请缩小问题后重试。');
+          if (choice.finish_reason) complete = true;
+          const delta = choice.delta;
+          // Opaque protocol data is kept only in this bounded in-memory request chain, never serialized as memory or UI.
+          if (options?.thinking === 'enabled' && delta?.reasoning_content) {
+            reasoning += delta.reasoning_content;
+            if (reasoning.length > reasoningCharacterLimit) throw new ProviderError('模型协议状态超过本轮上限。', false, 'protocol_budget');
+          }
+          if (delta?.content) {
+            content += delta.content;
+            if (content.length > 64000) throw new ProviderError('回复达到本次长度上限。');
+            onText?.(delta.content);
+          }
+          for (const part of delta?.tool_calls || []) {
+            if (!Number.isInteger(part.index) || part.index < 0 || part.index > 7)
+              throw new ProviderError('本轮工具数量超出上限。');
+            const call = calls.get(part.index) || {
+              id: '',
+              type: 'function' as const,
+              function: { name: '', arguments: '' },
+            };
+            if (part.id) call.id = part.id;
+            if (part.function?.name && part.function.name !== call.function.name)
+              call.function.name += part.function.name;
+            if (part.function?.arguments) call.function.arguments += part.function.arguments;
+            if (call.function.arguments.length > 20000) throw new ProviderError('工具请求超出长度上限。');
+            calls.set(part.index, call);
+          }
+        },
+        signal,
+      );
+    } catch (error) {
+      if (signal.aborted) throw error;
+      if (error instanceof ProviderError) throw error;
+      if (error instanceof Error && (error.name === 'AbortError' || error.name === 'TimeoutError'))
+        throw new ProviderError('连接 DeepSeek 超时，请检查网络或代理后重试。', true, 'timeout');
+      throw new ProviderError('DeepSeek 流式连接中断，请检查网络后重试。', true, 'network');
+    }
     if (outputLimited) throw new ProviderError('本次回复达到长度上限，可以请在场继续。', false, 'output_length', undefined, usage);
     if (!complete) throw new ProviderError('连接在回复完成前断开，请重试。');
     const tool_calls = [...calls.values()];

@@ -84,22 +84,41 @@ let window: BrowserWindow | undefined,
   invalidStoredKey = false;
 let closing = false;
 let connectionController: AbortController | undefined;
+function credentialPaths() {
+  const paths = [keyPath];
+  // The source cold-start launcher historically used
+  // %LOCALAPPDATA%\Zaichang\source-dev while the packaged app uses Electron's
+  // %APPDATA%\在场 profile. Read either profile so changing launch modes does
+  // not make a valid user credential appear to disappear. Isolated tests must
+  // never read a real personal profile.
+  if (process.env.ZAICHANG_TEST !== '1') {
+    if (process.env.APPDATA) paths.push(path.join(process.env.APPDATA, '在场', 'deepseek-key.bin'));
+    if (process.env.LOCALAPPDATA) paths.push(path.join(process.env.LOCALAPPDATA, 'Zaichang', 'source-dev', 'deepseek-key.bin'));
+  }
+  return [...new Set(paths.filter(Boolean))];
+}
 function getKey() {
   if (projectDeepSeekKey) {
     invalidStoredKey = false;
     return projectDeepSeekKey;
   }
-  if (existsSync(keyPath)) {
+  let foundStoredKey = false;
+  for (const candidate of credentialPaths()) {
+    if (!existsSync(candidate)) continue;
+    foundStoredKey = true;
     try {
-      const key = safeStorage.decryptString(readFileSync(keyPath));
+      const key = safeStorage.decryptString(readFileSync(candidate)).trim();
+      if (!key) continue;
       invalidStoredKey = false;
       return key;
     } catch {
-      // Keep the app usable, but expose that this is a recoverable credential issue.
-      invalidStoredKey = true;
+      // Another profile may contain the current valid credential. Continue
+      // checking it before reporting the stored credential as unreadable.
     }
   }
-  if (!existsSync(keyPath)) invalidStoredKey = false;
+  // Keep the app usable, but expose that this is a recoverable credential issue
+  // only when every existing profile copy was unreadable.
+  invalidStoredKey = foundStoredKey;
   return '';
 }
 function saveKey(key: string) {
@@ -112,7 +131,7 @@ function saveKey(key: string) {
   invalidStoredKey = false;
 }
 function deleteKey() {
-  if (existsSync(keyPath)) unlinkSync(keyPath);
+  for (const candidate of credentialPaths()) if (existsSync(candidate)) unlinkSync(candidate);
   projectDeepSeekKey = '';
   invalidStoredKey = false;
 }
