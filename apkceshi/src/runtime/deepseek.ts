@@ -61,12 +61,37 @@ export const LOCAL_TOOL_SPECS: DeepSeekToolSpec[] = [
   },
 ];
 
-function errorFromStatus(status: number): DeepSeekError {
+function apiErrorMessage(payload: unknown): string | undefined {
+  let value = payload;
+  if (typeof payload === 'string') {
+    try {
+      value = JSON.parse(payload);
+    } catch {
+      const plain = payload.replace(/\s+/g, ' ').trim();
+      return plain ? plain.slice(0, 240) : undefined;
+    }
+  }
+  if (!value || typeof value !== 'object') return undefined;
+  const body = value as { error?: unknown; message?: unknown };
+  if (typeof body.error === 'string') return body.error.slice(0, 240);
+  if (body.error && typeof body.error === 'object') {
+    const message = (body.error as { message?: unknown }).message;
+    if (typeof message === 'string') return message.slice(0, 240);
+  }
+  return typeof body.message === 'string' ? body.message.slice(0, 240) : undefined;
+}
+
+function errorFromStatus(status: number, payload?: unknown): DeepSeekError {
+  const detail = apiErrorMessage(payload);
   if (status === 401) return new DeepSeekError('DeepSeek API Key 无效，请在设置中更新。', 'authentication');
   if (status === 402) return new DeepSeekError('DeepSeek 账户余额不足，请充值后重试。', 'quota');
   if (status === 429) return new DeepSeekError('DeepSeek 当前请求较多，请稍后重试。', 'busy');
-  if (status === 400 || status === 404 || status === 422)
-    return new DeepSeekError('DeepSeek 未接受当前请求，请检查输入或模型配置。', 'protocol');
+  if (status === 400 || status === 404 || status === 422) {
+    return new DeepSeekError(
+      detail ? `DeepSeek 拒绝了请求：${detail}` : 'DeepSeek 未接受当前请求，请检查输入或模型配置。',
+      'protocol',
+    );
+  }
   return new DeepSeekError('DeepSeek 服务暂时不可用，请稍后重试。', 'busy');
 }
 
@@ -86,7 +111,12 @@ function parseSseEvent(raw: string): unknown | '[DONE]' | null {
 }
 
 function completionFromJson(payload: unknown, onText?: (text: string) => void): DeepSeekCompletion {
-  const body = typeof payload === 'string' ? JSON.parse(payload) : payload;
+  let body: unknown;
+  try {
+    body = typeof payload === 'string' ? JSON.parse(payload) : payload;
+  } catch {
+    throw new DeepSeekError('DeepSeek 返回内容不是有效 JSON，请重试。', 'protocol');
+  }
   if (!body || typeof body !== 'object')
     throw new DeepSeekError('DeepSeek 返回内容不完整，请重试。', 'protocol');
   const value = body as {
@@ -94,7 +124,11 @@ function completionFromJson(payload: unknown, onText?: (text: string) => void): 
     usage?: DeepSeekCompletion['usage'];
     choices?: Array<{ message?: DeepSeekMessage }>;
   };
-  if (value.error) throw new DeepSeekError('DeepSeek 中断了本次回复，请重试。', 'protocol');
+  if (value.error)
+    throw new DeepSeekError(
+      apiErrorMessage(value) ? `DeepSeek 拒绝了请求：${apiErrorMessage(value)}` : 'DeepSeek 中断了本次回复，请重试。',
+      'protocol',
+    );
   const message = value.choices?.[0]?.message;
   if (!message || message.role !== 'assistant')
     throw new DeepSeekError('DeepSeek 没有返回可用回复，请重试。', 'protocol');
@@ -111,10 +145,12 @@ async function completeNative(
   signal.throwIfAborted();
   let result: Awaited<ReturnType<typeof CapacitorHttp.post>>;
   try {
+    const nativeBody: Record<string, unknown> = { ...body, stream: false };
+    delete nativeBody.stream_options;
     result = await CapacitorHttp.post({
       url: DEEPSEEK_ENDPOINT,
       headers: { Authorization: `Bearer ${apiKey.trim()}`, 'Content-Type': 'application/json' },
-      data: { ...body, stream: false },
+      data: nativeBody,
       responseType: 'json',
       connectTimeout: 20_000,
       readTimeout: 90_000,
@@ -124,7 +160,7 @@ async function completeNative(
     throw new DeepSeekError('无法连接 DeepSeek，请检查网络或代理设置。', 'network');
   }
   signal.throwIfAborted();
-  if (result.status < 200 || result.status >= 300) throw errorFromStatus(result.status);
+  if (result.status < 200 || result.status >= 300) throw errorFromStatus(result.status, result.data);
   return completionFromJson(result.data, onText);
 }
 
@@ -161,8 +197,8 @@ export async function completeDeepSeek(
     throw new DeepSeekError('无法连接 DeepSeek，请检查网络或代理设置。', 'network');
   }
   if (!response.ok) {
-    await response.body?.cancel();
-    throw errorFromStatus(response.status);
+    const errorPayload = await response.text().catch(() => '');
+    throw errorFromStatus(response.status, errorPayload);
   }
   if (!response.body) throw new DeepSeekError('DeepSeek 没有返回内容，请重试。', 'protocol');
 
@@ -202,7 +238,11 @@ export async function completeDeepSeek(
               };
             }>;
           };
-          if (payload.error) throw new DeepSeekError('DeepSeek 中断了本次回复，请重试。', 'protocol');
+          if (payload.error)
+            throw new DeepSeekError(
+              apiErrorMessage(payload) ? `DeepSeek 拒绝了请求：${apiErrorMessage(payload)}` : 'DeepSeek 中断了本次回复，请重试。',
+              'protocol',
+            );
           if (payload.usage) usage = payload.usage;
           const delta = payload.choices?.[0]?.delta;
           if (delta?.content) {
