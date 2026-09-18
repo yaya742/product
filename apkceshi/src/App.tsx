@@ -15,6 +15,40 @@ function formatTime(value: string): string {
   return new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit' }).format(new Date(value));
 }
 
+function SettingsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z" />
+      <path d="m19.4 13.5 1.1.9-1.7 2.9-1.4-.5a7.7 7.7 0 0 1-1.4.8l-.3 1.5h-3.4l-.3-1.5a7.7 7.7 0 0 1-1.4-.8l-1.4.5-1.7-2.9 1.1-.9a7.1 7.1 0 0 1 0-1.6l-1.1-.9 1.7-2.9 1.4.5a7.7 7.7 0 0 1 1.4-.8l.3-1.5h3.4l.3 1.5a7.7 7.7 0 0 1 1.4.8l1.4-.5 1.7 2.9-1.1.9a7.1 7.1 0 0 1 0 1.6Z" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m6 6 12 12M18 6 6 18" />
+    </svg>
+  );
+}
+
+function ArrowIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 12h13M13 6l6 6-6 6" />
+    </svg>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3.5 19 6v5.1c0 4.2-2.6 7.8-7 9.4-4.4-1.6-7-5.2-7-9.4V6l7-2.5Z" />
+      <path d="m8.8 12 2.1 2.1 4.4-4.4" />
+    </svg>
+  );
+}
+
 export function App() {
   const initial = useMemo(() => loadMobileState(), []);
   const [state, setState] = useState<MobileState>(initial);
@@ -148,90 +182,40 @@ export function App() {
         <div className="brand-mark" aria-hidden="true">在</div>
         <div className="brand-copy">
           <strong>在场</strong>
-          <span>{online ? (state.apiKey ? '本机直连 DeepSeek' : '等待连接') : '当前没有网络'}</span>
+          <span className="connection-state">
+            <i className={`connection-dot ${online && state.apiKey ? 'active' : ''}`} />
+            {online ? (state.apiKey ? '已连接' : '等待连接') : '无网络'}
+          </span>
         </div>
-        <button className="icon-button" aria-label="打开设置" onClick={() => setSettingsOpen((open) => !open)}>
-          {settingsOpen ? '×' : '⚙'}
+        <button className="icon-button" aria-label="打开设置" onClick={() => setSettingsOpen(true)}>
+          <SettingsIcon />
         </button>
       </header>
-
-      {settingsOpen && (
-        <section className="settings-card" aria-label="连接设置">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">本机连接</p>
-              <h1>把 Key 留在你的手机里</h1>
-            </div>
-            <button className="quiet-button" onClick={() => setSettingsOpen(false)}>收起</button>
-          </div>
-          <p className="settings-copy">
-            这个移动端不经过在场服务器，消息直接发送到 DeepSeek。API Key 会保存在本机浏览器存储中；正式 APK 会替换为系统安全存储。
-          </p>
-          <label className="field-label" htmlFor="api-key">DeepSeek API Key</label>
-          <div className="key-row">
-            <input
-              id="api-key"
-              type="password"
-              value={state.apiKey}
-              placeholder="sk-…"
-              autoComplete="off"
-              onChange={(event) => updateState({ apiKey: event.target.value })}
-            />
-            <button className="primary-button" disabled={testing} onClick={() => void testConnection()}>
-              {testing ? '测试中' : '测试连接'}
-            </button>
-          </div>
-          {connectionMessage && <p className="connection-message">{connectionMessage}</p>}
-          <div className="settings-divider" />
-          <label className="field-label" htmlFor="memory">想让我长期记住什么？</label>
-          <div className="memory-row">
-            <input
-              id="memory"
-              value={memoryDraft}
-              placeholder="例如：我更喜欢安静的学习环境"
-              onChange={(event) => setMemoryDraft(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault();
-                  addMemory();
-                }
-              }}
-            />
-            <button className="secondary-button" onClick={addMemory}>保存</button>
-          </div>
-          {!!state.memories.length && (
-            <div className="memory-list">
-              {state.memories.map((memory, index) => (
-                <button
-                  className="memory-chip"
-                  key={`${memory}-${index}`}
-                  title="删除这条记忆"
-                  onClick={() => updateState({ memories: state.memories.filter((_, itemIndex) => itemIndex !== index) })}
-                >
-                  {memory} <span aria-hidden="true">×</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
 
       <section className="conversation" ref={scrollRef} aria-live="polite">
         {!state.messages.length && (
           <div className="welcome-card">
+            <div className="welcome-kicker"><span />在场 · 随时在线</div>
             <div className="welcome-orb">在</div>
-            <h2>照顾好眼前的生活</h2>
-            <p>你可以直接说一件正在处理的事。我会先理解，再告诉你下一步。</p>
-            <div className="suggestion-row">
+            <h1>把此刻，放在这里。</h1>
+            <p>说说你正在经历的事。我会先听懂，再陪你找到下一步。</p>
+            <div className="suggestion-list">
               {['帮我理一下今天要做的事', '我现在在哪里？', '给我一个简单的学习安排'].map((suggestion) => (
-                <button key={suggestion} onClick={() => setDraft(suggestion)}>{suggestion}</button>
+                <button key={suggestion} onClick={() => setDraft(suggestion)}>
+                  <span>{suggestion}</span>
+                  <ArrowIcon />
+                </button>
               ))}
             </div>
           </div>
         )}
         {state.messages.map((message) => (
           <article className={`message ${message.role} ${message.status}`} key={message.id}>
-            <div className="message-label">{message.role === 'user' ? '你' : '在场'} · {formatTime(message.createdAt)}</div>
+            <div className="message-author">
+              {message.role === 'assistant' && <span className="message-avatar">在</span>}
+              <span>{message.role === 'user' ? '你' : '在场'}</span>
+              <time>{formatTime(message.createdAt)}</time>
+            </div>
             <div className="message-bubble">
               {message.content || (message.status === 'running' ? <span className="typing">正在整理…</span> : '')}
             </div>
@@ -242,8 +226,8 @@ export function App() {
       <footer className="composer-area">
         <div className="status-line">
           <span className={`status-dot ${busy ? 'busy' : ''}`} />
-          <span>{busy ? status : state.apiKey ? '本机已准备好' : '填写 Key 后开始'}</span>
-          {!!state.messages.length && <button className="clear-button" disabled={busy} onClick={clearConversation}>清空对话</button>}
+          <span>{busy ? status : state.apiKey ? '本机已准备好' : '先在设置里连接 DeepSeek'}</span>
+          {!!state.messages.length && <button className="clear-button" disabled={busy} onClick={clearConversation}>新对话</button>}
         </div>
         <div className="composer">
           <textarea
@@ -262,11 +246,90 @@ export function App() {
           {busy ? (
             <button className="stop-button" onClick={stop}>停止</button>
           ) : (
-            <button className="send-button" disabled={!draft.trim()} onClick={() => void send()} aria-label="发送">↑</button>
+            <button className="send-button" disabled={!draft.trim()} onClick={() => void send()} aria-label="发送">
+              <ArrowIcon />
+            </button>
           )}
         </div>
         <p className="privacy-note">直连 DeepSeek · 对话、记忆和 Key 保存在本机</p>
       </footer>
+
+      {settingsOpen && (
+        <>
+          <button className="drawer-backdrop" aria-label="关闭设置" onClick={() => setSettingsOpen(false)} />
+          <section className="settings-drawer" aria-label="连接设置" role="dialog" aria-modal="true">
+            <div className="drawer-handle" />
+            <div className="drawer-heading">
+              <div>
+                <p className="eyebrow">设置</p>
+                <h2>让在场更懂你</h2>
+              </div>
+              <button className="icon-button small" aria-label="关闭设置" onClick={() => setSettingsOpen(false)}>
+                <CloseIcon />
+              </button>
+            </div>
+
+            <div className="secure-note">
+              <ShieldIcon />
+              <span>你的 Key 只保存在这台设备，消息直接发送到 DeepSeek。</span>
+            </div>
+            <label className="field-label" htmlFor="api-key">DeepSeek API Key</label>
+            <div className="key-row">
+              <input
+                id="api-key"
+                type="password"
+                value={state.apiKey}
+                placeholder="sk-…"
+                autoComplete="off"
+                onChange={(event) => updateState({ apiKey: event.target.value })}
+              />
+              <button className="primary-button" disabled={testing} onClick={() => void testConnection()}>
+                {testing ? '测试中' : '测试连接'}
+              </button>
+            </div>
+            {connectionMessage && <p className="connection-message">{connectionMessage}</p>}
+
+            <div className="drawer-section">
+              <div className="section-title-row">
+                <div>
+                  <p className="eyebrow">长期记忆</p>
+                  <h3>告诉我一些关于你的事</h3>
+                </div>
+                <span className="memory-count">{state.memories.length}/16</span>
+              </div>
+              <div className="memory-row">
+                <input
+                  id="memory"
+                  value={memoryDraft}
+                  placeholder="例如：我喜欢简洁的安排"
+                  onChange={(event) => setMemoryDraft(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      addMemory();
+                    }
+                  }}
+                />
+                <button className="secondary-button" onClick={addMemory}>保存</button>
+              </div>
+              {!!state.memories.length && (
+                <div className="memory-list">
+                  {state.memories.map((memory, index) => (
+                    <button
+                      className="memory-chip"
+                      key={`${memory}-${index}`}
+                      title="删除这条记忆"
+                      onClick={() => updateState({ memories: state.memories.filter((_, itemIndex) => itemIndex !== index) })}
+                    >
+                      {memory} <span aria-hidden="true">×</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        </>
+      )}
     </main>
   );
 }
