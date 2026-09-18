@@ -1,3 +1,5 @@
+import { Capacitor, CapacitorHttp } from '@capacitor/core';
+
 export const DEEPSEEK_ENDPOINT = 'https://api.deepseek.com/chat/completions';
 export const DEEPSEEK_MODEL = 'deepseek-flash';
 
@@ -83,6 +85,49 @@ function parseSseEvent(raw: string): unknown | '[DONE]' | null {
   }
 }
 
+function completionFromJson(payload: unknown, onText?: (text: string) => void): DeepSeekCompletion {
+  const body = typeof payload === 'string' ? JSON.parse(payload) : payload;
+  if (!body || typeof body !== 'object')
+    throw new DeepSeekError('DeepSeek 返回内容不完整，请重试。', 'protocol');
+  const value = body as {
+    error?: unknown;
+    usage?: DeepSeekCompletion['usage'];
+    choices?: Array<{ message?: DeepSeekMessage }>;
+  };
+  if (value.error) throw new DeepSeekError('DeepSeek 中断了本次回复，请重试。', 'protocol');
+  const message = value.choices?.[0]?.message;
+  if (!message || message.role !== 'assistant')
+    throw new DeepSeekError('DeepSeek 没有返回可用回复，请重试。', 'protocol');
+  if (message.content) onText?.(message.content);
+  return { message, usage: value.usage };
+}
+
+async function completeNative(
+  apiKey: string,
+  body: Record<string, unknown>,
+  signal: AbortSignal,
+  onText?: (text: string) => void,
+): Promise<DeepSeekCompletion> {
+  signal.throwIfAborted();
+  let result: Awaited<ReturnType<typeof CapacitorHttp.post>>;
+  try {
+    result = await CapacitorHttp.post({
+      url: DEEPSEEK_ENDPOINT,
+      headers: { Authorization: `Bearer ${apiKey.trim()}`, 'Content-Type': 'application/json' },
+      data: { ...body, stream: false },
+      responseType: 'json',
+      connectTimeout: 20_000,
+      readTimeout: 90_000,
+    });
+  } catch (error) {
+    if (signal.aborted) throw error;
+    throw new DeepSeekError('无法连接 DeepSeek，请检查网络或代理设置。', 'network');
+  }
+  signal.throwIfAborted();
+  if (result.status < 200 || result.status >= 300) throw errorFromStatus(result.status);
+  return completionFromJson(result.data, onText);
+}
+
 export async function completeDeepSeek(
   apiKey: string,
   messages: DeepSeekMessage[],
@@ -91,20 +136,22 @@ export async function completeDeepSeek(
   onText?: (text: string) => void,
 ): Promise<DeepSeekCompletion> {
   if (!apiKey.trim()) throw new DeepSeekError('请先在设置中填写 DeepSeek API Key。', 'authentication');
+  const requestBody = {
+    model: DEEPSEEK_MODEL,
+    messages,
+    ...(tools.length ? { tools } : {}),
+    stream: true,
+    stream_options: { include_usage: true },
+    max_tokens: 4096,
+    thinking: { type: 'disabled' },
+  };
+  if (Capacitor.isNativePlatform()) return completeNative(apiKey, requestBody, signal, onText);
   let response: Response;
   try {
     response = await fetch(DEEPSEEK_ENDPOINT, {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey.trim()}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: DEEPSEEK_MODEL,
-        messages,
-        ...(tools.length ? { tools } : {}),
-        stream: true,
-        stream_options: { include_usage: true },
-        max_tokens: 4096,
-        thinking: { type: 'disabled' },
-      }),
+      body: JSON.stringify(requestBody),
       signal: AbortSignal.any([signal, AbortSignal.timeout(90_000)]),
     });
   } catch (error) {

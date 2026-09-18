@@ -9,6 +9,7 @@
 - 对话和手动保存的记忆保存在本机。
 - Agent 可以按需读取手机本地时间和一次性 GPS；定位结果不会自动写入长期记忆。
 - 使用 SSE 流式回复，支持停止当前请求。
+- APK 运行时使用 Capacitor 原生 HTTP 请求，绕过 WebView 跨域限制；浏览器预览继续使用 SSE。
 - 已预留 Capacitor 配置，后续可生成 Android/iOS 容器。
 
 当前浏览器预览使用 `localStorage` 保存 Key；正式 Android/iOS 构建时应将 `src/runtime/storage.ts` 接到 `@capacitor/preferences` 或原生 Keystore/Keychain，不能把 Key 写进源码或发布包。
