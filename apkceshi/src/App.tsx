@@ -38,6 +38,11 @@ function compactTitle(value: string, fallback: string): string {
   return (clean || fallback).slice(0, 28);
 }
 
+function Avatar({ value, className }: { value: string; className: string }) {
+  const image = /^data:image\//i.test(value);
+  return <span className={className}>{image ? <img className="avatar-image" src={value} alt="" /> : (value || '在')}</span>;
+}
+
 function HistoryIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -158,6 +163,7 @@ export function App() {
   const [campusOpen, setCampusOpen] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
   const [weatherOpen, setWeatherOpen] = useState(false);
+  const [avatarMessage, setAvatarMessage] = useState('');
   const [campusSaved, setCampusSaved] = useState(false);
   const [scrollState, setScrollState] = useState({ canUp: false, canDown: false });
   const abortRef = useRef<AbortController | undefined>(undefined);
@@ -197,6 +203,39 @@ export function App() {
 
   function updateProfile(partial: Partial<MobileProfile>) {
     setState((current) => ({ ...current, profile: { ...current.profile, ...partial } }));
+  }
+
+  async function handleAvatarFile(file: File) {
+    const failedMessage = state.profile.language === 'en' ? 'Please choose a valid image.' : state.profile.language === 'zh-TW' ? '請選擇有效的圖片。' : '请选择有效的图片。';
+    if (!file.type.startsWith('image/')) {
+      setAvatarMessage(failedMessage);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const element = new Image();
+        element.onload = () => resolve(element);
+        element.onerror = () => reject(new Error(failedMessage));
+        element.src = objectUrl;
+      });
+      const size = Math.min(image.naturalWidth, image.naturalHeight);
+      if (!size) throw new Error(failedMessage);
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 256;
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error(failedMessage);
+      context.fillStyle = '#eef4ed';
+      context.fillRect(0, 0, 256, 256);
+      context.drawImage(image, (image.naturalWidth - size) / 2, (image.naturalHeight - size) / 2, size, size, 0, 0, 256, 256);
+      updateProfile({ avatar: canvas.toDataURL('image/jpeg', 0.86) });
+      setAvatarMessage('');
+    } catch (error) {
+      setAvatarMessage(error instanceof Error ? error.message : failedMessage);
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
   }
 
   async function changeLanguage(language: MobileLanguage) {
@@ -622,7 +661,7 @@ export function App() {
               )) : <p className="empty-history">{copy.historyEmpty}</p>}
             </div>
             <button className="profile-entry" onClick={openProfile}>
-              <span className="profile-avatar">{state.profile.avatar || '在'}</span>
+              <Avatar className="profile-avatar" value={state.profile.avatar} />
               <span className="profile-entry-copy"><strong>{copy.profileEyebrow}</strong><small>{copy.profileTitle}</small></span>
               <SettingsIcon />
             </button>
@@ -639,17 +678,16 @@ export function App() {
           </header>
           <div className="settings-scroll">
             <section className="profile-hero">
-              <span className="profile-avatar profile-avatar-large">{state.profile.avatar || '在'}</span>
+              <Avatar className="profile-avatar profile-avatar-large" value={state.profile.avatar} />
               <div><p className="eyebrow">{copy.profileEyebrow}</p><h1>{copy.profileTitle}</h1><p>{copy.avatarHint}</p></div>
             </section>
             <section className="profile-section">
               <div className="setting-label"><strong>{copy.avatar}</strong><span>{copy.avatarHint}</span></div>
-              <div className="avatar-options">
-                {['在', '🌿', '☀️', '🌙', '🪴', '✨'].map((avatar) => (
-                  <button className={state.profile.avatar === avatar ? 'selected' : ''} key={avatar} onClick={() => updateProfile({ avatar })}>{avatar}</button>
-                ))}
-              </div>
-              <input className="avatar-input" value={state.profile.avatar} maxLength={4} placeholder="在" onChange={(event) => updateProfile({ avatar: event.target.value })} />
+              <label className="avatar-upload-button" htmlFor="avatar-file">
+                <span>{copy.avatarHint}</span><ArrowIcon />
+              </label>
+              <input id="avatar-file" className="avatar-file-input" type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0]; if (file) void handleAvatarFile(file); event.currentTarget.value = ''; }} />
+              {avatarMessage && <p className="connection-message">{avatarMessage}</p>}
             </section>
             <section className="profile-section setting-row">
               <div className="setting-label"><strong>{copy.language}</strong><span>中文、繁體中文、English</span></div>

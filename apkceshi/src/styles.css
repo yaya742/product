@@ -166,6 +166,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .profile-entry:hover { border-color: var(--line-strong); background: var(--surface-strong); }
 .profile-entry svg { width: 18px; height: 18px; margin-left: auto; color: var(--text-soft); fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .profile-avatar { width: 35px; height: 35px; flex: 0 0 auto; border-radius: 12px; font-size: 15px; }
+.avatar-image { width: 100%; height: 100%; display: block; object-fit: cover; border-radius: inherit; }
 .profile-entry-copy { display: grid; gap: 2px; min-width: 0; }
 .profile-entry-copy strong { font-size: 12px; }
 .profile-entry-copy small { overflow: hidden; color: var(--text-soft); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
@@ -196,6 +197,10 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .avatar-options button { width: 39px; height: 39px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 13px; background: var(--surface-muted); font-size: 18px; }
 .avatar-options button.selected { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 3px var(--accent-soft); }
 .avatar-input { margin-top: 11px; }
+.avatar-upload-button { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 0 13px; color: var(--accent-strong); border: 1px solid var(--line-strong); border-radius: 13px; background: var(--surface-muted); font-size: 12px; cursor: pointer; }
+.avatar-upload-button:hover { border-color: var(--accent); background: var(--accent-soft); }
+.avatar-upload-button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.avatar-file-input { display: none; }
 .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .setting-row .setting-label { margin: 0; }
 .segmented-control { display: flex; padding: 3px; border-radius: 11px; background: var(--surface-muted); }

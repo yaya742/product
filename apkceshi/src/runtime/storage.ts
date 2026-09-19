@@ -60,8 +60,12 @@ function parseProfile(value: unknown): MobileProfile {
   if (!isRecord(value)) return { ...DEFAULT_PROFILE };
   const language: MobileLanguage = value.language === 'zh-TW' || value.language === 'en' ? value.language : 'zh-CN';
   const theme: MobileTheme = value.theme === 'dark' ? 'dark' : 'light';
+  const rawAvatar = typeof value.avatar === 'string' ? value.avatar.trim() : '';
+  const avatar = /^data:image\/(?:png|jpe?g|webp|gif);base64,/i.test(rawAvatar) && rawAvatar.length <= 2_000_000
+    ? rawAvatar
+    : rawAvatar.slice(0, 4);
   return {
-    avatar: typeof value.avatar === 'string' && value.avatar.trim() ? value.avatar.trim().slice(0, 4) : DEFAULT_PROFILE.avatar,
+    avatar: avatar || DEFAULT_PROFILE.avatar,
     language,
     theme,
     studentId: typeof value.studentId === 'string' ? value.studentId : '',
