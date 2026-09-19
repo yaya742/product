@@ -109,10 +109,21 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .message-author time { color: var(--text-faint); }
 .message.user .message-author { flex-direction: row-reverse; }
 .message-avatar { width: 19px; height: 19px; border-radius: 7px; font-size: 9px; }
-.message-bubble { max-width: min(100%, 620px); padding: 12px 15px; border: 1px solid var(--line); border-radius: 5px 17px 17px 17px; color: var(--text); background: var(--surface); white-space: pre-wrap; word-break: break-word; font-size: 14px; line-height: 1.72; box-shadow: 0 8px 25px rgba(40, 70, 45, .045); }
+.message-bubble { max-width: min(100%, 620px); padding: 12px 15px; border: 1px solid var(--line); border-radius: 5px 17px 17px 17px; color: var(--text); background: var(--surface); white-space: normal; word-break: break-word; font-size: 14px; line-height: 1.72; box-shadow: 0 8px 25px rgba(40, 70, 45, .045); }
 .message.user .message-bubble { color: #1c3423; border: 0; border-radius: 17px 5px 17px 17px; background: var(--user-bubble); box-shadow: 0 8px 24px rgba(80, 130, 88, .12); }
 .theme-dark .message.user .message-bubble { color: #142119; }
 .message.error .message-bubble { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 35%, var(--line)); background: color-mix(in srgb, var(--danger) 8%, var(--surface)); }
+.message-content { display: grid; gap: 8px; }
+.message-content p { margin: 0; }
+.message-content h4 { margin: 2px 0 0; color: var(--text); font-size: 15px; line-height: 1.45; }
+.message-content code { padding: 1px 5px; border-radius: 5px; background: var(--surface-muted); font-size: .9em; }
+.message-list-item { padding-left: 4px; }
+.message-line-break { height: 4px; }
+.message-table-wrap { overflow-x: auto; margin: 3px -3px; border: 1px solid var(--line); border-radius: 10px; }
+.message-table { width: 100%; min-width: 420px; border-collapse: collapse; font-size: 11px; line-height: 1.45; }
+.message-table th, .message-table td { padding: 8px 9px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.message-table th { color: var(--accent-strong); background: var(--surface-muted); font-weight: 700; }
+.message-table tr:last-child td { border-bottom: 0; }
 .typing { display: inline-flex; color: var(--text-soft); }
 .typing::after { content: ""; width: 5px; height: 5px; margin: auto 0 auto 7px; border-radius: 50%; background: var(--accent); animation: blink 1s infinite; }
 
@@ -244,6 +255,8 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .map-feature-land, .map-feature-area { fill: #e3eee0; stroke: #c0d4be; stroke-width: 0.45; }
 .map-feature-road { fill: none; stroke: #fffef8; stroke-width: 2.4; }
 .map-feature-barrier { fill: none; stroke: #ad9381; stroke-width: 1; stroke-dasharray: 3 2; }
+.map-labels { pointer-events: none; }
+.map-labels text { fill: #35523d; font-size: 8px; font-weight: 600; paint-order: stroke; stroke: #f4f8f2; stroke-width: 3px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .map-route-path { fill: none; stroke: #2f7950; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; filter: drop-shadow(0 1px 2px rgba(26, 69, 38, .3)); }
 .map-marker { stroke: #fff; stroke-width: 2; vector-effect: non-scaling-stroke; }
 .map-marker-start { fill: #397d50; }
@@ -285,6 +298,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .theme-dark .map-feature-water, .theme-dark .map-feature-waterway { fill: #23414b; stroke: #4e7781; }
 .theme-dark .map-feature-land, .theme-dark .map-feature-area { fill: #24392a; stroke: #415b44; }
 .theme-dark .map-feature-road { stroke: #b2c2ad; }
+.theme-dark .map-labels text { fill: #d6ead9; stroke: #1b2a20; }
 
 @keyframes rise { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }

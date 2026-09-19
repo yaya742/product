@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { MapPanel } from './MapPanel';
 import { WeatherPanel } from './WeatherPanel';
 import { runMobileAgent, type AgentStatus } from './runtime/agent';
@@ -41,6 +41,60 @@ function compactTitle(value: string, fallback: string): string {
 function Avatar({ value, className }: { value: string; className: string }) {
   const image = /^data:image\//i.test(value);
   return <span className={className}>{image ? <img className="avatar-image" src={value} alt="" /> : (value || '在')}</span>;
+}
+
+function inlineMarkdown(value: string): ReactNode {
+  const safe = value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return safe.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((piece, index) => {
+    if (piece.startsWith('**') && piece.endsWith('**')) return <strong key={index}>{piece.slice(2, -2)}</strong>;
+    if (piece.startsWith('`') && piece.endsWith('`')) return <code key={index}>{piece.slice(1, -1)}</code>;
+    return <span key={index}>{piece}</span>;
+  });
+}
+
+function tableCells(line: string): string[] {
+  return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((cell) => cell.trim());
+}
+
+function isTableSeparator(line: string): boolean {
+  return /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(line.trim());
+}
+
+function MessageContent({ content }: { content: string }) {
+  const lines = content.split(/\r?\n/);
+  const blocks: ReactNode[] = [];
+  for (let index = 0; index < lines.length;) {
+    if (lines[index].trim().startsWith('|') && index + 1 < lines.length && isTableSeparator(lines[index + 1])) {
+      const headers = tableCells(lines[index]);
+      index += 2;
+      const rows: string[][] = [];
+      while (index < lines.length && lines[index].trim().startsWith('|')) {
+        rows.push(tableCells(lines[index]));
+        index += 1;
+      }
+      blocks.push(
+        <div className="message-table-wrap" key={`table-${index}`}>
+          <table className="message-table">
+            <thead><tr>{headers.map((header, cellIndex) => <th key={cellIndex}>{inlineMarkdown(header)}</th>)}</tr></thead>
+            <tbody>{rows.map((row, rowIndex) => <tr key={rowIndex}>{headers.map((_, cellIndex) => <td key={cellIndex}>{inlineMarkdown(row[cellIndex] || '')}</td>)}</tr>)}</tbody>
+          </table>
+        </div>,
+      );
+      continue;
+    }
+    const line = lines[index];
+    if (!line.trim()) {
+      blocks.push(<div className="message-line-break" key={`blank-${index}`} />);
+    } else if (/^#{1,3}\s/.test(line)) {
+      blocks.push(<h4 key={index}>{inlineMarkdown(line.replace(/^#{1,3}\s/, ''))}</h4>);
+    } else if (/^[-*]\s+/.test(line)) {
+      blocks.push(<div className="message-list-item" key={index}>• {inlineMarkdown(line.replace(/^[-*]\s+/, ''))}</div>);
+    } else {
+      blocks.push(<p key={index}>{inlineMarkdown(line)}</p>);
+    }
+    index += 1;
+  }
+  return <div className="message-content">{blocks}</div>;
 }
 
 function HistoryIcon() {
@@ -582,7 +636,7 @@ export function App() {
               <time>{formatTime(message.createdAt, state.profile.language)}</time>
             </div>
             <div className="message-bubble">
-              {message.content || (message.status === 'running' ? <span className="typing">{copy.typing}</span> : '')}
+              {message.content ? <MessageContent content={message.content} /> : (message.status === 'running' ? <span className="typing">{copy.typing}</span> : '')}
             </div>
           </article>
         ))}

@@ -3,6 +3,7 @@ import type { MobileLanguage } from './types';
 import type { MapCoordinate } from './map';
 
 export const WEATHER_ENDPOINT = 'https://api.open-meteo.com/v1/forecast';
+export const GEOCODING_ENDPOINT = 'https://geocoding-api.open-meteo.com/v1/search';
 export const CAMPUS_COORDINATE: MapCoordinate = [120.07665, 30.30513];
 
 export interface WeatherSnapshot {
@@ -19,6 +20,13 @@ export interface WeatherSnapshot {
     precipitation: number;
     isDay: boolean;
   };
+  hourly: Array<{
+    time: string;
+    temperature: number;
+    weatherCode: number;
+    precipitationProbability: number;
+    precipitation: number;
+  }>;
   daily: Array<{
     date: string;
     weatherCode: number;
@@ -31,6 +39,13 @@ export interface WeatherSnapshot {
 export interface DeviceLocation {
   coordinate: MapCoordinate;
   accuracy: number;
+}
+
+export interface WeatherLocation {
+  name: string;
+  displayName: string;
+  coordinate: MapCoordinate;
+  timezone?: string;
 }
 
 export function readDeviceLocation(signal?: AbortSignal): Promise<DeviceLocation> {
@@ -62,30 +77,30 @@ export async function fetchWeather(coordinate: MapCoordinate, signal?: AbortSign
     latitude: coordinate[1].toFixed(6),
     longitude: coordinate[0].toFixed(6),
     current: 'temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,precipitation,is_day',
+    hourly: 'temperature_2m,weather_code,precipitation_probability,precipitation',
+    forecast_hours: '24',
     daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max',
     forecast_days: '5',
     timezone: 'auto',
   });
   const url = `${WEATHER_ENDPOINT}?${params.toString()}`;
   let status = 200;
-  let body: { error?: boolean; reason?: string; current?: Record<string, unknown>; daily?: Record<string, unknown>; latitude?: number; longitude?: number; timezone?: string };
-  if (Capacitor.isNativePlatform()) {
-    const response = await CapacitorHttp.get({ url, responseType: 'json', connectTimeout: 15_000, readTimeout: 20_000 });
-    status = response.status;
-    body = (typeof response.data === 'string' ? JSON.parse(response.data) : response.data) as typeof body;
-  } else {
-    const response = await fetch(url, { signal });
-    status = response.status;
-    body = await response.json().catch(() => undefined) as typeof body;
-  }
-  if (status < 200 || status >= 300 || body.error || !body.current || !body.daily) throw new Error(body.reason || `天气服务返回 ${status}`);
+  const body = await requestJson(url, signal) as { error?: boolean; reason?: string; current?: Record<string, unknown>; hourly?: Record<string, unknown>; daily?: Record<string, unknown>; latitude?: number; longitude?: number; timezone?: string; __status?: number };
+  status = body.__status || status;
+  if (status < 200 || status >= 300 || body.error || !body.current || !body.hourly || !body.daily) throw new Error(body.reason || `天气服务返回 ${status}`);
   const current = body.current;
+  const hourly = body.hourly;
   const daily = body.daily;
   const dates = Array.isArray(daily.time) ? daily.time : [];
   const codes = Array.isArray(daily.weather_code) ? daily.weather_code : [];
   const max = Array.isArray(daily.temperature_2m_max) ? daily.temperature_2m_max : [];
   const min = Array.isArray(daily.temperature_2m_min) ? daily.temperature_2m_min : [];
   const rain = Array.isArray(daily.precipitation_probability_max) ? daily.precipitation_probability_max : [];
+  const hourlyTimes = Array.isArray(hourly.time) ? hourly.time : [];
+  const hourlyTemperature = Array.isArray(hourly.temperature_2m) ? hourly.temperature_2m : [];
+  const hourlyCodes = Array.isArray(hourly.weather_code) ? hourly.weather_code : [];
+  const hourlyProbability = Array.isArray(hourly.precipitation_probability) ? hourly.precipitation_probability : [];
+  const hourlyPrecipitation = Array.isArray(hourly.precipitation) ? hourly.precipitation : [];
   const number = (value: unknown, fallback = 0) => typeof value === 'number' && Number.isFinite(value) ? value : fallback;
   return {
     latitude: number(body.latitude, coordinate[1]),
@@ -101,6 +116,13 @@ export async function fetchWeather(coordinate: MapCoordinate, signal?: AbortSign
       precipitation: number(current.precipitation),
       isDay: number(current.is_day, 1) === 1,
     },
+    hourly: hourlyTimes.map((time, index) => ({
+      time: String(time),
+      temperature: number(hourlyTemperature[index]),
+      weatherCode: number(hourlyCodes[index]),
+      precipitationProbability: number(hourlyProbability[index]),
+      precipitation: number(hourlyPrecipitation[index]),
+    })),
     daily: dates.map((date, index) => ({
       date: String(date),
       weatherCode: number(codes[index]),
@@ -109,6 +131,60 @@ export async function fetchWeather(coordinate: MapCoordinate, signal?: AbortSign
       precipitationProbability: number(rain[index]),
     })),
   };
+}
+
+type JsonResponse = Record<string, unknown> & { __status?: number };
+
+async function requestJson(url: string, signal?: AbortSignal): Promise<JsonResponse> {
+  if (Capacitor.isNativePlatform()) {
+    const response = await CapacitorHttp.get({ url, responseType: 'json', connectTimeout: 15_000, readTimeout: 20_000 });
+    const data = (typeof response.data === 'string' ? JSON.parse(response.data) : response.data) as JsonResponse;
+    return { ...data, __status: response.status };
+  }
+  const response = await fetch(url, { signal });
+  const data = await response.json().catch(() => ({})) as JsonResponse;
+  return { ...data, __status: response.status };
+}
+
+export async function searchWeatherLocations(query: string, signal?: AbortSignal): Promise<WeatherLocation[]> {
+  const params = new URLSearchParams({ name: query.trim(), count: '6', language: 'zh', format: 'json' });
+  const body = await requestJson(`${GEOCODING_ENDPOINT}?${params.toString()}`, signal);
+  const results = Array.isArray(body.results) ? body.results : [];
+  return results.flatMap((item) => {
+    if (!item || typeof item !== 'object') return [];
+    const value = item as Record<string, unknown>;
+    if (typeof value.name !== 'string' || typeof value.latitude !== 'number' || typeof value.longitude !== 'number') return [];
+    const parts = [value.name, value.admin1, value.country].filter((part): part is string => typeof part === 'string' && !!part);
+    return [{
+      name: value.name,
+      displayName: parts.join(' · '),
+      coordinate: [value.longitude, value.latitude] as MapCoordinate,
+      timezone: typeof value.timezone === 'string' ? value.timezone : undefined,
+    }];
+  });
+}
+
+function isRainHour(hour: WeatherSnapshot['hourly'][number]): boolean {
+  return hour.precipitation > 0.05 || hour.precipitationProbability >= 40 || (hour.weatherCode >= 51 && hour.weatherCode !== 71 && hour.weatherCode !== 73 && hour.weatherCode !== 75 && hour.weatherCode !== 77 && hour.weatherCode < 90) || hour.weatherCode >= 95;
+}
+
+export function rainIntervals(snapshot: WeatherSnapshot, language: MobileLanguage): string[] {
+  const intervals: Array<{ start: string; end: string }> = [];
+  let active: { start: string; end: string } | undefined;
+  for (const hour of snapshot.hourly) {
+    const rain = isRainHour(hour);
+    const end = new Date(new Date(hour.time).getTime() + 60 * 60 * 1000).toISOString();
+    if (rain && !active) active = { start: hour.time, end };
+    else if (rain && active) active.end = end;
+    else if (active) { intervals.push(active); active = undefined; }
+  }
+  if (active) intervals.push(active);
+  const locale = language === 'en' ? 'en-US' : language;
+  return intervals.slice(0, 4).map((interval) => {
+    const start = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(new Date(interval.start));
+    const end = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(new Date(interval.end));
+    return language === 'en' ? `${start}–${end} rain likely` : language === 'zh-TW' ? `${start}–${end} 可能有雨` : `${start}–${end} 可能有雨`;
+  });
 }
 
 export function weatherCodeText(code: number, language: MobileLanguage): string {

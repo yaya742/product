@@ -95,6 +95,8 @@ export function MapPanel({ language, onClose }: MapPanelProps) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const dragRef = useRef<{ x: number; y: number; panX: number; panY: number } | undefined>(undefined);
+  const pointersRef = useRef(new Map<number, { x: number; y: number }>());
+  const pinchRef = useRef<{ distance: number; zoom: number } | undefined>(undefined);
   const mapRef = useRef<SVGSVGElement>(null);
   const copy = language === 'en'
     ? {
@@ -136,6 +138,7 @@ export function MapPanel({ language, onClose }: MapPanelProps) {
   const endCoordinate = endPlace?.coordinate;
   const startMatches = placeMatches(data, startQuery);
   const endMatches = placeMatches(data, endQuery);
+  const mapLabels = useMemo(() => data?.places.filter((place) => place.displayName && !place.displayName.startsWith('未命名') && (place.kind !== 'building' || zoom >= 1.2)).slice(0, zoom >= 1.2 ? 608 : 10) || [], [data, zoom]);
 
   async function locate() {
     setLocating(true);
@@ -170,11 +173,31 @@ export function MapPanel({ language, onClose }: MapPanelProps) {
 
   function onPointerDown(event: React.PointerEvent<SVGSVGElement>) {
     mapRef.current?.setPointerCapture(event.pointerId);
+    pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pointersRef.current.size >= 2) {
+      const points = [...pointersRef.current.values()];
+      pinchRef.current = {
+        distance: Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y),
+        zoom,
+      };
+      dragRef.current = undefined;
+      return;
+    }
     dragRef.current = { x: event.clientX, y: event.clientY, panX: pan.x, panY: pan.y };
   }
 
   function onPointerMove(event: React.PointerEvent<SVGSVGElement>) {
-    if (!dragRef.current || !mapRef.current) return;
+    if (!mapRef.current) return;
+    if (pointersRef.current.has(event.pointerId)) pointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pointersRef.current.size >= 2 && pinchRef.current) {
+      const points = [...pointersRef.current.values()];
+      const distance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+      if (pinchRef.current.distance > 0) {
+        setZoom(Math.max(1, Math.min(4, pinchRef.current.zoom * distance / pinchRef.current.distance)));
+      }
+      return;
+    }
+    if (!dragRef.current) return;
     const rect = mapRef.current.getBoundingClientRect();
     setPan({
       x: dragRef.current.panX + (event.clientX - dragRef.current.x) * WORLD_WIDTH / rect.width,
@@ -182,7 +205,9 @@ export function MapPanel({ language, onClose }: MapPanelProps) {
     });
   }
 
-  function onPointerUp() {
+  function onPointerUp(event: React.PointerEvent<SVGSVGElement>) {
+    pointersRef.current.delete(event.pointerId);
+    if (pointersRef.current.size < 2) pinchRef.current = undefined;
     dragRef.current = undefined;
   }
 
@@ -217,6 +242,12 @@ export function MapPanel({ language, onClose }: MapPanelProps) {
               <rect width={WORLD_WIDTH} height={WORLD_HEIGHT} className="map-background" />
               <g transform={transform}>
                 {featurePaths.map((feature) => <path key={feature.id} d={feature.d} className={`map-feature map-feature-${feature.kind}`} />)}
+                <g className="map-labels">
+                  {mapLabels.map((place) => {
+                    const [x, y] = project(place.coordinate);
+                    return <text key={place.id} x={x} y={y} textAnchor="middle">{place.displayName}</text>;
+                  })}
+                </g>
                 {routePath && <path d={routePath} className="map-route-path" />}
                 {startCoordinate && <circle cx={project(startCoordinate)[0]} cy={project(startCoordinate)[1]} r="10" className="map-marker map-marker-start" />}
                 {endCoordinate && <circle cx={project(endCoordinate)[0]} cy={project(endCoordinate)[1]} r="10" className="map-marker map-marker-end" />}

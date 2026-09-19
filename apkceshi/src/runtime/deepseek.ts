@@ -68,6 +68,35 @@ export const LOCAL_TOOL_SPECS: DeepSeekToolSpec[] = [
       parameters: { type: 'object', properties: {}, additionalProperties: false },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'search_campus_map',
+      description: '在手机内置的浙江大学紫金港校园地图中搜索建筑、地点和地标名称。用户询问某栋楼在哪里、某地点坐标或校园地点时使用；只返回本地地图中确实存在的结果。',
+      parameters: {
+        type: 'object',
+        properties: { query: { type: 'string', description: '用户要查找的建筑或地点名称' } },
+        required: ['query'],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'plan_campus_route',
+      description: '使用手机内置校园步行路网规划两个已知地点之间的路线。只有用户明确询问路线、怎么走或步行距离时使用。',
+      parameters: {
+        type: 'object',
+        properties: {
+          origin: { type: 'string', description: '起点名称；如果是当前位置可写当前位置' },
+          destination: { type: 'string', description: '终点名称' },
+        },
+        required: ['origin', 'destination'],
+        additionalProperties: false,
+      },
+    },
+  },
 ];
 
 function apiErrorMessage(payload: unknown): string | undefined {
