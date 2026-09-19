@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "campus-map/v2",
+  "version": "osm-2026-09-10-94288783d81b",
+  "sourceDate": "2026-09-10T00:56:48Z",
+  "acquiredAt": "2026-09-10T00:58:03.362Z",
+  "bounds": [
+    120.06,
+    30.293,
+    120.101,
+    30.326
+  ],
+  "campusBounds": [
+    120.063,
+    30.296,
+    120.088,
+    30.319
+  ],
+  "label": "紫金港 · 望月公寓（桂花苑）",
+  "crs": "EPSG:4326",
+  "coordinateOrder": "longitude, latitude",
+  "renderProjection": "EPSG:3857",
+  "distance": "haversine, mean Earth radius 6371008.8 m",
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "source": "https://overpass-api.de/api/interpreter",
+  "copyright": "https://www.openstreetmap.org/copyright",
+  "buildings": 533,
+  "selectable": 608,
+  "coreLandmarks": 10,
+  "officialCoverageRecords": 379,
+  "officialAliasesApplied": 127,
+  "officialUnresolvedNames": 241,
+  "entrances": 67,
+  "connectedEntrances": 37,
+  "routableBuildings": 25,
+  "nodes": 5865,
+  "edges": 6525,
+  "features": 2591,
+  "rejected": {
+    "restrictedWays": 145,
+    "waterCrossings": 21,
+    "missingNodes": 0,
+    "outside": 587,
+    "blockedNodes": 31,
+    "wallCrossings": 5
+  },
+  "limitations": [
+    "OSM 是开放社区数据，不是浙大官方测绘或实时通行保证。",
+    "建筑入口仅依据同一 OSM 节点与道路的真实拓扑连接；不按最近距离吸附。",
+    "未知、受限或未连通入口不输出建筑路线；数据边缘不代表现实道路终止。",
+    "桂花苑别名来自用户提供，绑定 OSM 望月公寓边界；未推断其中的楼号或入口。"
+  ]
+}

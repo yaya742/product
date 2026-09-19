@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { MapPanel } from './MapPanel';
+import { WeatherPanel } from './WeatherPanel';
 import { runMobileAgent, type AgentStatus } from './runtime/agent';
 import { completeDeepSeek, DeepSeekError, testDeepSeekConnection, translateText } from './runtime/deepseek';
 import { getUiCopy } from './runtime/i18n';
@@ -49,6 +51,24 @@ function PlusIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+
+function MapIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m3.5 6.2 5.7-2.4 5.6 2.4 5.7-2.4v14.2L14.8 20l-5.6-2.2-5.7 2.2V6.2Z" />
+      <path d="M9.2 3.8v14M14.8 6.2v13.8" />
+    </svg>
+  );
+}
+
+function WeatherIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 18.2h10.2a3.3 3.3 0 0 0 .2-6.6 5.7 5.7 0 0 0-10.8-1.1A3.9 3.9 0 0 0 7 18.2Z" />
+      <path d="M8 21v-1.4M12 21v-1.4M16 21v-1.4" />
     </svg>
   );
 }
@@ -136,6 +156,8 @@ export function App() {
   const [renameDraft, setRenameDraft] = useState('');
   const [profileOpen, setProfileOpen] = useState(false);
   const [campusOpen, setCampusOpen] = useState(false);
+  const [mapOpen, setMapOpen] = useState(false);
+  const [weatherOpen, setWeatherOpen] = useState(false);
   const [campusSaved, setCampusSaved] = useState(false);
   const [scrollState, setScrollState] = useState({ canUp: false, canDown: false });
   const abortRef = useRef<AbortController | undefined>(undefined);
@@ -468,6 +490,18 @@ export function App() {
     setCampusOpen(false);
   }
 
+  function openMap() {
+    closeOverlays();
+    setMapOpen(true);
+    setWeatherOpen(false);
+  }
+
+  function openWeather() {
+    closeOverlays();
+    setWeatherOpen(true);
+    setMapOpen(false);
+  }
+
   const themeClass = state.profile.theme === 'dark' ? 'theme-dark' : 'theme-light';
 
   return (
@@ -477,9 +511,11 @@ export function App() {
           <HistoryIcon />
         </button>
         <div className="topbar-title">{copy.appName}</div>
-        <button className="header-icon-button" aria-label={copy.newConversation} onClick={createNewConversation}>
-          <PlusIcon />
-        </button>
+        <div className="topbar-actions">
+          <button className="header-icon-button" aria-label={state.profile.language === 'en' ? 'Map' : '地图'} onClick={openMap}><MapIcon /></button>
+          <button className="header-icon-button" aria-label={state.profile.language === 'en' ? 'Weather' : '天气'} onClick={openWeather}><WeatherIcon /></button>
+          <button className="header-icon-button" aria-label={copy.newConversation} onClick={createNewConversation}><PlusIcon /></button>
+        </div>
       </header>
 
       <section className="conversation" ref={scrollRef} aria-live="polite">
@@ -676,6 +712,9 @@ export function App() {
           </div>
         </section>
       )}
+
+      {mapOpen && <MapPanel language={state.profile.language} onClose={() => setMapOpen(false)} />}
+      {weatherOpen && <WeatherPanel language={state.profile.language} onClose={() => setWeatherOpen(false)} />}
     </main>
   );
 }

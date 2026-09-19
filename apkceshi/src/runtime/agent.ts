@@ -5,9 +5,10 @@ import {
   type DeepSeekToolCall,
   DeepSeekError,
 } from './deepseek';
+import { CAMPUS_COORDINATE, fetchWeather, readDeviceLocation } from './weather';
 import type { MobileLanguage, MobileMessage } from './types';
 
-export type AgentStatus = '联系 DeepSeek' | '读取手机时间' | '请求手机定位' | '整理回复';
+export type AgentStatus = '联系 DeepSeek' | '读取手机时间' | '请求手机定位' | '查询天气' | '整理回复';
 
 function modelHistory(messages: MobileMessage[]): DeepSeekMessage[] {
   return messages
@@ -56,6 +57,26 @@ async function runLocalTool(call: DeepSeekToolCall, signal: AbortSignal): Promis
     };
   }
   if (call.function.name === 'get_device_location') return runLocalToolLocation(signal);
+  if (call.function.name === 'get_weather') {
+    let coordinate = CAMPUS_COORDINATE;
+    let locationSource = '浙江大学紫金港校区参考位置';
+    try {
+      const location = await readDeviceLocation(signal);
+      coordinate = location.coordinate;
+      locationSource = `手机定位（误差约 ${Math.round(location.accuracy)} 米）`;
+    } catch (error) {
+      if (signal.aborted) throw error;
+    }
+    const weather = await fetchWeather(coordinate, signal);
+    return {
+      status: 'ok',
+      location_source: locationSource,
+      coordinates: coordinate,
+      timezone: weather.timezone,
+      current: weather.current,
+      daily: weather.daily,
+    };
+  }
   return { status: 'unavailable', reason: '手机端没有提供这项能力。' };
 }
 
@@ -91,7 +112,7 @@ export async function runMobileAgent(
 
     for (const call of completion.message.tool_calls) {
       signal.throwIfAborted();
-      onStatus(call.function.name === 'get_local_time' ? '读取手机时间' : '请求手机定位');
+      onStatus(call.function.name === 'get_local_time' ? '读取手机时间' : call.function.name === 'get_weather' ? '查询天气' : '请求手机定位');
       let result: Record<string, unknown>;
       try {
         result = await runLocalTool(call, signal);

@@ -60,6 +60,14 @@ export const LOCAL_TOOL_SPECS: DeepSeekToolSpec[] = [
       parameters: { type: 'object', properties: {}, additionalProperties: false },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'get_weather',
+      description: '查询当前位置或浙江大学紫金港校区的当前天气和未来五天预报。用户询问天气、温度、下雨、穿衣或户外活动建议时使用。手机定位不可用时使用校园参考位置，并明确说明位置是参考值。',
+      parameters: { type: 'object', properties: {}, additionalProperties: false },
+    },
+  },
 ];
 
 function apiErrorMessage(payload: unknown): string | undefined {
