@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { runMobileAgent, type AgentStatus } from './runtime/agent';
-import { completeDeepSeek, DeepSeekError, testDeepSeekConnection } from './runtime/deepseek';
+import { completeDeepSeek, DeepSeekError, testDeepSeekConnection, translateText } from './runtime/deepseek';
 import { getUiCopy } from './runtime/i18n';
 import { loadMobileState, saveMobileState } from './runtime/storage';
 import {
@@ -128,6 +128,8 @@ export function App() {
   const [, setStatus] = useState<AgentStatus | '空闲'>('空闲');
   const [connectionMessage, setConnectionMessage] = useState('');
   const [testing, setTesting] = useState(false);
+  const [translationMessage, setTranslationMessage] = useState('');
+  const [translating, setTranslating] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyMenuId, setHistoryMenuId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -137,6 +139,7 @@ export function App() {
   const [campusSaved, setCampusSaved] = useState(false);
   const [scrollState, setScrollState] = useState({ canUp: false, canDown: false });
   const abortRef = useRef<AbortController | undefined>(undefined);
+  const translationAbortRef = useRef<AbortController | undefined>(undefined);
   const scrollRef = useRef<HTMLDivElement>(null);
   const online = typeof navigator === 'undefined' ? true : navigator.onLine;
   const copy = getUiCopy(state.profile.language);
@@ -172,6 +175,67 @@ export function App() {
 
   function updateProfile(partial: Partial<MobileProfile>) {
     setState((current) => ({ ...current, profile: { ...current.profile, ...partial } }));
+  }
+
+  async function changeLanguage(language: MobileLanguage) {
+    const previousLanguage = state.profile.language;
+    if (language === previousLanguage || translating || busy) return;
+    const targetCopy = getUiCopy(language);
+    const conversationId = activeConversation?.id;
+    const currentMessages = messages;
+    updateProfile({ language });
+    setTranslationMessage('');
+    if (!conversationId || !currentMessages.length) return;
+    if (!state.apiKey.trim()) {
+      setTranslationMessage(targetCopy.translationNeedKey);
+      return;
+    }
+
+    translationAbortRef.current?.abort();
+    const controller = new AbortController();
+    translationAbortRef.current = controller;
+    setTranslating(true);
+    setTranslationMessage(targetCopy.translatingConversation);
+    setState((current) => ({
+      ...current,
+      conversations: current.conversations.map((conversation) => conversation.id !== conversationId ? conversation : {
+        ...conversation,
+        messages: conversation.messages.map((message) => ({
+          ...message,
+          translations: { ...message.translations, [previousLanguage]: message.translations?.[previousLanguage] ?? message.content },
+        })),
+      }),
+    }));
+
+    let failed = false;
+    try {
+      for (const message of currentMessages) {
+        controller.signal.throwIfAborted();
+        const cached = message.translations?.[language];
+        const translated = cached || await translateText(state.apiKey, message.content, language, controller.signal);
+        setState((current) => ({
+          ...current,
+          conversations: current.conversations.map((conversation) => conversation.id !== conversationId ? conversation : {
+            ...conversation,
+            messages: conversation.messages.map((item) => item.id !== message.id ? item : {
+              ...item,
+              content: translated,
+              translations: {
+                ...item.translations,
+                [previousLanguage]: item.translations?.[previousLanguage] ?? item.content,
+                [language]: translated,
+              },
+            }),
+          }),
+        }));
+      }
+    } catch (error) {
+      if (!controller.signal.aborted) failed = true;
+    } finally {
+      if (!controller.signal.aborted) setTranslationMessage(failed ? targetCopy.translationFailed : targetCopy.translatedConversation);
+      if (translationAbortRef.current === controller) translationAbortRef.current = undefined;
+      setTranslating(false);
+    }
   }
 
   function updateActiveConversation(change: (conversation: MobileConversation) => MobileConversation) {
@@ -224,11 +288,13 @@ export function App() {
     }
     const conversationId = activeConversation.id;
     const history = messages;
+    const conversationLanguage = state.profile.language;
     const shouldGenerateTitle = history.length === 0;
     const userMessage: MobileMessage = {
       id: newId('user'),
       role: 'user',
       content: text,
+      translations: { [conversationLanguage]: text },
       createdAt: new Date().toISOString(),
       status: 'done',
     };
@@ -237,6 +303,7 @@ export function App() {
       id: assistantId,
       role: 'assistant',
       content: '',
+      translations: {},
       createdAt: new Date().toISOString(),
       status: 'running',
     };
@@ -252,6 +319,7 @@ export function App() {
         history,
         text,
         state.memories,
+        conversationLanguage,
         controller.signal,
         (delta) => {
           updateActiveMessages((current) => current.map((message) =>
@@ -261,13 +329,22 @@ export function App() {
         setStatus,
       );
       updateActiveMessages((current) => current.map((message) =>
-        message.id === assistantId ? { ...message, status: 'done' } : message,
+        message.id === assistantId ? {
+          ...message,
+          status: 'done',
+          translations: { ...message.translations, [conversationLanguage]: message.content },
+        } : message,
       ));
       if (shouldGenerateTitle) void generateConversationTitle(conversationId, state.apiKey, text);
     } catch (error) {
       const message = friendlyError(error);
       updateActiveMessages((current) => current.map((item) =>
-        item.id === assistantId ? { ...item, content: item.content || message, status: 'error' } : item,
+        item.id === assistantId ? {
+          ...item,
+          content: item.content || message,
+          status: 'error',
+          translations: { ...item.translations, [conversationLanguage]: item.content || message },
+        } : item,
       ));
       if (shouldGenerateTitle) {
         const fallbackTitle = compactTitle(text, copy.titleFallback);
@@ -540,11 +617,16 @@ export function App() {
             </section>
             <section className="profile-section setting-row">
               <div className="setting-label"><strong>{copy.language}</strong><span>中文、繁體中文、English</span></div>
-              <select value={state.profile.language} onChange={(event) => updateProfile({ language: event.target.value as MobileLanguage })}>
+              <select
+                value={state.profile.language}
+                disabled={busy || translating}
+                onChange={(event) => void changeLanguage(event.target.value as MobileLanguage)}
+              >
                 <option value="zh-CN">中文（简体）</option>
                 <option value="zh-TW">中文（繁體）</option>
                 <option value="en">English</option>
               </select>
+              {translationMessage && <p className="connection-message">{translationMessage}</p>}
             </section>
             <section className="profile-section setting-row">
               <div className="setting-label"><strong>{copy.appearance}</strong><span>{state.profile.theme === 'light' ? copy.light : copy.dark}</span></div>

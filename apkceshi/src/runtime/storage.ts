@@ -16,6 +16,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
+function parseTranslations(value: unknown): MobileMessage['translations'] | undefined {
+  if (!isRecord(value)) return undefined;
+  const translations: MobileMessage['translations'] = {};
+  for (const language of ['zh-CN', 'zh-TW', 'en'] as MobileLanguage[]) {
+    if (typeof value[language] === 'string') translations[language] = value[language];
+  }
+  return Object.keys(translations).length ? translations : undefined;
+}
+
 function parseMessages(value: unknown): MobileMessage[] {
   if (!Array.isArray(value)) return [];
   return value.filter((item): item is MobileMessage => {
@@ -27,7 +36,7 @@ function parseMessages(value: unknown): MobileMessage[] {
       typeof item.createdAt === 'string' &&
       (item.status === 'running' || item.status === 'done' || item.status === 'error')
     );
-  });
+  }).map((item) => ({ ...item, translations: parseTranslations((item as unknown as Record<string, unknown>).translations) }));
 }
 
 function parseConversations(value: unknown): MobileConversation[] {

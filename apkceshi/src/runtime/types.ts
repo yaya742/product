@@ -6,6 +6,7 @@ export interface MobileMessage {
   id: string;
   role: MobileMessageRole;
   content: string;
+  translations?: Partial<Record<MobileLanguage, string>>;
   createdAt: string;
   status: 'running' | 'done' | 'error';
 }

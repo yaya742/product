@@ -49,6 +49,10 @@ export interface UiCopy {
   studentPassword: string;
   passwordPlaceholder: string;
   saved: string;
+  translatingConversation: string;
+  translatedConversation: string;
+  translationNeedKey: string;
+  translationFailed: string;
   back: string;
   contacting: string;
   readingTime: string;
@@ -110,6 +114,10 @@ const SIMPLIFIED: UiCopy = {
   studentPassword: '密码',
   passwordPlaceholder: '输入校园密码',
   saved: '已保存',
+  translatingConversation: '正在翻译当前对话…',
+  translatedConversation: '对话语言已切换。',
+  translationNeedKey: '切换对话语言需要先配置 DeepSeek API Key。',
+  translationFailed: '部分消息翻译失败，已保留原文。',
   back: '返回',
   contacting: '联系 DeepSeek',
   readingTime: '读取手机时间',
@@ -137,7 +145,8 @@ const TRADITIONAL: UiCopy = {
   renamePlaceholder: '輸入新的標題', cancel: '取消', done: '完成', profileEyebrow: '個人設定', avatar: '頭像',
   avatarHint: '選擇一個頭像，或輸入 1-4 個字元', language: '語言', appearance: '外觀', light: '淺色', dark: '深色',
   campus: '校園資訊', campusHint: '學號和密碼僅保存在本機', campusTitle: '校園資訊', studentId: '學號',
-  studentPassword: '密碼', passwordPlaceholder: '輸入校園密碼', saved: '已儲存', back: '返回',
+  studentPassword: '密碼', passwordPlaceholder: '輸入校園密碼', saved: '已儲存',
+  translatingConversation: '正在翻譯目前對話…', translatedConversation: '對話語言已切換。', translationNeedKey: '切換對話語言需要先設定 DeepSeek API Key。', translationFailed: '部分訊息翻譯失敗，已保留原文。', back: '返回',
   contacting: '聯絡 DeepSeek', readingTime: '讀取手機時間', locating: '請求手機定位', composing: '整理回覆',
   assistant: '在場', user: '你', typing: '正在整理…', draftPlaceholder: '說說眼前的事…', titleFallback: '未命名對話',
 };
@@ -155,7 +164,8 @@ const ENGLISH: UiCopy = {
   historyTitle: 'Chat history', historyEmpty: 'No conversations yet', rename: 'Rename', delete: 'Delete', renamePlaceholder: 'Enter a new title',
   cancel: 'Cancel', done: 'Done', profileEyebrow: 'Profile settings', avatar: 'Avatar', avatarHint: 'Choose an avatar or type 1-4 characters', language: 'Language',
   appearance: 'Appearance', light: 'Light', dark: 'Dark', campus: 'Campus information', campusHint: 'Student ID and password stay on this device', campusTitle: 'Campus information',
-  studentId: 'Student ID', studentPassword: 'Password', passwordPlaceholder: 'Enter campus password', saved: 'Saved', back: 'Back', contacting: 'Contacting DeepSeek',
+  studentId: 'Student ID', studentPassword: 'Password', passwordPlaceholder: 'Enter campus password', saved: 'Saved',
+  translatingConversation: 'Translating this conversation…', translatedConversation: 'Conversation language switched.', translationNeedKey: 'Add a DeepSeek API key before translating this conversation.', translationFailed: 'Some messages could not be translated and were kept as-is.', back: 'Back', contacting: 'Contacting DeepSeek',
   readingTime: 'Reading phone time', locating: 'Requesting location', composing: 'Preparing reply', assistant: 'Zaichang', user: 'You', typing: 'Preparing…',
   draftPlaceholder: 'Tell me what is on your mind…', titleFallback: 'Untitled chat',
 };

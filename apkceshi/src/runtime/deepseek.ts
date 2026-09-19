@@ -1,4 +1,5 @@
 import { Capacitor, CapacitorHttp } from '@capacitor/core';
+import type { MobileLanguage } from './types';
 
 export const DEEPSEEK_ENDPOINT = 'https://api.deepseek.com/chat/completions';
 export const DEEPSEEK_MODEL = 'deepseek-flash';
@@ -297,4 +298,27 @@ export async function testDeepSeekConnection(apiKey: string, signal: AbortSignal
     signal,
     [],
   );
+}
+
+export async function translateText(
+  apiKey: string,
+  text: string,
+  targetLanguage: MobileLanguage,
+  signal: AbortSignal,
+): Promise<string> {
+  if (!text.trim()) return text;
+  const languageName = targetLanguage === 'en' ? 'English' : targetLanguage === 'zh-TW' ? '繁體中文' : '简体中文';
+  const completion = await completeDeepSeek(
+    apiKey,
+    [
+      {
+        role: 'system',
+        content: `请将用户提供的内容翻译成${languageName}。只返回翻译后的正文，不要解释，不要添加前缀。保留原有的换行、列表、Markdown 标记和语气。`,
+      },
+      { role: 'user', content: text },
+    ],
+    signal,
+    [],
+  );
+  return completion.message.content?.trim() || text;
 }

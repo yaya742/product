@@ -5,7 +5,7 @@ import {
   type DeepSeekToolCall,
   DeepSeekError,
 } from './deepseek';
-import type { MobileMessage } from './types';
+import type { MobileLanguage, MobileMessage } from './types';
 
 export type AgentStatus = '联系 DeepSeek' | '读取手机时间' | '请求手机定位' | '整理回复';
 
@@ -68,12 +68,13 @@ export async function runMobileAgent(
   messages: MobileMessage[],
   userText: string,
   memories: string[],
+  language: MobileLanguage,
   signal: AbortSignal,
   onText: (text: string) => void,
   onStatus: (status: AgentStatus) => void,
 ): Promise<string> {
   const wire: DeepSeekMessage[] = [
-    { role: 'system', content: buildSystemPrompt(memories) },
+    { role: 'system', content: buildSystemPrompt(memories, language) },
     ...modelHistory(messages),
     { role: 'user', content: userText },
   ];
