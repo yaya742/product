@@ -64,6 +64,7 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .topbar {
   position: relative;
   z-index: 5;
+  flex: 0 0 auto;
   min-height: 68px;
   display: grid;
   grid-template-columns: 44px 1fr 44px;
@@ -115,10 +116,14 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .typing::after { content: ""; width: 5px; height: 5px; margin: auto 0 auto 7px; border-radius: 50%; background: var(--accent); animation: blink 1s infinite; }
 
 .composer-area { position: sticky; bottom: 0; z-index: 4; padding: 8px 16px calc(14px + env(safe-area-inset-bottom)); background: linear-gradient(180deg, color-mix(in srgb, var(--bg) 0%, transparent), color-mix(in srgb, var(--bg) 94%, transparent) 22%, var(--bg) 46%); }
-.status-line { display: flex; align-items: center; gap: 7px; min-height: 28px; padding: 0 3px; color: var(--text-soft); font-size: 11px; }
-.status-dot, .connection-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-faint); }
-.status-dot.busy { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); animation: blink 1.2s infinite; }
-.clear-button { margin-left: auto; padding: 5px 0; color: var(--accent); border: 0; background: transparent; font-size: 11px; }
+.connection-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-faint); }
+.connection-dot.active { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.scroll-jump { position: absolute; right: 16px; bottom: 87px; z-index: 8; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--line-strong); border-radius: 14px; background: color-mix(in srgb, var(--surface) 92%, transparent); box-shadow: var(--shadow); backdrop-filter: blur(12px); }
+.scroll-jump button { width: 38px; height: 34px; display: grid; place-items: center; color: var(--accent-strong); border: 0; background: transparent; }
+.scroll-jump button + button { border-top: 1px solid var(--line); }
+.scroll-jump button:hover { background: var(--surface-strong); }
+.scroll-jump button:disabled { color: var(--text-faint); opacity: .35; }
+.scroll-jump svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .composer { display: flex; align-items: flex-end; gap: 8px; padding: 7px; border: 1px solid var(--line-strong); border-radius: 18px; background: var(--surface); box-shadow: var(--shadow); }
 .composer:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow); }
 textarea, input, select { color: var(--text); border: 1px solid var(--line); outline: 0; background: var(--surface); border-radius: 12px; }
@@ -132,7 +137,6 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .send-button { color: #fff; background: var(--accent); }
 .send-button:hover { background: var(--accent-strong); }
 .stop-button { color: var(--text); background: var(--surface-strong); font-size: 12px; }
-.privacy-note { margin: 8px 0 0; color: var(--text-faint); font-size: 10px; text-align: center; }
 
 .drawer-backdrop { position: fixed; inset: 0; z-index: 19; width: 100%; height: 100%; border: 0; background: rgba(15, 25, 18, .3); backdrop-filter: blur(4px); animation: fade-in .18s ease-out; }
 .history-drawer { position: fixed; top: 0; bottom: 0; left: max(0px, calc(50% - 380px)); z-index: 20; width: min(88vw, 360px); display: flex; flex-direction: column; padding: calc(18px + env(safe-area-inset-top)) 14px calc(16px + env(safe-area-inset-bottom)); color: var(--text); border-right: 1px solid var(--line); background: var(--surface); box-shadow: 18px 0 50px rgba(40, 70, 45, .14); animation: drawer-right .22s ease-out; }

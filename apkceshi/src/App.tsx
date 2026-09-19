@@ -36,14 +36,6 @@ function compactTitle(value: string, fallback: string): string {
   return (clean || fallback).slice(0, 28);
 }
 
-function statusLabel(status: AgentStatus | '空闲', copy: ReturnType<typeof getUiCopy>): string {
-  if (status === '联系 DeepSeek') return copy.contacting;
-  if (status === '读取手机时间') return copy.readingTime;
-  if (status === '请求手机定位') return copy.locating;
-  if (status === '整理回复') return copy.composing;
-  return copy.ready;
-}
-
 function HistoryIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -102,6 +94,22 @@ function ArrowIcon() {
   );
 }
 
+function ChevronUpIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m6 14 6-6 6 6" />
+    </svg>
+  );
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m6 10 6 6 6-6" />
+    </svg>
+  );
+}
+
 function ShieldIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -117,7 +125,7 @@ export function App() {
   const [draft, setDraft] = useState('');
   const [memoryDraft, setMemoryDraft] = useState('');
   const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState<AgentStatus | '空闲'>('空闲');
+  const [, setStatus] = useState<AgentStatus | '空闲'>('空闲');
   const [connectionMessage, setConnectionMessage] = useState('');
   const [testing, setTesting] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -127,6 +135,7 @@ export function App() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [campusOpen, setCampusOpen] = useState(false);
   const [campusSaved, setCampusSaved] = useState(false);
+  const [scrollState, setScrollState] = useState({ canUp: false, canDown: false });
   const abortRef = useRef<AbortController | undefined>(undefined);
   const scrollRef = useRef<HTMLDivElement>(null);
   const online = typeof navigator === 'undefined' ? true : navigator.onLine;
@@ -142,6 +151,20 @@ export function App() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, busy]);
+
+  useEffect(() => {
+    const node = scrollRef.current;
+    if (!node) return;
+    const updateScrollState = () => {
+      setScrollState({
+        canUp: node.scrollTop > 16,
+        canDown: node.scrollTop + node.clientHeight < node.scrollHeight - 16,
+      });
+    };
+    updateScrollState();
+    node.addEventListener('scroll', updateScrollState, { passive: true });
+    return () => node.removeEventListener('scroll', updateScrollState);
+  }, [messages]);
 
   function updateState(partial: Partial<MobileState>) {
     setState((current) => ({ ...current, ...partial }));
@@ -262,6 +285,12 @@ export function App() {
 
   function stop() {
     abortRef.current?.abort();
+  }
+
+  function jumpConversation(edge: 'top' | 'bottom') {
+    const node = scrollRef.current;
+    if (!node) return;
+    node.scrollTo({ top: edge === 'top' ? 0 : node.scrollHeight, behavior: 'smooth' });
   }
 
   async function testConnection() {
@@ -407,12 +436,14 @@ export function App() {
         ))}
       </section>
 
-      <footer className="composer-area">
-        <div className="status-line">
-          <span className={`status-dot ${busy ? 'busy' : ''}`} />
-          <span>{busy ? statusLabel(status, copy) : state.apiKey ? copy.ready : copy.needKey}</span>
-          {!!messages.length && <button className="clear-button" disabled={busy} onClick={createNewConversation}>{copy.newConversation}</button>}
+      {messages.length > 0 && (scrollState.canUp || scrollState.canDown) && (
+        <div className="scroll-jump" aria-label="对话位置">
+          <button disabled={!scrollState.canUp} aria-label="回到顶部" onClick={() => jumpConversation('top')}><ChevronUpIcon /></button>
+          <button disabled={!scrollState.canDown} aria-label="回到底部" onClick={() => jumpConversation('bottom')}><ChevronDownIcon /></button>
         </div>
+      )}
+
+      <footer className="composer-area">
         <div className="composer">
           <textarea
             value={draft}
@@ -435,7 +466,6 @@ export function App() {
             </button>
           )}
         </div>
-        <p className="privacy-note">{copy.privacy}</p>
       </footer>
 
       {historyOpen && (
