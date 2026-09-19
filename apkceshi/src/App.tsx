@@ -227,7 +227,10 @@ export function App() {
   const copy = getUiCopy(state.profile.language);
   const activeConversation = state.conversations.find((item) => item.id === state.activeConversationId) || state.conversations[0];
   const messages = activeConversation?.messages || [];
-  const sortedConversations = [...state.conversations].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  // Empty drafts are not history items, so repeated new-chat taps stay out of history.
+  const sortedConversations = state.conversations
+    .filter((conversation) => conversation.messages.length > 0)
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 
   useEffect(() => {
     saveMobileState(state);
@@ -733,7 +736,7 @@ export function App() {
           <div className="settings-scroll">
             <section className="profile-hero">
               <Avatar className="profile-avatar profile-avatar-large" value={state.profile.avatar} />
-              <div><p className="eyebrow">{copy.profileEyebrow}</p><h1>{copy.profileTitle}</h1><p>{copy.avatarHint}</p></div>
+              <div><p className="eyebrow">{copy.profileEyebrow}</p><h1>{copy.profileTitle}</h1></div>
             </section>
             <section className="profile-section">
               <div className="setting-label"><strong>{copy.avatar}</strong><span>{copy.avatarHint}</span></div>
