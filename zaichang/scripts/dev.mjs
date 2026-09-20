@@ -40,10 +40,13 @@ const server = await createServer({
   server: {
     host: '127.0.0.1',
     port: 5173,
-    // The desktop cold-start path should be stable rather than watching the
-    // whole repository. .test-data can exceed a gigabyte; even an ignored
-    // watcher still performs an expensive initial crawl on Windows.
-    watch: null,
+    // Vite 8 normalizes `watch: null` to its default watcher. Explicitly
+    // ignore every path: this shortcut is a cold-start launcher, not an HMR
+    // session, and Windows should not crawl generated/test trees at all.
+    watch: {
+      ignored: ['**/*'],
+    },
+    hmr: false,
   },
 });
 await server.listen();

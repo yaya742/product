@@ -75,6 +75,8 @@ protocol.registerSchemesAsPrivileged([
 // Explicit profile override also makes packaged verification independent of personal data.
 if (process.env.ZAICHANG_DATA_DIR) app.setPath('userData', path.resolve(process.env.ZAICHANG_DATA_DIR));
 app.setName('在场');
+// Keep Windows notification identity stable across display-name or packaging changes.
+if (process.platform === 'win32') app.setAppUserModelId('studio.zaichang.desktop');
 let window: BrowserWindow | undefined,
   store: Store,
   harness: Harness,
@@ -740,7 +742,10 @@ app.whenReady().then(async () => {
     minHeight: 570,
     backgroundColor: '#171918',
     frame: false,
-    show: false,
+    // Do not make cold start depend on Chromium's ready-to-show event. On
+    // Windows a slow Vite/renderer load can delay that event indefinitely,
+    // leaving a healthy Electron process with no visible window.
+    show: true,
     icon: path.join(app.getAppPath(), 'build/icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -753,6 +758,12 @@ app.whenReady().then(async () => {
   });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', (event) => event.preventDefault());
+  window.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
+    console.error('[在场] renderer load failed', JSON.stringify({ errorCode, errorDescription, validatedURL }));
+  });
+  window.webContents.on('render-process-gone', (_event, details) => {
+    console.error('[在场] renderer process gone', JSON.stringify({ reason: details.reason, exitCode: details.exitCode }));
+  });
   window.once('ready-to-show', () => window?.show());
   window.on('close', (event) => {
     if (!closing && harness.running) {
@@ -767,6 +778,10 @@ app.whenReady().then(async () => {
   await window.loadURL(
     process.env.ZAICHANG_DEV === '1' ? devServerUrl : 'app://zaichang/index.html',
   );
+  // Keep the visible-state guarantee even when ready-to-show is skipped by a
+  // slow or partially failed renderer; the new diagnostics above explain the
+  // underlying load failure instead of looking like a silent launch failure.
+  window.show();
   store.runtime.reminders.port = {
     capabilities: {
       submitted: Notification.isSupported(),
