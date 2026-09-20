@@ -49,6 +49,10 @@ function responseText(result: HttpResult): string {
   return asText(result.data);
 }
 
+function casLoginUrl(): string {
+  return `${LOGIN_URL}?service=${encodeURIComponent(ZDBK_SERVICE)}`;
+}
+
 async function request(options: {
   url: string;
   method?: 'GET' | 'POST';
@@ -63,7 +67,11 @@ async function request(options: {
       url: options.url,
       method: options.method || 'GET',
       data: options.data,
-      headers: options.headers,
+      headers: {
+        'User-Agent': 'Zaichang-ZJU-Connector/0.1 (Android; read-only)',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.7',
+        ...options.headers,
+      },
       responseType: options.responseType || 'text',
       disableRedirects: options.disableRedirects,
       connectTimeout: 20_000,
@@ -92,14 +100,14 @@ function listFromPayload(value: unknown, key: string): Record<string, unknown>[]
 
 function parseExecution(body: string): string {
   const matches = [
-    /name=["']execution["'][^>]*value=["']([^"']+)/i,
-    /value=["']([^"']+)["'][^>]*name=["']execution["']/i,
+    /name\s*=\s*["']execution["'][^>]*value\s*=\s*["']([^"']+)/i,
+    /value\s*=\s*["']([^"']+)["'][^>]*name\s*=\s*["']execution["']/i,
   ];
   for (const pattern of matches) {
     const match = body.match(pattern);
     if (match?.[1]) return decodeHtml(match[1]);
   }
-  throw new CampusError('统一身份认证页面缺少登录会话信息，请稍后重试。', 'authentication');
+  throw new CampusError('统一身份认证没有返回本次登录表单，可能是认证服务跳转或网络拦截，请稍后重试。', 'authentication');
 }
 
 function decodeHtml(value: string): string {
@@ -130,13 +138,17 @@ function encryptPassword(password: string, modulusHex: string, exponentHex: stri
 async function clearCampusCookies() {
   await Promise.all([
     CapacitorCookies.clearCookies({ url: 'https://zjuam.zju.edu.cn' }),
+    CapacitorCookies.clearCookies({ url: 'https://identity.zju.edu.cn' }),
     CapacitorCookies.clearCookies({ url: 'https://zdbk.zju.edu.cn' }),
     CapacitorCookies.clearCookies({ url: 'https://courses.zju.edu.cn' }),
   ]);
 }
 
 async function authenticate(studentId: string, password: string) {
-  const loginPage = await request({ url: LOGIN_URL, responseType: 'text' });
+  // Keep the CAS service target on both GET and POST. Without it, some mobile
+  // network paths return an intermediate identity page without `execution`.
+  const loginUrl = casLoginUrl();
+  const loginPage = await request({ url: loginUrl, responseType: 'text' });
   if (loginPage.status !== 200) throw new CampusError(`无法打开统一身份认证（HTTP ${loginPage.status}）。`, 'authentication');
   const execution = parseExecution(responseText(loginPage));
   const publicKey = await request({ url: PUBLIC_KEY_URL, responseType: 'json' });
@@ -145,7 +157,7 @@ async function authenticate(studentId: string, password: string) {
   const exponent = field(key, ['exponent']);
   if (!modulus || !exponent) throw new CampusError('统一身份认证没有返回可用公钥。', 'authentication');
   const loginResult = await request({
-    url: LOGIN_URL,
+    url: loginUrl,
     method: 'POST',
     data: {
       username: studentId,
