@@ -262,6 +262,23 @@ class ConnectorTests(unittest.TestCase):
         self.assertEqual(result["notices"][0]["category"], "profile")
         self.assertEqual(result["notices"][0]["title"], "学院简介")
 
+    def test_college_all_category_covers_multiple_official_sections(self):
+        class FakeClient:
+            pages = {
+                "https://www.zju.edu.cn/599/listm.htm": '<a href="https://www.math.zju.edu.cn/">数学科学学院</a>',
+                "https://www.math.zju.edu.cn/": '<a href="/info">学院简介</a><a href="/faculty">师资队伍</a><a href="/contact">联系我们</a><a href="/labs">实验室</a>',
+                "https://www.math.zju.edu.cn/info": '<a href="/info/detail.htm">学院简介</a>',
+                "https://www.math.zju.edu.cn/faculty": '<a href="/faculty/detail.htm">师资队伍</a>',
+                "https://www.math.zju.edu.cn/contact": '<a href="/contact/detail.htm">联系我们</a>',
+                "https://www.math.zju.edu.cn/labs": '<a href="/labs/detail.htm">实验室</a>',
+            }
+
+            def request(self, url, **kwargs):
+                return 200, self.pages[url], {}
+
+        result = fetch_college_notices("数学学院", category="all", client=FakeClient())
+        self.assertEqual({item["category"] for item in result["notices"]}, {"profile", "faculty", "contact", "labs"})
+
     def test_notices_sync_saves_public_snapshot_without_credentials(self):
         normalized = {
             "notices": [{"id": "zju-notice-1", "title": "通知", "url": "https://zdbk.zju.edu.cn/notice"}],

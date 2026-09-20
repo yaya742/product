@@ -169,7 +169,11 @@ def _record_category(title: str, url: str, requested: str) -> str:
 def _discover_pages(home_url: str, body: str, category: str = "all") -> list[str]:
     home_host = (urlparse(home_url).hostname or "").lower()
     category = _category_key(category)
-    hints = CATEGORY_HINTS.get(category, ())
+    hints = (
+        tuple(hint for group in CATEGORY_HINTS.values() for hint in group)
+        if category == "all"
+        else CATEGORY_HINTS.get(category, ())
+    )
     ranked: list[tuple[int, str]] = []
     for href, title in _links(body):
         url = _official_url(href, home_url)
@@ -187,9 +191,10 @@ def _discover_pages(home_url: str, body: str, category: str = "all") -> list[str
     for _, url in sorted(ranked):
         if url not in pages:
             pages.append(url)
-        # Keep the common query bounded: homepage plus the most likely notice
-        # page keeps a college lookup responsive on heterogeneous sites.
-        if len(pages) >= 2:
+        # Targeted categories stay fast; an explicit comprehensive lookup gets
+        # a few more official pages so profile/faculty/program/contact/lab links
+        # can all be represented without crawling an entire college site.
+        if len(pages) >= (5 if category == "all" else 2):
             break
     return pages
 
@@ -213,7 +218,7 @@ def _notice_records(
         item_category = _record_category(title, url, category)
         if category != "all" and item_category != category:
             continue
-        if title in SKIP_TITLES and not (category != "all" and item_category == category):
+        if title in SKIP_TITLES and item_category == "general":
             continue
         if title.startswith(("---", "--")) or title.casefold() in {"more", "read more"}:
             continue
