@@ -1,0 +1,21 @@
+import { build } from 'esbuild';
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const outfile = path.join(os.tmpdir(), `zaichang-judge-acceptance-${process.pid}.cjs`);
+await build({
+  entryPoints: ['scripts/judge-live-acceptance.ts'],
+  bundle: true,
+  platform: 'node',
+  format: 'cjs',
+  target: 'node24',
+  outfile,
+});
+try {
+  const result = spawnSync(process.execPath, [outfile], { stdio: 'inherit', windowsHide: true, env: process.env });
+  process.exitCode = result.status ?? 1;
+} finally {
+  fs.rmSync(outfile, { force: true });
+}

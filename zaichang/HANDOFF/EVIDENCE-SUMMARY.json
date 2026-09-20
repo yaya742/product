@@ -1,0 +1,513 @@
+{
+  "capturedAt": "2026-09-15T10:58:49.676072+08:00",
+  "kind": "statistics_only_handoff",
+  "reports": [
+    {
+      "path": "artifacts/understanding-action/luna-sixty-stories-v2/report.json",
+      "mtime": "2026-09-14T00:32:35.212996+08:00",
+      "sha256": "f6e246b2ea1754592e06fdf68edb4fa2b9662ccbebdd6c9fe35792d62899ede9",
+      "kind": "real_model_public_development",
+      "status": "incomplete_or_failed",
+      "completed": 180,
+      "planned": 180,
+      "totalCalls": 1072,
+      "modelTransport": {
+        "providerId": "openai-app-server",
+        "model": "gpt-5.6-luna",
+        "temporaryTestSubstitute": true,
+        "replaces": "deepseek-flash",
+        "reasoningEffort": "xhigh"
+      },
+      "resultCount": 180,
+      "passed": 159,
+      "failed": 21,
+      "failedIds": [
+        "S04:r2",
+        "S05:r2",
+        "S08:r2",
+        "S08:r3",
+        "S12:r1",
+        "S12:r2",
+        "S21:r1",
+        "S21:r2",
+        "S21:r3",
+        "S25:r1",
+        "S25:r2",
+        "S25:r3",
+        "S35:r1",
+        "S35:r2",
+        "S35:r3",
+        "N04:r2",
+        "N12:r3",
+        "N15:r1",
+        "N19:r1",
+        "N19:r3",
+        "N19:r2"
+      ]
+    },
+    {
+      "path": "artifacts/understanding-action/luna-response-form-judge-replay/report.json",
+      "mtime": "2026-09-13T23:00:27.913377+08:00",
+      "sha256": "d38c5867302f4a87b06ea79bbdf621a16681a8f873b0257e45582d1cc6701206",
+      "kind": "recorded_trajectory_judge_replay",
+      "status": "passed_reassessment",
+      "startedAt": "2026-09-13T15:00:19.703Z",
+      "finishedAt": "2026-09-13T15:00:27.912Z",
+      "modelTransport": {
+        "providerId": "openai-app-server",
+        "model": "gpt-5.6-luna",
+        "temporaryTestSubstitute": true,
+        "replaces": "deepseek-flash",
+        "reasoningEffort": "xhigh"
+      }
+    },
+    {
+      "path": "artifacts/understanding-action/luna-long-input-review-pilot/report.json",
+      "mtime": "2026-09-13T22:59:29.951523+08:00",
+      "sha256": "b8975740f8ad66b6721ffd404cc4cb58eb3ce1cffa1cac776c00c259bef0d90c",
+      "kind": "real_model_long_input_cancellation",
+      "status": "passed",
+      "planned": 2,
+      "complete": true,
+      "totalCalls": 16,
+      "modelTransport": {
+        "providerId": "openai-app-server",
+        "model": "gpt-5.6-luna",
+        "temporaryTestSubstitute": true,
+        "replaces": "deepseek-flash",
+        "reasoningEffort": "xhigh"
+      },
+      "resultCount": 2,
+      "passed": 2,
+      "failed": 0,
+      "failedIds": []
+    },
+    {
+      "path": "artifacts/understanding-action/luna-long-tail/report.json",
+      "mtime": "2026-09-13T22:56:48.626374+08:00",
+      "sha256": "73bfaaaee9abd427e99eaa6489d50a224be59b680356dc1c721086e77c8718ec",
+      "kind": "real_model_long_input_cancellation",
+      "status": "incomplete_or_failed",
+      "planned": 7,
+      "complete": true,
+      "totalCalls": 21,
+      "modelTransport": {
+        "providerId": "openai-app-server",
+        "model": "gpt-5.6-luna",
+        "temporaryTestSubstitute": true,
+        "replaces": "deepseek-flash",
+        "reasoningEffort": "xhigh"
+      },
+      "resultCount": 7,
+      "passed": 2,
+      "failed": 5,
+      "failedIds": [
+        "L01",
+        "L02",
+        "L03",
+        "L04",
+        "L05"
+      ]
+    },
+    {
+      "path": "artifacts/understanding-action/luna-timezone-judge-replay-r2/report.json",
+      "mtime": "2026-09-13T22:48:27.649374+08:00",
+      "sha256": "7c6948c20d35e96ab2f09f494b7c832c93400b6f69b5ac42236045bafcf0b911",
+      "kind": "recorded_trajectory_judge_replay",
+      "status": "passed_reassessment",
+      "startedAt": "2026-09-13T14:48:18.254Z",
+      "finishedAt": "2026-09-13T14:48:27.648Z",
+      "modelTransport": {
+        "providerId": "openai-app-server",
+        "model": "gpt-5.6-luna",
+        "temporaryTestSubstitute": true,
+        "replaces": "deepseek-flash",
+        "reasoningEffort": "xhigh"
+      }
+    },
+    {
+      "path": "artifacts/understanding-action/luna-timezone-judge-replay-r1/report.json",
+      "mtime": "2026-09-13T22:48:25.678165+08:00",
+      "sha256": "f1009f4bed11eab1e030bfb23d072fb885a6c1e8cbb99de943d88fb65ee0c5fc",
+      "kind": "recorded_trajectory_judge_replay",
+      "status": "passed_reassessment",
+      "startedAt": "2026-09-13T14:48:18.423Z",
+      "finishedAt": "2026-09-13T14:48:25.678Z",
+      "modelTransport": {
+        "providerId": "openai-app-server",
+        "model": "gpt-5.6-luna",
+        "temporaryTestSubstitute": true,
+        "replaces": "deepseek-flash",
+        "reasoningEffort": "xhigh"
+      }
+    },
+    {
+      "path": "artifacts/understanding-action/luna-sixty-stories-three-repeat/report.json",
+      "mtime": "2026-09-13T22:45:26.656771+08:00",
+      "sha256": "250ceaa965f00115dc82d66304951301f7eec16700af4e70d3fcbdb801bf9556",
+      "kind": "real_model_public_development",
+      "status": "incomplete_or_failed",
+      "completed": 4,
+      "planned": 180,
+      "totalCalls": 31,
+      "modelTransport": {
+        "providerId": "openai-app-server",
+        "model": "gpt-5.6-luna",
+        "temporaryTestSubstitute": true,
+        "replaces": "deepseek-flash",
+        "reasoningEffort": "xhigh"
+      },
+      "resultCount": 4,
+      "passed": 2,
+      "failed": 2,
+      "failedIds": [
+        "S01:r2",
+        "S01:r1"
+      ]
+    },
+    {
+      "path": "artifacts/understanding-action/luna-delegation-observations/report.json",
+      "mtime": "2026-09-13T22:41:37.189179+08:00",
+      "sha256": "08829d770ba3b6cfdc1ee66f504e8e1cabcc7a4385616031f9b2b980ded70832",
+      "kind": "real_model_public_development",
+      "status": "passed",
+      "completed": 3,
+      "planned": 3,
+      "totalCalls": 41,
+      "modelTransport": {
+        "providerId": "openai-app-server",
+        "model": "gpt-5.6-luna",
+        "temporaryTestSubstitute": true,
+        "replaces": "deepseek-flash",
+        "reasoningEffort": "xhigh"
+      },
+      "resultCount": 3,
+      "passed": 3,
+      "failed": 0,
+      "failedIds": []
+    },
+    {
+      "path": "artifacts/understanding-action/luna-adapter-backend-gate/tests.json",
+      "mtime": "2026-09-13T22:35:58.964976+08:00",
+      "sha256": "f791c6618c7d9d2af15700ae58389d35ee495a9a4c9b51a73ade8a7a396da707",
+      "kind": "deterministic_mechanism",
+      "status": "passed",
+      "startedAt": "2026-09-13T14:29:33.762Z",
+      "finishedAt": "2026-09-13T14:35:58.963Z",
+      "resultCount": 23,
+      "suites": 23,
+      "tests": 249,
+      "passed": 249,
+      "failed": 0,
+      "sourceDigests": [
+        {
+          "file": "calendar.test.ts",
+          "compiledSha256": "66907feaba543312647fe0e0d572076be2f60a3187867c6502050f736b81aaeb",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "collaboration-paging.test.ts",
+          "compiledSha256": "5f4e2b14998858231447c77e1521d76eefa5574299ca98be426b62914b459d3e",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "controls.test.ts",
+          "compiledSha256": "8caba6efc787440fc0ac0e337b393a71f4722a6980c2a2a96c4ef15b0f124c4e",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "drafts.test.ts",
+          "compiledSha256": "7c7f36bae20f153475bb66bb505a557f07406071f74b7832d98301ae5d7e9fbb",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "evaluation.test.ts",
+          "compiledSha256": "cf050ea42960002b573ab4eb848921522aee167e9cfa563eac75708a428df9db",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "extensions.test.ts",
+          "compiledSha256": "cd3a05284461c7e43e247f9ad74d3b4c4d3f767bb03c4f4cc01706f9e9d6fd1d",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "faults.test.ts",
+          "compiledSha256": "242b8b57309353582b422522cb5d74ed1b1bb6844a9b1e51b640fdf8bb6faaab",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "hermes.test.ts",
+          "compiledSha256": "effdbaeaf9fe09f0399dffcb40a7f56ff8627643043f7c8feaa37a79b5541c19",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "migration.test.ts",
+          "compiledSha256": "604e44a11b540e43d970a39efcb4fbdbbff18ae9d41acd4ee9d4bcc7e59d7797",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "performance.test.ts",
+          "compiledSha256": "b2ef23d5278cbf0ac2ef89ef44cf1096d83dc3a66599065b8a7d1c0c8d20cd4c",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "ports.test.ts",
+          "compiledSha256": "d0c7430b9a4730442d56872faa3fa339587bdcb8f4b29759b4c3587b237219b3",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "privacy.test.ts",
+          "compiledSha256": "19ba25ba10f8c78ac965eea1ff4d0f01afe7d9a2b173bba2bc47b4b868d06a07",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "protocol.test.ts",
+          "compiledSha256": "d9cff94f73d00d9a1a59a92658bc6a84b3de1683f5047f4598f73e58eb0d80ef",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "release-composer.test.ts",
+          "compiledSha256": "6717fe4b57a042b7ded489573a887287a480857880f10fee14e760b07906fe95",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "release.test.ts",
+          "compiledSha256": "61b9f515c9f367b1929409dd3eb459cbaaa8c09848ad64a6ae32a56169c22397",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "retention-effects.test.ts",
+          "compiledSha256": "97c9f70e75625847d06352b14e5aecf0a03efc794f81f0195e3a004c7fed13f8",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "scenarios.test.ts",
+          "compiledSha256": "b2848aa09e29993d40e963cf2d84dd6721035a6a1708a020504a35ff9d498f02",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "state.test.ts",
+          "compiledSha256": "29dc980857a7c0e6f2f0d88deefcfd530fcc13aba53b65cacbc16a216b815d1e",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "structured-result.test.ts",
+          "compiledSha256": "978829a8a43359effa34beb4c2d5a82b852d658b855aa35d5207c5cd31f110f7",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "understanding-fixtures.test.ts",
+          "compiledSha256": "19840040baee3bef7e1094e2d553ab5e98dd6e3c0919c48fb83a02b27e4d1bb0",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "understanding-scoring.test.ts",
+          "compiledSha256": "9020ceb6b09485702aedf65a73ba4aa098c7f555f5079c1e2656379fe0277e65",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "understanding.test.ts",
+          "compiledSha256": "05145d691f366e7f7748a8935ffefc2b76a6f366286c8128550238c397b68170",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "unit.test.ts",
+          "compiledSha256": "3a6cded280a15458e283f676fb5a02747c8df9a69d44a848e638c69cd6f9045e",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        }
+      ]
+    },
+    {
+      "path": "artifacts/understanding-action/luna-electron-multimodal/live-report.json",
+      "mtime": "2026-09-13T22:27:06.795342+08:00",
+      "sha256": "afa879721298852ebbe6d7fa86b3e94813b38749a6be5b5122fa3b41674dad6d",
+      "kind": "real_model_electron_multimodal",
+      "model": "gpt-5.6-luna",
+      "providerId": "openai-app-server",
+      "temporaryTestSubstitute": true
+    },
+    {
+      "path": "artifacts/understanding-action/backend-seal-after-multimodal/tests.json",
+      "mtime": "2026-09-13T22:07:33.458682+08:00",
+      "sha256": "8943a9b46efa89539c01201e7ca901de0a9ef8de8c460368522f494ea3c56a4b",
+      "kind": "deterministic_mechanism",
+      "status": "passed",
+      "startedAt": "2026-09-13T14:00:48.122Z",
+      "finishedAt": "2026-09-13T14:07:33.458Z",
+      "resultCount": 23,
+      "suites": 23,
+      "tests": 248,
+      "passed": 248,
+      "failed": 0,
+      "sourceDigests": [
+        {
+          "file": "calendar.test.ts",
+          "compiledSha256": "e56137e2134f82a570dfc53c336415cdafbbb8dde7100f7fe7c708ac13a15f67",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "collaboration-paging.test.ts",
+          "compiledSha256": "b0b81a8ec65778e3b21a6692c11c1d03f292138950d5d862a1c579840db05a92",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "controls.test.ts",
+          "compiledSha256": "58e735d383dbf7152783cab9674d34dd14a81cf128c898febbdce7e444dfb89f",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "drafts.test.ts",
+          "compiledSha256": "38730089b73f1e3e3027361447ae45bd049f50c5c7ae63f61d116a22b4d6c3f7",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "evaluation.test.ts",
+          "compiledSha256": "cf050ea42960002b573ab4eb848921522aee167e9cfa563eac75708a428df9db",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "extensions.test.ts",
+          "compiledSha256": "f588f7b3de7399cf9e98832312e7d239b69eaba4188e36c25dbfce3dc12f1261",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "faults.test.ts",
+          "compiledSha256": "20a1a52642e9351281bad2630bbe615cde820f90c2acbb380c3359030cf6faa3",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "hermes.test.ts",
+          "compiledSha256": "effdbaeaf9fe09f0399dffcb40a7f56ff8627643043f7c8feaa37a79b5541c19",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "migration.test.ts",
+          "compiledSha256": "e69833971db27b82c3cb7ed0e8303b39351f2f6cd65acdf638e17066be6c5bd1",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "performance.test.ts",
+          "compiledSha256": "da90b8bd59e54720e0e48624689937d3be4fcde676668cf01d7b5eb58ca9c5c4",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "ports.test.ts",
+          "compiledSha256": "ee95102659a444aca802d6874267f99aa1cae8e0f078097f4b05ef55e50979d9",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "privacy.test.ts",
+          "compiledSha256": "5996f1abba9de79b1549896e9d0258f7b1ebf1704801cde7795381f0193dd2e6",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "protocol.test.ts",
+          "compiledSha256": "a54cf9487f146bad34d9529fdda34c7917453b89f1d01b30519e2feb8da2d8b7",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "release-composer.test.ts",
+          "compiledSha256": "cd1fc7d24cd131414f6d06f7b84ab644dfb2215622f7770c7342c6b5caf57744",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "release.test.ts",
+          "compiledSha256": "c1652c8a65a711f7dcc77443d1092b5e976e0cfed25cd888081877a8951611cb",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "retention-effects.test.ts",
+          "compiledSha256": "bd5d6f8c23baf710367d09079b12c6d2f0e697c76323b827051b8610c0beeff5",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "scenarios.test.ts",
+          "compiledSha256": "b9b0af2dd3971947b22892ad2129bb4d966fef6213788e6312b542e344a9017b",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "state.test.ts",
+          "compiledSha256": "a6340638b6d0a44e6f72b4fd8ab052a880148b29fef98f80fad05d35ac8c5944",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "structured-result.test.ts",
+          "compiledSha256": "978829a8a43359effa34beb4c2d5a82b852d658b855aa35d5207c5cd31f110f7",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "understanding-fixtures.test.ts",
+          "compiledSha256": "9a1e2456649781e45471629437e219012e56af922231e118b591748e40006251",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "understanding-scoring.test.ts",
+          "compiledSha256": "9020ceb6b09485702aedf65a73ba4aa098c7f555f5079c1e2656379fe0277e65",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "understanding.test.ts",
+          "compiledSha256": "ed79dc5ce9272cc15627e49c1a4cc29df22ef5b1d5b02d3c2fa244a6f457f030",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        },
+        {
+          "file": "unit.test.ts",
+          "compiledSha256": "89266dc08c19984e669fc9927f98fe52a6ca42669518782e6e99c1699947d95d",
+          "sidecarSha256": "4f2b7934574a7bee7dda81ac02b3912dbd91c5f5b8d798e5af5479d38dee26eb"
+        }
+      ]
+    },
+    {
+      "path": "artifacts/understanding-action/backend-candidate-three-repeat/report.json",
+      "mtime": "2026-09-13T21:33:16.820680+08:00",
+      "sha256": "91c3c18bdf7bfaa5af5de31e3c3ec16b800ea09ebf436fce980003ec8a4b00a6",
+      "kind": "real_model_public_development",
+      "status": "externally_blocked",
+      "completed": 2,
+      "planned": 180,
+      "totalCalls": 17,
+      "resultCount": 2,
+      "passed": 0,
+      "failed": 2,
+      "failedIds": [
+        "S01:r1",
+        "S01:r2"
+      ]
+    },
+    {
+      "path": "artifacts/understanding-action/sixty-stories-three-repeat/audit.json",
+      "mtime": "2026-09-13T17:40:27.007987+08:00",
+      "sha256": "f9329c3ce5e8f510666c33082af117d502a2fcc986d79d09608d1a1664037e5e",
+      "kind": "evidence_completeness_and_threshold_audit",
+      "complete": false,
+      "passedRuns": 171,
+      "presentRuns": 180,
+      "expectedRuns": 180
+    },
+    {
+      "path": "artifacts/understanding-action/sixty-stories-three-repeat/report.json",
+      "mtime": "2026-09-13T17:38:45.273738+08:00",
+      "sha256": "f5d538adc9e95c10a59e25b6c0385c53a941e848f18d567a3f3c3527fbac5cf5",
+      "kind": "real_model_public_development",
+      "status": "incomplete_or_failed",
+      "completed": 180,
+      "planned": 180,
+      "totalCalls": 1153,
+      "resultCount": 180,
+      "passed": 171,
+      "failed": 9,
+      "failedIds": [
+        "S12:r2",
+        "S16:r3",
+        "S21:r1",
+        "S22:r2",
+        "S31:r1",
+        "S40:r3",
+        "N09:r1",
+        "N12:r3",
+        "N18:r3"
+      ]
+    }
+  ],
+  "note": "Historical source reports stay outside package; records are source path, time, digest and counts only, not fresh model validation."
+}

@@ -1,0 +1,125 @@
+{
+  "name": "zaichang",
+  "productName": "在场",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "description": "一个对话框，照顾好眼前的生活。",
+  "author": "Zaichang",
+  "main": "dist-electron/main.cjs",
+  "scripts": {
+    "dev:luna:test": "node scripts/run-luna-test.mjs scripts/dev.mjs",
+    "start:luna:test": "node scripts/run-luna-test.mjs node_modules/electron/cli.js .",
+    "test:luna:transport": "node --import tsx --test tests/luna-provider.test.ts",
+    "test:luna:live": "node --import tsx scripts/probe-luna-transport.ts",
+    "test:multimodal:luna": "node scripts/run-luna-test.mjs tests/multimodal-ui.mjs --live",
+    "eval:harness:luna:test": "node scripts/run-luna-test.mjs scripts/evaluate-harness.mjs --live",
+    "dev": "node scripts/dev.mjs",
+    "dev:deepseek": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run node scripts/dev.mjs",
+    "build": "tsc --noEmit && vite build --logLevel warn && node scripts/build-electron.mjs",
+    "start": "electron .",
+    "start:deepseek": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run node node_modules/electron/cli.js .",
+    "deepseek:check": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 status",
+    "deepseek:run": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run",
+    "test:deepseek:vision": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run node scripts/probe-deepseek-vision.mjs",
+    "test": "node scripts/test.mjs",
+    "test:desktop": "node tests/desktop.mjs",
+    "test:cold-start": "node tests/cold-start.mjs",
+    "test:connection": "node tests/connection.mjs",
+    "test:zju": "python -m unittest discover -s integrations/zju-student-info/tests -p \"test_*.py\" -v",
+    "test:multimodal": "node tests/multimodal-ui.mjs",
+    "test:multimodal:live": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run node tests/multimodal-ui.mjs --live",
+    "test:map": "node tests/map-v2.mjs",
+    "test:interfaces": "node --import tsx --test tests/interface-manager.test.ts",
+    "test:plugins": "node --import tsx --test tests/plugin-manager.test.ts tests/plugin-runtime.test.ts tests/weather-plugin.test.ts",
+    "package:weather": "node scripts/package-weather-plugin.mjs",
+    "test:weather-gps": "node scripts/test-weather-gps.mjs",
+    "package": "npm run build && node scripts/stage-hermes-runtime.mjs && electron-builder --config build/hermes-builder.json --win portable --x64",
+    "setup:hermes": "node scripts/setup-hermes.mjs",
+    "check:harness": "tsc --project tsconfig.harness-tests.json --noEmit",
+    "test:map:core": "node --import tsx --test tests/map-v2.test.ts",
+    "map:import": "node scripts/import-map-v2.mjs",
+    "audit:map:coverage": "node scripts/audit-map-coverage.mjs",
+    "test:harness:unit": "node scripts/test-harness.mjs --suite unit",
+    "test:harness:state": "node scripts/test-harness.mjs --suite state",
+    "test:harness:faults": "node scripts/test-harness.mjs --suite faults",
+    "test:harness:privacy": "node scripts/test-harness.mjs --suite privacy",
+    "test:harness:migration": "node scripts/test-harness.mjs --suite migration",
+    "test:harness:extensions": "node scripts/test-harness.mjs --suite extensions",
+    "test:harness:controls": "node scripts/test-harness.mjs --suite controls",
+    "test:harness:ports": "node scripts/test-harness.mjs --suite ports",
+    "test:harness:protocol": "node scripts/test-harness.mjs --suite protocol",
+    "test:harness:scenarios": "node scripts/test-harness.mjs --suite scenarios",
+    "test:harness:trajectories": "node --test tests/trajectory-validation.test.mjs",
+    "test:harness:desktop": "node tests/harness-ui.mjs",
+    "eval:harness:offline": "node scripts/evaluate-harness.mjs",
+    "eval:harness:live": "node scripts/evaluate-harness.mjs --live",
+    "eval:harness:live:project": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run-live node scripts/evaluate-harness.mjs --live",
+    "smoke:zju:deepseek": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run-live node scripts/run-live-zju-smoke.mjs",
+    "eval:acceptance:real": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run-live node scripts/run-live-acceptance-eval.mjs",
+    "eval:acceptance:judge": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run-live node scripts/run-judge-live-acceptance.mjs",
+    "eval:zju:real": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run-live node scripts/run-live-zju-deepseek-eval.mjs",
+    "verify:harness": "node scripts/verify-harness.mjs",
+    "recover:harness": "node scripts/harness-recover.mjs"
+  },
+  "build": {
+    "appId": "studio.zaichang.desktop",
+    "productName": "在场",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "assets/map-v2/**/*",
+      "build/icon.png",
+      "licenses/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "integrations/zju-student-info",
+        "to": "integrations/zju-student-info",
+        "filter": ["**/*", "!**/__pycache__/**", "!**/*.pyc"]
+      }
+    ],
+    "asar": true,
+    "win": {
+      "target": "portable",
+      "icon": "build/icon.ico",
+      "signAndEditExecutable": true
+    },
+    "portable": {
+      "artifactName": "Zaichang-${version}-Windows.exe"
+    },
+    "electronDist": "node_modules/electron/dist"
+  },
+  "dependencies": {
+    "@fontsource-variable/noto-sans-sc": "^5.3.0",
+    "lucide-react": "^1.43.0",
+    "ol": "^10.10.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.5.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "electron": "^44.3.0",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.2",
+    "osmtogeojson": "^3.0.0-beta.5",
+    "prettier": "^3.9.6",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2"
+  },
+  "overrides": {
+    "@xmldom/xmldom": "0.9.12"
+  }
+}

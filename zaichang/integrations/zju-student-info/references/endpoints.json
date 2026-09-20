@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "access_mode": "compatibility_local",
+  "notice": "这些是校内业务系统的兼容只读接口，不是浙江大学面向本应用提供的官方开放 API。",
+  "endpoints": [
+    { "id": "zjuam.login", "host": "zjuam.zju.edu.cn", "status": "implemented", "kind": "authentication" },
+    { "id": "zjuam.public_key", "host": "zjuam.zju.edu.cn", "status": "implemented", "kind": "authentication" },
+    { "id": "zdbk.schedule", "host": "zdbk.zju.edu.cn", "status": "implemented", "kind": "read_only" },
+    { "id": "zdbk.exams", "host": "zdbk.zju.edu.cn", "status": "implemented", "kind": "read_only" },
+    { "id": "courses.todos", "host": "courses.zju.edu.cn", "status": "implemented", "kind": "read_only" }
+  ]
+}

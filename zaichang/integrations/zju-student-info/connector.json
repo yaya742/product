@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "zju-student-info",
+  "label": "浙大校园资料本机兼容连接",
+  "protocolVersion": 1,
+  "accessMode": "compatibility_local",
+  "entrypoint": "scripts/zju.py",
+  "allowedHosts": [
+    "zjuam.zju.edu.cn",
+    "identity.zju.edu.cn",
+    "zdbk.zju.edu.cn",
+    "courses.zju.edu.cn"
+  ],
+  "supportedDomains": [
+    "schedule",
+    "courses",
+    "exams",
+    "assignments",
+    "source_status"
+  ],
+  "commands": [
+    "credentials set",
+    "credentials forget",
+    "auth",
+    "academic",
+    "history",
+    "quick"
+  ]
+}

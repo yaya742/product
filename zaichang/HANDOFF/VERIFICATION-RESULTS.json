@@ -1,0 +1,719 @@
+{
+  "generatedAt": "2026-09-15T11:38:01.913886+08:00",
+  "overall": "verification_failed_source_snapshot_only",
+  "checks": [
+    {
+      "label": "npm-ci",
+      "command": "npm ci",
+      "cwd": "<CLEAN_EXTRACT>",
+      "startedAt": "2026-09-15T10:45:28.198739+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 0,
+      "status": "passed",
+      "finishedAt": "2026-09-15T10:45:44.613443+08:00",
+      "durationSeconds": 16.41,
+      "log": "npm-ci.log",
+      "counts": {},
+      "logSha256": "1d51c4b03e8de470a533dd752c71dcf50a81ae1c907eb6646abb82fc67fd3db2"
+    },
+    {
+      "label": "setup-hermes",
+      "command": "npm run setup:hermes",
+      "cwd": "<CLEAN_EXTRACT>",
+      "startedAt": "2026-09-15T10:45:28.319068+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 1,
+      "status": "failed",
+      "finishedAt": "2026-09-15T10:47:29.771145+08:00",
+      "durationSeconds": 121.45,
+      "log": "setup-hermes.log",
+      "counts": {},
+      "logSha256": "29d5dcc75beeb4bf0fa1eb1390d4a45c70fd49521a5c8adbf005ee7437038dcf"
+    },
+    {
+      "label": "check-harness",
+      "command": "npm run check:harness",
+      "cwd": "<CLEAN_EXTRACT>",
+      "startedAt": "2026-09-15T10:47:24.218400+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 0,
+      "status": "passed",
+      "finishedAt": "2026-09-15T10:47:25.110008+08:00",
+      "durationSeconds": 0.89,
+      "log": "check-harness.log",
+      "counts": {},
+      "logSha256": "276a5ddd473035de75b35c158c0769939f506b15d5ca596805dd0b80828f307c"
+    },
+    {
+      "label": "build",
+      "command": "npm run build",
+      "cwd": "<CLEAN_EXTRACT>",
+      "startedAt": "2026-09-15T10:47:24.333903+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 0,
+      "status": "passed",
+      "finishedAt": "2026-09-15T10:47:26.091051+08:00",
+      "durationSeconds": 1.76,
+      "log": "build.log",
+      "counts": {},
+      "logSha256": "baf34dda5b5c25d5f63ee1eeabc92d8fd3d3a2e8cecce5d9662ab92c0e96ac82"
+    },
+    {
+      "label": "npm-ci-short",
+      "step": "npm-ci",
+      "command": "npm ci",
+      "cwd": "<CLEAN_EXTRACT>",
+      "startedAt": "2026-09-15T10:51:07.799684+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 0,
+      "status": "passed",
+      "finishedAt": "2026-09-15T10:51:17.782716+08:00",
+      "durationSeconds": 9.98,
+      "log": "npm-ci-short.log",
+      "counts": {},
+      "logSha256": "521bfb7a2fb3a35432fb87e627edea8cfd239d77705715c888a09b9a12c6035d"
+    },
+    {
+      "label": "setup-hermes-short",
+      "step": "setup-hermes",
+      "command": "npm run setup:hermes",
+      "cwd": "<CLEAN_EXTRACT>",
+      "startedAt": "2026-09-15T10:51:07.952197+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 0,
+      "status": "passed",
+      "finishedAt": "2026-09-15T10:53:19.453798+08:00",
+      "durationSeconds": 131.5,
+      "log": "setup-hermes-short.log",
+      "counts": {},
+      "logSha256": "18408ff6d45abde1b7f40c05d57596783e01c3022396a46284bfffcd485b9300"
+    },
+    {
+      "label": "build-short",
+      "step": "build",
+      "command": "npm run build",
+      "cwd": "<CLEAN_EXTRACT>",
+      "startedAt": "2026-09-15T10:59:50.077105+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 0,
+      "status": "passed",
+      "finishedAt": "2026-09-15T10:59:52.040319+08:00",
+      "durationSeconds": 1.96,
+      "log": "build-short.log",
+      "counts": {},
+      "logSha256": "baf34dda5b5c25d5f63ee1eeabc92d8fd3d3a2e8cecce5d9662ab92c0e96ac82"
+    },
+    {
+      "label": "check-harness-short",
+      "step": "check-harness",
+      "command": "npm run check:harness",
+      "cwd": "<CLEAN_EXTRACT>",
+      "startedAt": "2026-09-15T10:59:50.228546+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 0,
+      "status": "passed",
+      "finishedAt": "2026-09-15T10:59:51.161727+08:00",
+      "durationSeconds": 0.93,
+      "log": "check-harness-short.log",
+      "counts": {},
+      "logSha256": "276a5ddd473035de75b35c158c0769939f506b15d5ca596805dd0b80828f307c"
+    },
+    {
+      "label": "map-core",
+      "step": "map-core",
+      "command": "npm run test:map:core",
+      "cwd": "<CLEAN_EXTRACT>",
+      "startedAt": "2026-09-15T10:59:50.406485+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 0,
+      "status": "passed",
+      "finishedAt": "2026-09-15T10:59:51.272748+08:00",
+      "durationSeconds": 0.87,
+      "log": "map-core.log",
+      "counts": {
+        "tests": 22,
+        "passed": 22,
+        "failed": 0
+      },
+      "logSha256": "e71204d69424372d3f60ff2d550999f73a0a5211a3265e225f43bf87620f0181"
+    },
+    {
+      "label": "core",
+      "step": "core",
+      "command": "npm run test",
+      "cwd": "<CLEAN_EXTRACT>",
+      "startedAt": "2026-09-15T10:59:50.611897+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 1,
+      "status": "failed",
+      "finishedAt": "2026-09-15T11:02:49.376616+08:00",
+      "durationSeconds": 178.76,
+      "log": "core.log",
+      "counts": {
+        "tests": 26,
+        "passed": 15,
+        "failed": 10,
+        "cancelled": 1
+      },
+      "logSha256": "95eba7f07acd0d521ad3c45e17e3ca347d06e77e721e9b704fed32f60b67bfe1"
+    },
+    {
+      "label": "backend",
+      "step": "backend",
+      "command": "node scripts/test-harness.mjs --suite all --layer backend --report-dir <EXTERNAL_REPORT>",
+      "cwd": "<CLEAN_EXTRACT>",
+      "startedAt": "2026-09-15T10:59:50.821719+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 1,
+      "status": "failed",
+      "finishedAt": "2026-09-15T11:04:12.644569+08:00",
+      "durationSeconds": 261.82,
+      "log": "backend.log",
+      "counts": {
+        "tests": 251,
+        "passed": 211,
+        "failed": 40
+      },
+      "logSha256": "ed075da42e7298be5b06dd38fc0e1fef63af7708cd1257b6b8de479a6821f686"
+    },
+    {
+      "label": "multimodal",
+      "step": "multimodal",
+      "command": "npm run test:multimodal",
+      "cwd": "<CLEAN_EXTRACT>",
+      "startedAt": "2026-09-15T11:04:32.823704+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 1,
+      "status": "failed",
+      "finishedAt": "2026-09-15T11:05:00.699041+08:00",
+      "durationSeconds": 27.88,
+      "log": "multimodal.log",
+      "counts": {},
+      "logSha256": "be0bbb19bc9d0652dc4c62aad8b352109d67df25f16cb2f8aee6222f6ea7af96"
+    },
+    {
+      "label": "desktop",
+      "step": "desktop",
+      "command": "npm run test:desktop",
+      "cwd": "<CLEAN_EXTRACT>",
+      "startedAt": "2026-09-15T11:08:29.921279+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 1,
+      "status": "failed",
+      "finishedAt": "2026-09-15T11:09:05.575860+08:00",
+      "durationSeconds": 35.65,
+      "log": "desktop.log",
+      "counts": {},
+      "logSha256": "5dbe78781110a313c7e3c2c9ae2fd76cc0374ff1ff4e856bd6d088431f9a99ff"
+    },
+    {
+      "label": "luna-mechanism",
+      "step": "luna-mechanism",
+      "command": "npm run test:luna:transport",
+      "cwd": "<CLEAN_EXTRACT>",
+      "startedAt": "2026-09-15T11:08:40.213016+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 0,
+      "status": "passed",
+      "finishedAt": "2026-09-15T11:08:41.022011+08:00",
+      "durationSeconds": 0.81,
+      "log": "luna-mechanism.log",
+      "counts": {
+        "tests": 5,
+        "passed": 5,
+        "failed": 0
+      },
+      "logSha256": "16bb4b8882133cfc019fe248e86c37bb0a075526eccc08d03f3d09faabfcda5d"
+    },
+    {
+      "label": "map-desktop",
+      "step": "map-desktop",
+      "command": "npm run test:map",
+      "cwd": "<CLEAN_EXTRACT>",
+      "startedAt": "2026-09-15T11:10:54.654265+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 4294967295,
+      "status": "failed",
+      "finishedAt": "2026-09-15T11:15:45.175617+08:00",
+      "durationSeconds": 290.52,
+      "log": "map-desktop.log",
+      "counts": {},
+      "logSha256": "f357ade752e18ce58078020a32cf29298f313fe7dfa50ee943242ca1107b9025"
+    },
+    {
+      "label": "harness-desktop",
+      "step": "harness-desktop",
+      "command": "npm run test:harness:desktop",
+      "cwd": "<CLEAN_EXTRACT>",
+      "startedAt": "2026-09-15T11:13:07.322103+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 1,
+      "status": "failed",
+      "finishedAt": "2026-09-15T11:13:44.160719+08:00",
+      "durationSeconds": 36.84,
+      "log": "harness-desktop.log",
+      "counts": {},
+      "logSha256": "8f8d67a558cea7e8567235e8f0daf6b641c3135df39594d2eaf280754cbde082"
+    },
+    {
+      "label": "capture-map",
+      "step": "capture-map",
+      "command": "node <HANDOFF_TOOL>/capture_map.mjs (new isolated Electron, simulated location, no video)",
+      "cwd": "<CLEAN_EXTRACT>",
+      "startedAt": "2026-09-15T11:16:39.864047+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 0,
+      "status": "passed",
+      "finishedAt": "2026-09-15T11:16:42.220468+08:00",
+      "durationSeconds": 2.36,
+      "log": "capture-map.log",
+      "counts": {},
+      "logSha256": "ba9e146dc163f8e7a57a5d8fef992baaee9accbada9d328835fa73552614f718"
+    },
+    {
+      "label": "npm-ci-final-zip",
+      "step": "npm-ci",
+      "command": "npm ci",
+      "cwd": "<CLEAN_EXTRACT>",
+      "extraction": "full_handoff_zip",
+      "startedAt": "2026-09-15T11:26:57.388633+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 0,
+      "status": "passed",
+      "finishedAt": "2026-09-15T11:27:08.400634+08:00",
+      "durationSeconds": 11.01,
+      "log": "npm-ci-final-zip.log",
+      "counts": {},
+      "logSha256": "521bfb7a2fb3a35432fb87e627edea8cfd239d77705715c888a09b9a12c6035d"
+    },
+    {
+      "label": "setup-hermes-final-zip",
+      "step": "setup-hermes",
+      "command": "npm run setup:hermes",
+      "cwd": "<CLEAN_EXTRACT>",
+      "extraction": "full_handoff_zip",
+      "startedAt": "2026-09-15T11:26:57.522968+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 0,
+      "status": "passed",
+      "finishedAt": "2026-09-15T11:29:08.795871+08:00",
+      "durationSeconds": 131.27,
+      "log": "setup-hermes-final-zip.log",
+      "counts": {},
+      "logSha256": "e890b1bb27db7e1036340bb80bbb208f0fd68646b26c512c7d42afefd6b9853b"
+    },
+    {
+      "label": "build-final-zip",
+      "step": "build",
+      "command": "npm run build",
+      "cwd": "<CLEAN_EXTRACT>",
+      "extraction": "full_handoff_zip",
+      "startedAt": "2026-09-15T11:30:29.378057+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 0,
+      "status": "passed",
+      "finishedAt": "2026-09-15T11:30:31.189801+08:00",
+      "durationSeconds": 1.81,
+      "log": "build-final-zip.log",
+      "counts": {},
+      "logSha256": "baf34dda5b5c25d5f63ee1eeabc92d8fd3d3a2e8cecce5d9662ab92c0e96ac82"
+    },
+    {
+      "label": "check-harness-final-zip",
+      "step": "check-harness",
+      "command": "npm run check:harness",
+      "cwd": "<CLEAN_EXTRACT>",
+      "extraction": "full_handoff_zip",
+      "startedAt": "2026-09-15T11:30:29.555579+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 0,
+      "status": "passed",
+      "finishedAt": "2026-09-15T11:30:30.345122+08:00",
+      "durationSeconds": 0.79,
+      "log": "check-harness-final-zip.log",
+      "counts": {},
+      "logSha256": "276a5ddd473035de75b35c158c0769939f506b15d5ca596805dd0b80828f307c"
+    },
+    {
+      "label": "core-final-zip",
+      "step": "core",
+      "command": "npm run test",
+      "cwd": "<CLEAN_EXTRACT>",
+      "extraction": "full_handoff_zip",
+      "startedAt": "2026-09-15T11:30:29.699264+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 1,
+      "status": "failed",
+      "finishedAt": "2026-09-15T11:33:24.756205+08:00",
+      "durationSeconds": 175.06,
+      "log": "core-final-zip.log",
+      "counts": {
+        "tests": 26,
+        "passed": 15,
+        "failed": 10,
+        "cancelled": 1
+      },
+      "logSha256": "abeb1ab2a699ae54e4b607654be840ddefab56c44df19bfabee19f014d47339b"
+    },
+    {
+      "label": "map-core-final-zip",
+      "step": "map-core",
+      "command": "npm run test:map:core",
+      "cwd": "<CLEAN_EXTRACT>",
+      "extraction": "full_handoff_zip",
+      "startedAt": "2026-09-15T11:30:29.856093+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 0,
+      "status": "passed",
+      "finishedAt": "2026-09-15T11:30:30.572636+08:00",
+      "durationSeconds": 0.72,
+      "log": "map-core-final-zip.log",
+      "counts": {
+        "tests": 22,
+        "passed": 22,
+        "failed": 0
+      },
+      "logSha256": "703ae649b7dc2e8be079d7ed6421ffef9bef7771adb0e3c77b8c8dd5dfd5f159"
+    },
+    {
+      "label": "backend-final-zip",
+      "step": "backend",
+      "command": "node scripts/test-harness.mjs --suite all --layer backend --report-dir <EXTERNAL_REPORT>",
+      "cwd": "<CLEAN_EXTRACT>",
+      "extraction": "full_handoff_zip",
+      "startedAt": "2026-09-15T11:30:30.058905+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 1,
+      "status": "failed",
+      "finishedAt": "2026-09-15T11:34:58.117356+08:00",
+      "durationSeconds": 268.06,
+      "log": "backend-final-zip.log",
+      "counts": {
+        "tests": 251,
+        "passed": 211,
+        "failed": 40
+      },
+      "logSha256": "b5c0779f44f7e1c3da2ff6c4b70b91da8ad57cabe6fe13c98822b7c117882a94"
+    },
+    {
+      "label": "multimodal-final-zip",
+      "step": "multimodal",
+      "command": "npm run test:multimodal",
+      "cwd": "<CLEAN_EXTRACT>",
+      "extraction": "full_handoff_zip",
+      "startedAt": "2026-09-15T11:32:58.730330+08:00",
+      "isolation": "Fresh extracted source; independent npm/uv/Python/cache/home directories. No original node_modules/.runtime/database. Real account environment stripped.",
+      "exitCode": 1,
+      "status": "failed",
+      "finishedAt": "2026-09-15T11:33:24.831544+08:00",
+      "durationSeconds": 26.1,
+      "log": "multimodal-final-zip.log",
+      "counts": {},
+      "logSha256": "09017984d03624faf11dc76cf386e31f6a56645d54b25989a56d2bacf9046385"
+    }
+  ],
+  "backend": {
+    "suites": 24,
+    "cases": 251,
+    "passed": 211,
+    "failed": 40,
+    "finishedAt": "2026-09-15T03:34:58.105Z",
+    "suitesDetail": [
+      {
+        "file": "calendar.test.ts",
+        "status": "passed",
+        "passed": 10,
+        "total": 10,
+        "compiledSha256": "ded368b26161c4f072e3afe4c0a8b49747d8e448b42201d8673a110d00c1f541",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": []
+      },
+      {
+        "file": "collaboration-paging.test.ts",
+        "status": "passed",
+        "passed": 2,
+        "total": 2,
+        "compiledSha256": "b98e24c4b16097565287251ef7247af380c1a9cd4d6cf33a08d1525b991a7c81",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": []
+      },
+      {
+        "file": "controls.test.ts",
+        "status": "failed",
+        "passed": 8,
+        "total": 10,
+        "compiledSha256": "974de0e0f1fe35575fcae768f4b87e7f9d7c4adb0fc85b23b0b1b272f3a0b23a",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": [
+          "original Harness keeps stable option references when the model explicitly restores and resolves the next turn",
+          "deleting unextracted history clears cross-session reply, action and option derivatives while preserving unrelated evidence"
+        ]
+      },
+      {
+        "file": "drafts.test.ts",
+        "status": "passed",
+        "passed": 2,
+        "total": 2,
+        "compiledSha256": "3fdf4a575e3bbd2c37dafe1082f838b125cdbd47f8d21cb65b7eb8f8b769a750",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": []
+      },
+      {
+        "file": "evaluation.test.ts",
+        "status": "passed",
+        "passed": 2,
+        "total": 2,
+        "compiledSha256": "cf050ea42960002b573ab4eb848921522aee167e9cfa563eac75708a428df9db",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": []
+      },
+      {
+        "file": "extensions.test.ts",
+        "status": "failed",
+        "passed": 1,
+        "total": 2,
+        "compiledSha256": "05bf8b57552a3a5aa7eb0d9fa7a7d3c0548a858ed288dd2eac0321d46f1f396a",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": [
+          "X06 model-discovered unfamiliar provider revalidates a resource rejection without keyword-triggered recipes; revocation blocks read"
+        ]
+      },
+      {
+        "file": "faults.test.ts",
+        "status": "passed",
+        "passed": 7,
+        "total": 7,
+        "compiledSha256": "70c35e919781ba17ce4eddd4ea32af1089b1abb4dbef3a52c6d11f9e11c2ec43",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": []
+      },
+      {
+        "file": "hermes.test.ts",
+        "status": "failed",
+        "passed": 0,
+        "total": 9,
+        "compiledSha256": "12cb596613e8a5e960ec7c9f5ddabbe5010cbb2af2c66041655d73255fb50353",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": [
+          "repeated failures retain the native warning while permitting independent answers",
+          "pinned real AIAgent calls host tool and consumes its observation, with no native tools",
+          "cancellation interrupts an outstanding model call and rejects its late tool proposal",
+          "a changed permission version blocks the next model/tool boundary and a clean run can resume",
+          "native Hermes delegation creates independent worker loops and the parent consumes their observed results",
+          "host-normalized image and text pass through the real engine in one user message without caption fallback",
+          "one native worker failure leaves its sibling result available to the parent",
+          "cancelling a native delegation prevents late worker output from reaching any tool",
+          "native compression uses the host model exit and keeps the middle constraint available"
+        ]
+      },
+      {
+        "file": "long-input-review.test.ts",
+        "status": "failed",
+        "passed": 0,
+        "total": 2,
+        "compiledSha256": "97b7ba72932d17f5e3bfface98886daf5f813cdde4d954e81325674b1eceb3eb",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": [
+          "long tool-free input reviews the full original and repairs a middle omission without adding an action",
+          "a short direct exchange still needs no coverage review or working-state object"
+        ]
+      },
+      {
+        "file": "migration.test.ts",
+        "status": "passed",
+        "passed": 3,
+        "total": 3,
+        "compiledSha256": "c1248aeeccf944cbe11be0e4eeb9a851100e933d36bb7731f8a47733d4c8d387",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": []
+      },
+      {
+        "file": "performance.test.ts",
+        "status": "passed",
+        "passed": 1,
+        "total": 1,
+        "compiledSha256": "38c4488d62d55c0433ea0a6b94b64982e5e2d1318edc5e296a7eb072c6b5bdee",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": []
+      },
+      {
+        "file": "ports.test.ts",
+        "status": "passed",
+        "passed": 5,
+        "total": 5,
+        "compiledSha256": "7f3a6f8fc35f2d4a0dd4207131fc1b457e1a3d14d54166004c06fcfc1686dc3d",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": []
+      },
+      {
+        "file": "privacy.test.ts",
+        "status": "failed",
+        "passed": 9,
+        "total": 10,
+        "compiledSha256": "4881fa3d4f72c847014dd0353fefa383a5ce98b5cc8d1bac727230ceea7b794a",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": [
+          "INV-14 group draft receives actual busy projection but neither private calendar title nor private current reason"
+        ]
+      },
+      {
+        "file": "protocol.test.ts",
+        "status": "passed",
+        "passed": 12,
+        "total": 12,
+        "compiledSha256": "9fff4178be23c538d2571894a8e230724319c3543a9c4b555b4cf6e271643315",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": []
+      },
+      {
+        "file": "release-composer.test.ts",
+        "status": "failed",
+        "passed": 6,
+        "total": 8,
+        "compiledSha256": "f62a9bc860a9423344e2ef49d282966058e98317580155a035e52c7fc1f78c36",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": [
+          "one owner completes a local action and isolated draft, then revises only the actual draft version",
+          "explicit outward UI delivers only the isolated artifact, while the raw preparation stays private"
+        ]
+      },
+      {
+        "file": "release.test.ts",
+        "status": "passed",
+        "passed": 3,
+        "total": 3,
+        "compiledSha256": "a2ec5827991fafe9f1554b0400228a79df103bf5d78657689dec6518cf6bf7e7",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": []
+      },
+      {
+        "file": "retention-effects.test.ts",
+        "status": "passed",
+        "passed": 3,
+        "total": 3,
+        "compiledSha256": "ae79e58fea9198a0c8d7d115ae34cfc74ad91ba3e549242adbc76b346890aedd",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": []
+      },
+      {
+        "file": "scenarios.test.ts",
+        "status": "failed",
+        "passed": 79,
+        "total": 92,
+        "compiledSha256": "aa1b06e6a1a73bceb7518f02f5afee85bb1ea91ff149fcf061372e1d0e684b78",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": [
+          "C003 单位纠正是历史理解修正而不是现实变更",
+          "C004 条件偏好共存而不互相覆盖",
+          "C014 采用准备方案不代表申请已成功",
+          "C018 允许没有产出的时间",
+          "C032 原文未生成任何记忆仍能检索",
+          "C041 用户说跑完或本地done不增加官方次数",
+          "C043 未知楼入口不生成直线假路线",
+          "C046 草稿和接受只生成本地回执",
+          "C052 取消目标使提醒和派生准备停止",
+          "C062 借来设备使旧拒绝理由失效",
+          "C065 共同准备保留选择不代用户选定方向",
+          "C084 DeepSeek工具协议opaque字段不能当用户证据",
+          "C085 取消父任务传递到只读子代理"
+        ]
+      },
+      {
+        "file": "state.test.ts",
+        "status": "passed",
+        "passed": 10,
+        "total": 10,
+        "compiledSha256": "29dc980857a7c0e6f2f0d88deefcfd530fcc13aba53b65cacbc16a216b815d1e",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": []
+      },
+      {
+        "file": "structured-result.test.ts",
+        "status": "passed",
+        "passed": 2,
+        "total": 2,
+        "compiledSha256": "978829a8a43359effa34beb4c2d5a82b852d658b855aa35d5207c5cd31f110f7",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": []
+      },
+      {
+        "file": "understanding-fixtures.test.ts",
+        "status": "passed",
+        "passed": 1,
+        "total": 1,
+        "compiledSha256": "19840040baee3bef7e1094e2d553ab5e98dd6e3c0919c48fb83a02b27e4d1bb0",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": []
+      },
+      {
+        "file": "understanding-scoring.test.ts",
+        "status": "passed",
+        "passed": 1,
+        "total": 1,
+        "compiledSha256": "9020ceb6b09485702aedf65a73ba4aa098c7f555f5079c1e2656379fe0277e65",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": []
+      },
+      {
+        "file": "understanding.test.ts",
+        "status": "failed",
+        "passed": 24,
+        "total": 34,
+        "compiledSha256": "c72650d1734d5b477cb091313b19af79b9c464b1e1a2e6568886aff2b8a64ff3",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": [
+          "invalid control structure still permits independent current-input help without persistence or private reads",
+          "a native child does not inherit a parent private dependency notice",
+          "a mixed-purpose next turn cannot inherit cached private context before its read-purpose check",
+          "two substantive correction continuations can finish within one shared budget without publishing rejected replies",
+          "completion review receives the same scoped capability facts as the actor, separately from filtered search observations",
+          "native malformed-tool recovery remains within the host output allowance and never executes partial arguments",
+          "same-scope conversation carries all prior protocol turns in memory and source restriction clears them",
+          "an image remains confined to its own turn and is not replayed by text conversation protocol caching",
+          "a worker instruction cannot authorize private reads that the root user did not request",
+          "a cached fact changing during generation triggers final review even when this turn calls no tool"
+        ]
+      },
+      {
+        "file": "unit.test.ts",
+        "status": "passed",
+        "passed": 20,
+        "total": 20,
+        "compiledSha256": "3a6cded280a15458e283f676fb5a02747c8df9a69d44a848e638c69cd6f9045e",
+        "sidecarSha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+        "failedTests": []
+      }
+    ]
+  },
+  "notRun": [
+    {
+      "command": "DeepSeek/Luna real model and real ZJU account tests",
+      "reason": "Explicitly prohibited for this handoff; no keys or account quota needed."
+    },
+    {
+      "command": "npm run test:connection",
+      "reason": "Additional full connection suite not run; required deterministic/Electron checks and selected harness UI covered separately."
+    },
+    {
+      "command": "npm run package / tests/package.mjs",
+      "reason": "Source handoff, not executable product release; existing release outputs excluded."
+    },
+    {
+      "command": "Full original-repository documentation/evidence audits and historical B1 replay",
+      "reason": "Require intentionally excluded historical reports/baseline and live model authorization; no synthetic replacement reports created."
+    }
+  ],
+  "originalIntegrity": {
+    "checkedAt": "2026-09-15T11:38:01.900504+08:00",
+    "originalWriteOperationsPerformed": 0,
+    "includedOriginalFilesChecked": 248,
+    "originalSourceHashChanges": [],
+    "snapshotSourceHashChanges": [],
+    "cleanValidationSourceHashChanges": [],
+    "gitStatusIdentical": true,
+    "gitStatusBeforeSha256": "e0a90f7cad55400fc0372a0151c9fd172394f8c0d708de583dee33e43498b83d",
+    "gitStatusAfterSha256": "e0a90f7cad55400fc0372a0151c9fd172394f8c0d708de583dee33e43498b83d",
+    "privateOrGeneratedContentsHashed": false,
+    "limitation": "No claim of byte-wise verification of excluded private databases, caches, or active-process outputs; those contents were not read."
+  }
+}
