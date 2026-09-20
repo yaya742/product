@@ -150,6 +150,7 @@ const lookUpSchema = z
     courseId: z.string().regex(/^\d{1,32}$/).optional(),
     query: z.string().max(100).optional(),
     college: z.string().max(80).optional(),
+    category: z.enum(['all', 'profile', 'faculty', 'program', 'contact', 'labs']).optional(),
     page: z.number().int().min(1).max(50).optional(),
     detail: z.boolean().optional(),
     days: z.number().int().min(1).max(7).optional(),
@@ -1541,7 +1542,7 @@ export class RuntimeCoordinator {
     if (!args.domain) return { status: 'needs_parameters', reason: '请选择所需资料领域；可先读取source_status了解覆盖。', domains: campusDomains };
     return call(campusReadCapability, {
       domain: args.domain, courseId: args.courseId, academicYear: args.academicYear, term: args.term,
-      query: args.query, college: args.college, page: args.page, detail: args.detail, from: args.from, to: args.to, at: args.at, timeMode: args.timeMode,
+      query: args.query, college: args.college, category: args.category, page: args.page, detail: args.detail, from: args.from, to: args.to, at: args.at, timeMode: args.timeMode,
       fields: args.fields, filters: args.filters, sort: args.sort, offset: args.offset,
       window: args.window, limit: args.limit || 12, refresh: args.mode === 'refresh' || !!args.refresh,
     });

@@ -52,6 +52,7 @@ export interface CampusReadArgs {
   sort?: string;
   query?: string;
   college?: string;
+  category?: 'all' | 'profile' | 'faculty' | 'program' | 'contact' | 'labs';
   page?: number;
   detail?: boolean;
   limit?: number;
@@ -127,7 +128,7 @@ const SUMMARY_FIELDS: Partial<Record<CampusDomain, string[]>> = {
   gpa_semesters: ['semester_id', 'gpa', 'gpa_credit_denominator', 'eligible_attempts', 'counted_attempts', 'excluded_attempts', 'complete'],
   gpa_cumulative: ['through_semester', 'gpa', 'gpa_credit_denominator', 'eligible_attempts', 'counted_attempts', 'complete'],
   holidays: ['id', 'title', 'startDate', 'endDate', 'kind', 'note', 'source'],
-  notices: ['id', 'title', 'publishedAt', 'publisher', 'url', 'summary', 'detail', 'detailSource', 'pinned', 'source'],
+  notices: ['id', 'title', 'publishedAt', 'publisher', 'url', 'summary', 'category', 'detail', 'detailSource', 'pinned', 'source'],
   retakes: ['course_key', 'course_code', 'name', 'attempts', 'selected', 'selection_policy'],
   projects: ['id', 'projectName', 'categoryName', 'score', 'statusLabel', 'approved', 'countsTowardTotal', 'activityStart', 'activityEnd'],
   activities: ['activity_id', 'course_id', 'name', 'type', 'starts_at', 'deadline', 'scores', 'completion'],
@@ -936,21 +937,24 @@ export class ZjuAdapter {
     refresh = false,
     query?: string,
     college?: string,
+    category: CampusReadArgs['category'] = 'all',
     page = 1,
     detail = false,
   ) {
     const normalizedQuery = query?.trim() || '';
     const normalizedCollege = college?.trim() || '';
+    const normalizedCategory = category || 'all';
     const normalizedPage = Math.max(1, Math.min(50, Math.floor(page || 1)));
     // A keyword search only needs the official list. Full article fetches are
     // deliberately opt-in because they add up to three extra network calls.
     const includeDetails = detail;
-    const key = `official:${normalizedCollege}:${normalizedQuery}:${normalizedPage}:${includeDetails ? 1 : 0}`;
+    const key = `official:${normalizedCollege}:${normalizedCategory}:${normalizedQuery}:${normalizedPage}:${includeDetails ? 1 : 0}`;
     let pending = this.noticesInFlight.get(key);
     if (!pending) {
       const args = ['notices'];
       if (normalizedQuery) args.push('--query', normalizedQuery);
       if (normalizedCollege) args.push('--college', normalizedCollege);
+      if (normalizedCollege && normalizedCategory !== 'all') args.push('--category', normalizedCategory);
       if (normalizedPage !== 1) args.push('--page', String(normalizedPage));
       if (includeDetails) args.push('--detail');
       if (refresh) args.push('--refresh');
@@ -964,13 +968,13 @@ export class ZjuAdapter {
     return result;
   }
 
-  private queueNoticesRefresh(query = '', college = '', page = 1, detail = false) {
+  private queueNoticesRefresh(query = '', college = '', category: CampusReadArgs['category'] = 'all', page = 1, detail = false) {
     const keyPrefix = 'official:';
     if (CAMPUS_AUTO_REFRESH_DISABLED || [...this.noticesInFlight.keys()].some(key => key.startsWith(keyPrefix))) return;
     queueMicrotask(() => {
       if ([...this.noticesInFlight.keys()].some(key => key.startsWith(keyPrefix))) return;
       const controller = new AbortController();
-      void this.bootstrapNotices(controller.signal, true, query, college, page, detail).catch(() => undefined);
+      void this.bootstrapNotices(controller.signal, true, query, college, category, page, detail).catch(() => undefined);
     });
   }
 
@@ -983,11 +987,12 @@ export class ZjuAdapter {
     // Keep the common search path fast; callers can request full official
     // article bodies explicitly with detail=true.
     const includeDetails = Boolean(args.detail);
-    const notices = await this.bootstrapNotices(signal, !!args.refresh, args.query, args.college, page, includeDetails);
+    const publicLabel = args.college ? '浙大学院资料' : DOMAIN_LABEL[args.domain];
+    const notices = await this.bootstrapNotices(signal, !!args.refresh, args.query, args.college, args.category, page, includeDetails);
     if (!notices?.bundle_id) {
       return {
         domain: args.domain,
-        label: DOMAIN_LABEL[args.domain],
+        label: publicLabel,
         cached: !args.refresh,
         connector: this.describe(),
         data: {
@@ -998,7 +1003,7 @@ export class ZjuAdapter {
         },
       };
     }
-    if (notices.stale && !args.refresh) this.queueNoticesRefresh(args.query, args.college, page, includeDetails);
+    if (notices.stale && !args.refresh) this.queueNoticesRefresh(args.query, args.college, args.category, page, includeDetails);
     const cli = ['quick', 'notices', '--bundle', String(notices.bundle_id)];
     if (args.query) cli.push('--query', args.query);
     if (args.fields?.length) cli.push('--fields', args.fields.join(','));
@@ -1012,7 +1017,7 @@ export class ZjuAdapter {
     const freshness = this.cacheFreshness(observedAt);
     return {
       domain: args.domain,
-      label: DOMAIN_LABEL[args.domain],
+      label: publicLabel,
       cached: !args.refresh,
       connector: this.describe(),
       data: {

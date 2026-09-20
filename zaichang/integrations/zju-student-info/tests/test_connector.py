@@ -246,6 +246,22 @@ class ConnectorTests(unittest.TestCase):
         self.assertTrue(result["notices"][0]["url"].startswith("https://www.math.zju.edu.cn/"))
         self.assertTrue(all(source["url"].startswith("https://") for source in result["sources"]))
 
+    def test_college_profile_category_selects_profile_page(self):
+        class FakeClient:
+            pages = {
+                "https://www.zju.edu.cn/599/listm.htm": '<a href="https://www.math.zju.edu.cn/">数学科学学院</a>',
+                "https://www.math.zju.edu.cn/": '<a href="/info">学院简介</a><a href="/faculty">师资队伍</a>',
+                "https://www.math.zju.edu.cn/info": '<a href="/info/detail.htm">学院简介</a>',
+            }
+
+            def request(self, url, **kwargs):
+                return 200, self.pages[url], {}
+
+        result = fetch_college_notices("数学学院", category="profile", client=FakeClient())
+        self.assertEqual(result["coverage"]["category"], "profile")
+        self.assertEqual(result["notices"][0]["category"], "profile")
+        self.assertEqual(result["notices"][0]["title"], "学院简介")
+
     def test_notices_sync_saves_public_snapshot_without_credentials(self):
         normalized = {
             "notices": [{"id": "zju-notice-1", "title": "通知", "url": "https://zdbk.zju.edu.cn/notice"}],
@@ -288,7 +304,7 @@ class ConnectorTests(unittest.TestCase):
             result = cli._notices(refresh=True, query="转专业", page=1, detail=False, college="数学学院")
         self.assertEqual(result["status"], "ok")
         self.assertEqual(result["source"]["service"], "ZJU official 数学科学学院 site")
-        fetch.assert_called_once_with("数学学院", query="转专业", page=1, include_details=False)
+        fetch.assert_called_once_with("数学学院", query="转专业", category="all", page=1, include_details=False)
 
 
 if __name__ == "__main__":

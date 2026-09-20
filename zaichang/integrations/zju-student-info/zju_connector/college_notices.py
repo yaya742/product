@@ -27,7 +27,15 @@ SKIP_TITLES = {
     "下一页",
     "上一页",
 }
-LIST_HINTS = ("通知", "公告", "本科", "学生", "教学", "招生", "新闻", "动态", "公示")
+GENERAL_HINTS = ("通知", "公告", "本科", "学生", "教学", "招生", "新闻", "动态", "公示")
+CATEGORY_HINTS = {
+    "profile": ("学院概况", "学院简介", "学院介绍", "历史沿革", "机构设置", "about", "profile"),
+    "faculty": ("师资", "教师", "教工", "导师", "师资队伍", "faculty", "teacher"),
+    "program": ("培养方案", "培养", "专业", "课程", "教学", "本科", "研究生", "program"),
+    "contact": ("联系", "联系方式", "联系我们", "地址", "电话", "邮箱", "contact"),
+    "labs": ("实验室", "科研", "研究所", "研究中心", "科研平台", "平台", "实验中心", "lab"),
+}
+SUPPORTED_CATEGORIES = tuple(["all", *CATEGORY_HINTS.keys()])
 COLLEGE_BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0 Safari/537.36"
 ALIASES = {
     "数院": "数学科学学院",
@@ -142,8 +150,26 @@ def _resolve_college(college: str, client: CampusHttpClient) -> tuple[str, str]:
     return title, url
 
 
-def _discover_pages(home_url: str, body: str) -> list[str]:
+def _category_key(category: str | None) -> str:
+    value = (category or "all").strip().casefold()
+    return value if value in SUPPORTED_CATEGORIES else "all"
+
+
+def _record_category(title: str, url: str, requested: str) -> str:
+    lower = f"{title} {url}".casefold()
+    if requested != "all":
+        hints = CATEGORY_HINTS.get(requested, ())
+        return requested if any(hint.casefold() in lower for hint in hints) else "general"
+    for category, hints in CATEGORY_HINTS.items():
+        if any(hint.casefold() in lower for hint in hints):
+            return category
+    return "general"
+
+
+def _discover_pages(home_url: str, body: str, category: str = "all") -> list[str]:
     home_host = (urlparse(home_url).hostname or "").lower()
+    category = _category_key(category)
+    hints = CATEGORY_HINTS.get(category, ())
     ranked: list[tuple[int, str]] = []
     for href, title in _links(body):
         url = _official_url(href, home_url)
@@ -153,7 +179,8 @@ def _discover_pages(home_url: str, body: str) -> list[str]:
         if (parsed.hostname or "").lower() != home_host:
             continue
         lower = f"{title} {parsed.path}".casefold()
-        score = sum(3 for hint in LIST_HINTS if hint in lower)
+        score = sum(6 for hint in hints if hint.casefold() in lower)
+        score += sum(2 for hint in GENERAL_HINTS if hint.casefold() in lower)
         if score:
             ranked.append((-score, url))
     pages = [home_url]
@@ -167,14 +194,26 @@ def _discover_pages(home_url: str, body: str) -> list[str]:
     return pages
 
 
-def _notice_records(body: str, page_url: str, college: str, query: str | None) -> list[dict[str, Any]]:
+def _notice_records(
+    body: str,
+    page_url: str,
+    college: str,
+    query: str | None,
+    category: str = "all",
+) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     seen: set[str] = set()
     needle = query.casefold().strip() if query else ""
+    category = _category_key(category)
     for href, title in _links(body):
         url = _official_url(href, page_url)
         title = _clean(title, 240)
-        if not url or not title or len(title) < 4 or title in SKIP_TITLES:
+        if not url or not title or len(title) < 2:
+            continue
+        item_category = _record_category(title, url, category)
+        if category != "all" and item_category != category:
+            continue
+        if title in SKIP_TITLES and not (category != "all" and item_category == category):
             continue
         if title.startswith(("---", "--")) or title.casefold() in {"more", "read more"}:
             continue
@@ -193,6 +232,7 @@ def _notice_records(body: str, page_url: str, college: str, query: str | None) -
                 "publishedAt": published.group(0).replace("/", "-") if published else "",
                 "url": url,
                 "summary": title,
+                "category": item_category,
                 "pinned": False,
                 "source": page_url,
             }
@@ -208,6 +248,7 @@ def _detail(body: str, notice_url: str) -> dict[str, str]:
 def fetch_college_notices(
     college: str,
     query: str | None = None,
+    category: str = "all",
     page: int = 1,
     include_details: bool = False,
     client: CampusHttpClient | None = None,
@@ -215,9 +256,10 @@ def fetch_college_notices(
     client = client or CampusHttpClient(allow_official_subdomains=True)
     page = max(1, min(20, int(page)))
     query = (query or "").strip()[:100] or None
+    category = _category_key(category)
     resolved_name, home_url = _resolve_college(college, client)
     home_body = _request(client, home_url)
-    pages = _discover_pages(home_url, home_body)
+    pages = _discover_pages(home_url, home_body, category)
     all_records: list[dict[str, Any]] = []
     fetched_pages = [home_url]
     for page_url in pages:
@@ -231,7 +273,7 @@ def fetch_college_notices(
                 # column must not erase notices already read from other pages.
                 continue
             fetched_pages.append(page_url)
-        all_records.extend(_notice_records(body, page_url, resolved_name, query))
+        all_records.extend(_notice_records(body, page_url, resolved_name, query, category))
         if len(all_records) >= 80:
             break
     unique: dict[str, dict[str, Any]] = {}
@@ -262,6 +304,7 @@ def fetch_college_notices(
             "college_home": home_url,
             "page": page,
             "query": query,
+            "category": category,
             "total_available": total_available,
             "details_included": include_details,
             "note": "信息来自浙江大学学院官方站点；学院网站栏目结构可能不同，结果保留官方页面链接供核对。",

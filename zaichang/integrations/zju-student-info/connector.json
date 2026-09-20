@@ -10,7 +10,9 @@
     "identity.zju.edu.cn",
     "zdbk.zju.edu.cn",
     "courses.zju.edu.cn",
-    "ugrs.zju.edu.cn"
+    "ugrs.zju.edu.cn",
+    "www.zju.edu.cn",
+    "*.zju.edu.cn"
   ],
   "supportedDomains": [
     "schedule",
