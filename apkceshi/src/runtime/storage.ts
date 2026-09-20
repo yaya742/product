@@ -4,6 +4,11 @@ import {
   DEFAULT_PROFILE,
   type MobileConversation,
   type MobileAttachment,
+  type MobileCampusData,
+  type CampusCourse,
+  type CampusExam,
+  type CampusGrade,
+  type CampusTodo,
   type MobileLanguage,
   type MobileMessage,
   type MobileProfile,
@@ -99,6 +104,27 @@ function parseReminders(value: unknown): MobileReminder[] {
   }).sort((a, b) => a.dueAt.localeCompare(b.dueAt)).slice(0, 100);
 }
 
+function parseCampusData(value: unknown): MobileCampusData | null {
+  if (!isRecord(value) || typeof value.fetchedAt !== 'string') return null;
+  const parseList = <T>(item: unknown, fields: string[]): T[] => {
+    if (!Array.isArray(item)) return [];
+    return item.flatMap((entry) => {
+      if (!isRecord(entry)) return [];
+      const valid = fields.every((field) => typeof entry[field] === 'string');
+      return valid ? [entry as T] : [];
+    }).slice(0, 200);
+  };
+  return {
+    fetchedAt: value.fetchedAt,
+    academicYear: typeof value.academicYear === 'string' ? value.academicYear : '',
+    term: typeof value.term === 'string' ? value.term : '',
+    courses: parseList<CampusCourse>(value.courses, ['id', 'name', 'teacher', 'location', 'time', 'weeks']),
+    exams: parseList<CampusExam>(value.exams, ['id', 'name', 'time', 'location', 'seat']),
+    grades: parseList<CampusGrade>(value.grades, ['id', 'name', 'score', 'credit', 'point']),
+    todos: parseList<CampusTodo>(value.todos, ['id', 'name', 'course', 'deadline', 'status']),
+  };
+}
+
 function parseConversations(value: unknown): MobileConversation[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((item) => {
@@ -161,6 +187,7 @@ export function loadMobileState(): MobileState {
       activeConversationId: activeId,
       memories,
       reminders: parseReminders(value.reminders),
+      campus: parseCampusData(value.campus),
       profile: parseProfile(value.profile),
     };
   } catch {

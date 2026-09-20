@@ -3,6 +3,7 @@ import { MapPanel } from './MapPanel';
 import { WeatherPanel } from './WeatherPanel';
 import { runMobileAgent, type AgentStatus } from './runtime/agent';
 import { completeDeepSeek, DeepSeekError, testDeepSeekConnection, translateText } from './runtime/deepseek';
+import { CampusError, readCampusInfo } from './runtime/campus';
 import { getUiCopy } from './runtime/i18n';
 import { cancelLocalReminder, scheduleLocalReminder, withNotificationId } from './runtime/reminders';
 import { loadMobileState, saveMobileState } from './runtime/storage';
@@ -47,6 +48,11 @@ function localDateTimeValue(value = new Date(Date.now() + 60 * 60 * 1000)): stri
 }
 
 function formatReminderDate(value: string, language: MobileLanguage): string {
+  const locale = language === 'en' ? 'en-US' : language;
+  return new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
+}
+
+function formatCampusUpdated(value: string, language: MobileLanguage): string {
   const locale = language === 'en' ? 'en-US' : language;
   return new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
 }
@@ -256,6 +262,9 @@ export function App() {
   const [weatherOpen, setWeatherOpen] = useState(false);
   const [avatarMessage, setAvatarMessage] = useState('');
   const [campusSaved, setCampusSaved] = useState(false);
+  const [campusLoading, setCampusLoading] = useState(false);
+  const [campusMessage, setCampusMessage] = useState('');
+  const [campusTab, setCampusTab] = useState<'overview' | 'schedule' | 'exams' | 'grades' | 'todos'>('overview');
   const [scrollState, setScrollState] = useState({ canUp: false, canDown: false });
   const abortRef = useRef<AbortController | undefined>(undefined);
   const translationAbortRef = useRef<AbortController | undefined>(undefined);
@@ -318,6 +327,31 @@ export function App() {
 
   function updateProfile(partial: Partial<MobileProfile>) {
     setState((current) => ({ ...current, profile: { ...current.profile, ...partial } }));
+  }
+
+  function campusErrorMessage(error: unknown): string {
+    if (error instanceof CampusError) return error.message;
+    return state.profile.language === 'en' ? 'Campus information could not be loaded. Please try again.' : state.profile.language === 'zh-TW' ? '無法讀取校園資訊，請稍後再試。' : '暂时无法读取校园信息，请稍后重试。';
+  }
+
+  async function refreshCampusInfo() {
+    if (campusLoading) return;
+    if (!state.profile.studentId.trim() || !state.profile.studentPassword) {
+      setCampusMessage(copy.campusNeedCredentials);
+      return;
+    }
+    setCampusLoading(true);
+    setCampusMessage(copy.campusLoading);
+    try {
+      const campus = await readCampusInfo(state.profile.studentId, state.profile.studentPassword);
+      updateState({ campus });
+      setCampusSaved(true);
+      setCampusMessage(copy.campusUpdated);
+    } catch (error) {
+      setCampusMessage(campusErrorMessage(error));
+    } finally {
+      setCampusLoading(false);
+    }
   }
 
   async function handleAvatarFile(file: File) {
@@ -566,6 +600,7 @@ export function App() {
         {
           conversations: state.conversations,
           reminders: state.reminders,
+          campus: state.campus,
           currentAttachment: attachment || undefined,
           createReminder: createReminderRecord,
           saveMemory: async (memory) => {
@@ -789,6 +824,7 @@ export function App() {
   }
 
   const themeClass = state.profile.theme === 'dark' ? 'theme-dark' : 'theme-light';
+  const campus = state.campus;
 
   return (
     <main className={`app-shell ${themeClass}`}>
@@ -1065,12 +1101,97 @@ export function App() {
             <span className="topbar-spacer" />
           </header>
           <div className="settings-scroll campus-screen">
-            <div className="campus-intro"><p className="eyebrow">{copy.campus}</p><h1>{copy.campusTitle}</h1><p>{copy.campusHint}</p></div>
-            <label className="field-label" htmlFor="student-id">{copy.studentId}</label>
-            <input id="student-id" value={state.profile.studentId} placeholder={copy.studentId} onChange={(event) => updateProfile({ studentId: event.target.value })} />
-            <label className="field-label" htmlFor="student-password">{copy.studentPassword}</label>
-            <input id="student-password" type="password" value={state.profile.studentPassword} placeholder={copy.passwordPlaceholder} onChange={(event) => updateProfile({ studentPassword: event.target.value })} />
-            <button className="save-wide-button" onClick={() => setCampusSaved(true)}>{campusSaved ? copy.saved : copy.save}</button>
+            <div className="campus-intro">
+              <p className="eyebrow">{copy.campus}</p>
+              <h1>{copy.campusTitle}</h1>
+              <p>{copy.campusReadOnly}</p>
+            </div>
+            <section className="profile-section campus-account-card">
+              <div className="setting-label"><strong>{copy.campus}</strong><span>{copy.campusHint}</span></div>
+              <label className="field-label" htmlFor="student-id">{copy.studentId}</label>
+              <input id="student-id" value={state.profile.studentId} placeholder={copy.studentId} onChange={(event) => { updateProfile({ studentId: event.target.value }); setCampusSaved(false); }} />
+              <label className="field-label" htmlFor="student-password">{copy.studentPassword}</label>
+              <input id="student-password" type="password" value={state.profile.studentPassword} placeholder={copy.passwordPlaceholder} onChange={(event) => { updateProfile({ studentPassword: event.target.value }); setCampusSaved(false); }} />
+              <div className="campus-account-actions">
+                <button className="secondary-button" onClick={() => setCampusSaved(true)}>{campusSaved ? copy.saved : copy.save}</button>
+                <button className="primary-button" disabled={campusLoading} onClick={() => void refreshCampusInfo()}>{campusLoading ? copy.campusLoading : copy.campusRefresh}</button>
+              </div>
+              <p className="campus-privacy-note">{copy.campusReadOnly}</p>
+              {campusMessage && <p className="connection-message">{campusMessage}</p>}
+            </section>
+
+            {campus && (
+              <>
+                <section className="campus-status-row">
+                  <div><strong>{copy.campusUpdated}</strong><small>{formatCampusUpdated(campus.fetchedAt, state.profile.language)} · {campus.academicYear}–{Number(campus.academicYear) + 1}</small></div>
+                  <button className="icon-refresh-button" disabled={campusLoading} onClick={() => void refreshCampusInfo()} aria-label={copy.campusRefresh}>↻</button>
+                </section>
+                <div className="campus-tabs" role="tablist" aria-label={copy.campusTitle}>
+                  {([
+                    ['overview', copy.campusOverview],
+                    ['schedule', copy.campusSchedule],
+                    ['exams', copy.campusExams],
+                    ['grades', copy.campusGrades],
+                    ['todos', copy.campusTodos],
+                  ] as const).map(([tab, label]) => (
+                    <button key={tab} className={campusTab === tab ? 'selected' : ''} role="tab" aria-selected={campusTab === tab} onClick={() => setCampusTab(tab)}>{label}</button>
+                  ))}
+                </div>
+
+                {campusTab === 'overview' && (
+                  <section className="campus-stat-grid">
+                    <button onClick={() => setCampusTab('schedule')}><strong>{campus.courses.length}</strong><span>{copy.campusCoursesCount}</span></button>
+                    <button onClick={() => setCampusTab('exams')}><strong>{campus.exams.length}</strong><span>{copy.campusExamsCount}</span></button>
+                    <button onClick={() => setCampusTab('grades')}><strong>{campus.grades.length}</strong><span>{copy.campusGradesCount}</span></button>
+                    <button onClick={() => setCampusTab('todos')}><strong>{campus.todos.length}</strong><span>{copy.campusTodosCount}</span></button>
+                  </section>
+                )}
+
+                {campusTab === 'schedule' && (
+                  <section className="profile-section campus-data-card">
+                    <div className="setting-label"><strong>{copy.campusSchedule}</strong><span>{campus.courses.length ? `${campus.courses.length} · ${campus.academicYear}–${Number(campus.academicYear) + 1}` : copy.campusEmpty}</span></div>
+                    {campus.courses.length ? campus.courses.map((course) => (
+                      <div className="campus-record" key={course.id}>
+                        <strong>{course.name}</strong><span>{course.time} · {course.location || copy.campusNoLocation}</span><small>{course.teacher} · {course.weeks}</small>
+                      </div>
+                    )) : <p className="empty-history">{copy.campusEmpty}</p>}
+                  </section>
+                )}
+
+                {campusTab === 'exams' && (
+                  <section className="profile-section campus-data-card">
+                    <div className="setting-label"><strong>{copy.campusExams}</strong><span>{campus.exams.length ? `${campus.exams.length}` : copy.campusEmpty}</span></div>
+                    {campus.exams.length ? campus.exams.map((exam) => (
+                      <div className="campus-record" key={exam.id}>
+                        <strong>{exam.name}</strong><span>{exam.time}</span><small>{exam.location || copy.campusNoLocation}{exam.seat ? ` · ${exam.seat}` : ''}</small>
+                      </div>
+                    )) : <p className="empty-history">{copy.campusEmpty}</p>}
+                  </section>
+                )}
+
+                {campusTab === 'grades' && (
+                  <section className="profile-section campus-data-card">
+                    <div className="setting-label"><strong>{copy.campusGrades}</strong><span>{campus.grades.length ? `${campus.grades.length}` : copy.campusEmpty}</span></div>
+                    {campus.grades.length ? campus.grades.map((grade) => (
+                      <div className="campus-record campus-grade-record" key={grade.id}>
+                        <strong>{grade.name}</strong><span>{grade.score}</span><small>{grade.credit} · {grade.point}</small>
+                      </div>
+                    )) : <p className="empty-history">{copy.campusEmpty}</p>}
+                  </section>
+                )}
+
+                {campusTab === 'todos' && (
+                  <section className="profile-section campus-data-card">
+                    <div className="setting-label"><strong>{copy.campusTodos}</strong><span>{campus.todos.length ? `${campus.todos.length}` : copy.campusEmpty}</span></div>
+                    {campus.todos.length ? campus.todos.map((todo) => (
+                      <div className="campus-record" key={todo.id}>
+                        <strong>{todo.name}</strong><span>{todo.course}</span><small>{todo.deadline || copy.campusNoDeadline}</small>
+                      </div>
+                    )) : <p className="empty-history">{copy.campusEmpty}</p>}
+                  </section>
+                )}
+              </>
+            )}
           </div>
         </section>
       )}

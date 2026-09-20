@@ -27,6 +27,49 @@ export interface MobileReminder {
   notificationId: number;
 }
 
+export interface CampusCourse {
+  id: string;
+  name: string;
+  teacher: string;
+  location: string;
+  time: string;
+  weeks: string;
+}
+
+export interface CampusExam {
+  id: string;
+  name: string;
+  time: string;
+  location: string;
+  seat: string;
+}
+
+export interface CampusGrade {
+  id: string;
+  name: string;
+  score: string;
+  credit: string;
+  point: string;
+}
+
+export interface CampusTodo {
+  id: string;
+  name: string;
+  course: string;
+  deadline: string;
+  status: string;
+}
+
+export interface MobileCampusData {
+  fetchedAt: string;
+  academicYear: string;
+  term: string;
+  courses: CampusCourse[];
+  exams: CampusExam[];
+  grades: CampusGrade[];
+  todos: CampusTodo[];
+}
+
 export interface MobileMessage {
   id: string;
   role: MobileMessageRole;
@@ -59,6 +102,7 @@ export interface MobileState {
   activeConversationId: string;
   memories: string[];
   reminders: MobileReminder[];
+  campus: MobileCampusData | null;
   profile: MobileProfile;
 }
 
@@ -87,6 +131,7 @@ export function createInitialState(): MobileState {
     activeConversationId: conversation.id,
     memories: [],
     reminders: [],
+    campus: null,
     profile: { ...DEFAULT_PROFILE },
   };
 }

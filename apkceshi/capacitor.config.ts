@@ -8,6 +8,12 @@ const config: CapacitorConfig = {
     backgroundColor: '#101614',
   },
   plugins: {
+    CapacitorHttp: {
+      enabled: true,
+    },
+    CapacitorCookies: {
+      enabled: true,
+    },
     SplashScreen: {
       launchAutoHide: true,
       backgroundColor: '#101614',

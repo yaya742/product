@@ -8,13 +8,14 @@ import {
 } from './deepseek';
 import { findWalkingRoute, loadMapData } from './map';
 import { CAMPUS_COORDINATE, fetchWeather, readDeviceLocation } from './weather';
-import type { MobileAttachment, MobileConversation, MobileLanguage, MobileMessage, MobileReminder } from './types';
+import type { MobileAttachment, MobileCampusData, MobileConversation, MobileLanguage, MobileMessage, MobileReminder } from './types';
 
-export type AgentStatus = '联系 DeepSeek' | '读取手机时间' | '请求手机定位' | '查询天气' | '查询校园地图' | '规划路线' | '保存本地提醒' | '读取本地提醒' | '搜索历史记录' | '保存长期记忆' | '整理回复';
+export type AgentStatus = '联系 DeepSeek' | '读取手机时间' | '请求手机定位' | '查询天气' | '查询校园地图' | '规划路线' | '读取校园信息' | '保存本地提醒' | '读取本地提醒' | '搜索历史记录' | '保存长期记忆' | '整理回复';
 
 export interface MobileAgentContext {
   conversations: MobileConversation[];
   reminders: MobileReminder[];
+  campus: MobileCampusData | null;
   currentAttachment?: MobileAttachment;
   createReminder: (input: { title: string; dueAt: string; notes: string }) => Promise<Record<string, unknown>>;
   saveMemory: (text: string) => Promise<Record<string, unknown>>;
@@ -153,6 +154,19 @@ async function runLocalTool(call: DeepSeekToolCall, signal: AbortSignal, context
       ? { status: 'ok', origin: origin.name, destination: destination.name, distance_m: Math.round(route.meters), coordinates: route.coordinates }
       : { status: 'unavailable', origin: origin.name, destination: destination.name, reason: '本地步行路网没有找到连通路线。' };
   }
+  if (call.function.name === 'get_campus_info') {
+    if (!context?.campus) return { status: 'unavailable', reason: '手机端还没有读取校园信息，请先在个人设置的校园信息中填写账号并读取。' };
+    return {
+      status: 'ok',
+      fetched_at: context.campus.fetchedAt,
+      academic_year: context.campus.academicYear,
+      term: context.campus.term,
+      schedule: context.campus.courses,
+      exams: context.campus.exams,
+      grades: context.campus.grades,
+      todos: context.campus.todos,
+    };
+  }
   if (call.function.name === 'create_local_reminder') {
     if (!context) return { status: 'unavailable', reason: '手机端提醒存储暂不可用。' };
     const args = toolArguments(call);
@@ -258,6 +272,8 @@ export async function runMobileAgent(
               ? '查询校园地图'
               : call.function.name === 'plan_campus_route'
                 ? '规划路线'
+                : call.function.name === 'get_campus_info'
+                  ? '读取校园信息'
                 : call.function.name === 'create_local_reminder'
                   ? '保存本地提醒'
                   : call.function.name === 'list_local_reminders'

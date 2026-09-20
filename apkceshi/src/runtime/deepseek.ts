@@ -105,6 +105,14 @@ export const LOCAL_TOOL_SPECS: DeepSeekToolSpec[] = [
   {
     type: 'function',
     function: {
+      name: 'get_campus_info',
+      description: '读取手机端已经同步的校园信息，包括课表、考试、成绩和待办。用户询问自己的校园安排时使用；如果还没有同步，明确提示用户先在校园信息页面读取。',
+      parameters: { type: 'object', properties: {}, additionalProperties: false },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'create_local_reminder',
       description: '在手机本地创建一个提醒。只有用户明确要求提醒、记住某个时间或安排待办时使用；时间必须是 ISO 8601 格式并带时区。',
       parameters: {

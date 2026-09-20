@@ -261,9 +261,33 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .campus-intro { margin-bottom: 28px; }
 .campus-intro h1 { margin: 0 0 8px; font-size: 27px; letter-spacing: -.05em; }
 .campus-intro p:last-child { margin: 0; color: var(--text-soft); font-size: 12px; }
+.campus-account-card { margin-bottom: 12px; }
 .field-label { display: block; margin: 17px 0 8px; color: var(--text); font-size: 12px; font-weight: 600; }
+.campus-account-actions { display: flex; gap: 8px; margin-top: 19px; }
+.campus-account-actions button { flex: 1; }
+.campus-privacy-note { margin: 10px 0 0; color: var(--text-faint); font-size: 10px; line-height: 1.5; }
 .save-wide-button { width: 100%; min-height: 46px; margin-top: 26px; color: #fff; border: 0; border-radius: 13px; background: var(--accent); font-weight: 600; }
 .save-wide-button:hover { background: var(--accent-strong); }
+.campus-status-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 auto 10px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface-muted); }
+.campus-status-row > div { display: grid; gap: 4px; min-width: 0; }
+.campus-status-row strong { color: var(--text); font-size: 12px; }
+.campus-status-row small { color: var(--text-soft); font-size: 10px; }
+.campus-tabs { display: flex; gap: 5px; margin: 0 auto 12px; padding: 4px; overflow-x: auto; border-radius: 13px; background: var(--surface-muted); scrollbar-width: none; }
+.campus-tabs::-webkit-scrollbar { display: none; }
+.campus-tabs button { flex: 0 0 auto; min-height: 34px; padding: 0 11px; color: var(--text-soft); border: 0; border-radius: 9px; background: transparent; font-size: 11px; white-space: nowrap; }
+.campus-tabs button.selected { color: var(--accent-strong); background: var(--surface); box-shadow: 0 2px 7px rgba(40, 70, 45, .08); }
+.campus-stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; margin-bottom: 12px; }
+.campus-stat-grid button { display: grid; gap: 5px; min-height: 86px; padding: 13px; color: var(--text); border: 1px solid var(--line); border-radius: 15px; background: var(--surface); text-align: left; box-shadow: 0 5px 18px rgba(40, 70, 45, .035); }
+.campus-stat-grid button:hover { border-color: var(--line-strong); background: var(--surface-strong); }
+.campus-stat-grid strong { color: var(--accent-strong); font-size: 23px; letter-spacing: -.04em; }
+.campus-stat-grid span { color: var(--text-soft); font-size: 11px; }
+.campus-data-card { display: grid; gap: 0; }
+.campus-data-card .setting-label { margin-bottom: 3px; }
+.campus-record { display: grid; gap: 4px; padding: 12px 0; border-top: 1px solid var(--line); }
+.campus-record strong { color: var(--text); font-size: 13px; line-height: 1.4; }
+.campus-record span, .campus-record small { color: var(--text-soft); font-size: 11px; line-height: 1.45; }
+.campus-grade-record { grid-template-columns: 1fr auto; align-items: center; column-gap: 10px; }
+.campus-grade-record small { grid-column: 1 / -1; }
 .reminders-screen { max-width: 620px; margin: 0 auto; }
 .reminder-form .setting-label { margin-bottom: 0; }
 .reminder-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 0; border-top: 1px solid var(--line); }
