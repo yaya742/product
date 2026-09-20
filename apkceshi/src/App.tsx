@@ -352,7 +352,7 @@ export function App() {
       const campus = await readCampusInfo(state.profile.studentId, state.profile.studentPassword);
       updateState({ campus });
       setCampusSaved(true);
-      setCampusMessage(copy.campusUpdated);
+      setCampusMessage(campus.warnings.length ? copy.campusPartial : copy.campusUpdated);
     } catch (error) {
       setCampusMessage(campusErrorMessage(error));
     } finally {
@@ -1137,6 +1137,12 @@ export function App() {
                   <div><strong>{copy.campusUpdated}</strong><small>{formatCampusUpdated(campus.fetchedAt, state.profile.language)} · {campus.academicYear}–{Number(campus.academicYear) + 1}</small></div>
                   <button className="icon-refresh-button" disabled={campusLoading} onClick={() => void refreshCampusInfo()} aria-label={copy.campusRefresh}>↻</button>
                 </section>
+                {campus.warnings.length > 0 && (
+                  <section className="campus-warning" role="status">
+                    <strong>{copy.campusPartial}</strong>
+                    {campus.warnings.map((warning) => <small key={warning}>{warning}</small>)}
+                  </section>
+                )}
                 <div className="campus-tabs" role="tablist" aria-label={copy.campusTitle}>
                   {([
                     ['overview', copy.campusOverview],

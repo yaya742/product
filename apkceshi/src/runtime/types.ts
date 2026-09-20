@@ -72,6 +72,7 @@ export interface MobileCampusData {
   todos: CampusTodo[];
   gpa: number | null;
   totalCredit: number;
+  warnings: string[];
 }
 
 export interface MobileMessage {

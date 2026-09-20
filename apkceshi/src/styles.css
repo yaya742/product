@@ -266,6 +266,9 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .campus-status-row > div { display: grid; gap: 4px; min-width: 0; }
 .campus-status-row strong { color: var(--text); font-size: 12px; }
 .campus-status-row small { color: var(--text-soft); font-size: 10px; }
+.campus-warning { display: grid; gap: 5px; margin: 0 auto 10px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface-muted); }
+.campus-warning strong { color: var(--text); font-size: 11px; font-weight: 600; }
+.campus-warning small { color: var(--text-soft); font-size: 10px; line-height: 1.45; }
 .campus-tabs { display: flex; gap: 5px; margin: 0 auto 12px; padding: 4px; overflow-x: auto; border-radius: 13px; background: var(--surface-muted); scrollbar-width: none; }
 .campus-tabs::-webkit-scrollbar { display: none; }
 .campus-tabs button { flex: 0 0 auto; min-height: 34px; padding: 0 11px; color: var(--text-soft); border: 0; border-radius: 9px; background: transparent; font-size: 11px; white-space: nowrap; }

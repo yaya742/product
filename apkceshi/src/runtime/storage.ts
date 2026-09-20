@@ -147,6 +147,9 @@ function parseCampusData(value: unknown): MobileCampusData | null {
     todos: parseList<CampusTodo>(value.todos, ['id', 'name', 'course', 'deadline', 'status']),
     gpa,
     totalCredit,
+    warnings: Array.isArray(value.warnings)
+      ? value.warnings.filter((item): item is string => typeof item === 'string').map((item) => item.trim()).filter(Boolean).slice(0, 12)
+      : [],
   };
 }
 
