@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT))
 
 from zju_connector.auth import _encrypt_password
 import zju_connector.cli as cli
-from zju_connector.normalize import courses_from_schedule, exam_items, schedule_item
+from zju_connector.normalize import courses_from_schedule, exam_items, grade_items, grade_summary, schedule_item
 
 
 class ConnectorTests(unittest.TestCase):
@@ -50,6 +50,20 @@ class ConnectorTests(unittest.TestCase):
         self.assertEqual(records[1]["time_precision"], "source_label_only")
         self.assertEqual(records[1]["dateLabel"], "待定")
 
+    def test_grade_parser_and_summary_keep_source_score_and_bound_gpa_claim(self):
+        records = grade_items([
+            {"xkkh": "MATH-1", "kcmc": "高等数学", "xf": "4", "cj": "92", "jd": "4.0"},
+            {"xkkh": "PE-1", "kcmc": "体育", "xf": "1", "cj": "通过", "jd": ""},
+        ])
+        self.assertEqual(records[0]["original"], "92")
+        self.assertEqual(records[0]["fivePoint"], 4.0)
+        self.assertTrue(records[0]["gpaIncluded"])
+        self.assertFalse(records[1]["gpaIncluded"])
+        summary = grade_summary(records)[0]
+        self.assertEqual(summary["gpa"], 4.0)
+        self.assertFalse(summary["complete"])
+        self.assertIn("重修", summary["note"])
+
     def test_academic_sync_keeps_schedule_when_another_resource_has_a_network_error(self):
         raw_schedule = [{
             "kcb": "高等数学<br>教学班<br>张老师<br>紫金港东1-101",
@@ -64,6 +78,7 @@ class ConnectorTests(unittest.TestCase):
              patch.object(cli, "history", return_value=[]), \
              patch.object(cli, "fetch_schedule", return_value=raw_schedule), \
              patch.object(cli, "fetch_exams", return_value=[]), \
+             patch.object(cli, "fetch_grades", return_value=[]), \
              patch.object(cli, "fetch_todos", side_effect=OSError("TLS detail must not leak")), \
              patch.object(cli, "save_academic_bundle", return_value="bundle-test"):
             result = cli._academic("2026-2027", "1")
@@ -86,6 +101,7 @@ class ConnectorTests(unittest.TestCase):
              patch.object(cli, "load_bundle", return_value={"normalized": previous}), \
              patch.object(cli, "fetch_schedule", side_effect=OSError("temporary schedule outage")), \
              patch.object(cli, "fetch_exams", return_value=[]), \
+             patch.object(cli, "fetch_grades", return_value=[]), \
              patch.object(cli, "fetch_todos", return_value=[]), \
              patch.object(cli, "save_academic_bundle", return_value="bundle-new"):
             result = cli._academic("2026-2027", "1")

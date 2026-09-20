@@ -190,6 +190,11 @@ const FULL_CONTEXT_DOMAINS: CampusDomain[] = [
   'source_status',
 ];
 const SENSITIVE_DOMAINS = new Set<CampusDomain>([
+  'grades',
+  'gpa',
+  'gpa_semesters',
+  'gpa_cumulative',
+  'retakes',
   'reservations',
   'reservation_violations',
   'card',
@@ -253,7 +258,7 @@ function readManifest(root: string): ConnectorManifest | null {
       !Array.isArray(manifest.allowedHosts) ||
       !manifest.allowedHosts.includes('zjuam.zju.edu.cn') ||
       !Array.isArray(manifest.supportedDomains) ||
-      !manifest.supportedDomains.every((domain) => ['schedule', 'courses', 'exams', 'assignments', 'source_status'].includes(domain))
+      !manifest.supportedDomains.every((domain) => ['schedule', 'courses', 'exams', 'assignments', 'grades', 'gpa', 'gpa_cumulative', 'source_status'].includes(domain))
     ) return null;
     return manifest;
   } catch {
@@ -509,7 +514,7 @@ export class ZjuAdapter {
         label: '浙大校园账号',
         sourceKind: 'zju_account',
         accessMode: 'compatibility_local',
-        supportedDomains: ['schedule', 'courses', 'exams', 'assignments', 'source_status'],
+        supportedDomains: ['schedule', 'courses', 'exams', 'assignments', 'grades', 'gpa', 'gpa_cumulative', 'source_status'],
         authStatus: 'needs_login',
         credentialsConfigured: false,
         reason: '还没有找到浙大个人信息技能。可以安装技能，或在连接设置中选择它。',
@@ -572,7 +577,7 @@ export class ZjuAdapter {
         label: '浙大校园账号',
         sourceKind: 'zju_account',
         accessMode: 'compatibility_local',
-        supportedDomains: ['schedule', 'courses', 'exams', 'assignments', 'source_status'],
+        supportedDomains: ['schedule', 'courses', 'exams', 'assignments', 'grades', 'gpa', 'gpa_cumulative', 'source_status'],
         authStatus: this.credentialsConfigured() ? 'credentials_saved' : 'needs_login',
         credentialsConfigured: this.credentialsConfigured(),
         reason: '技能目录可用，但连接状态摘要暂时不可读。',

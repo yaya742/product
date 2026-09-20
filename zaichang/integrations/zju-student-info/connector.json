@@ -16,6 +16,9 @@
     "courses",
     "exams",
     "assignments",
+    "grades",
+    "gpa",
+    "gpa_cumulative",
     "source_status"
   ],
   "commands": [

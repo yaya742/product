@@ -11,6 +11,7 @@ ZDBK_HOME = "https://zdbk.zju.edu.cn/jwglxt/xtgl/index_initMenu.html"
 ZDBK_SERVICE = "https://zdbk.zju.edu.cn/jwglxt/xtgl/login_ssologin.html"
 SCHEDULE_URL = "https://zdbk.zju.edu.cn/jwglxt/kbcx/xskbcx_cxXsKb.html"
 EXAMS_URL = "https://zdbk.zju.edu.cn/jwglxt/xskscx/kscx_cxXsgrksIndex.html?doType=query&queryModel.showCount=5000"
+GRADES_URL = "https://zdbk.zju.edu.cn/jwglxt/cxdy/xscjcx_cxXscjIndex.html?doType=query&queryModel.showCount=5000"
 COURSES_HOME = "https://courses.zju.edu.cn/user/index"
 TODOS_URL = "https://courses.zju.edu.cn/api/todos"
 
@@ -75,6 +76,16 @@ def fetch_exams(session: AuthenticatedSession) -> list[dict]:
     items = payload.get("items")
     if not isinstance(items, list):
         raise RuntimeError("教务网考试响应缺少考试列表。")
+    return [item for item in items if isinstance(item, dict)]
+
+
+def fetch_grades(session: AuthenticatedSession) -> list[dict]:
+    """Read the authenticated student's grade records from the academic system."""
+    login_zdbk(session)
+    payload, _headers = session.client.json(GRADES_URL, data=b"", headers=_ajax_headers())
+    items = payload.get("items") if isinstance(payload, dict) else None
+    if not isinstance(items, list):
+        raise RuntimeError("教务网成绩响应缺少成绩列表。")
     return [item for item in items if isinstance(item, dict)]
 
 

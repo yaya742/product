@@ -16,6 +16,14 @@ def _integer(value: Any, fallback: int = 0) -> int:
         return fallback
 
 
+def _decimal(value: Any) -> float | None:
+    try:
+        text = _text(value).replace(",", "")
+        return float(text) if text else None
+    except (TypeError, ValueError):
+        return None
+
+
 def schedule_item(raw: dict[str, Any], semester_id: str, index: int) -> dict[str, Any] | None:
     if not raw.get("kcb") or _text(raw.get("sfyjskc")) == "1":
         return None
@@ -64,6 +72,57 @@ def courses_from_schedule(records: list[dict[str, Any]], semester_id: str) -> li
     return list(found.values())
 
 
+def grade_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Normalize ZDBK grade rows without retaining raw response fields."""
+    records: list[dict[str, Any]] = []
+    for index, raw in enumerate(items):
+        course_key = _text(raw.get("xkkh"))
+        name = _text(raw.get("kcmc")) or "未知课程"
+        credit = _decimal(raw.get("xf"))
+        original = _text(raw.get("cj")) or None
+        five_point = _decimal(raw.get("jd"))
+        if not course_key and not original and name == "未知课程":
+            continue
+        included = five_point is not None and credit is not None and credit > 0
+        records.append(
+            {
+                "id": course_key or f"grade:{index}",
+                "name": name.replace("(", "（").replace(")", "）"),
+                "semester_id": None,
+                "course_key": course_key or None,
+                "credit": credit,
+                "original": original,
+                "fivePoint": five_point,
+                "gpaIncluded": included,
+                "gpa_exclusion_reason": None if included else "成绩接口未提供可纳入绩点计算的学分或绩点。",
+            }
+        )
+    return records
+
+
+def grade_summary(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Compute a bounded aggregate while stating the missing school-side rules."""
+    counted = [
+        record
+        for record in records
+        if record.get("gpaIncluded") and isinstance(record.get("credit"), (int, float)) and isinstance(record.get("fivePoint"), (int, float))
+    ]
+    denominator = sum(float(record["credit"]) for record in counted)
+    gpa = sum(float(record["credit"]) * float(record["fivePoint"]) for record in counted) / denominator if denominator else None
+    return [
+        {
+            "through_semester": "all_available",
+            "gpa": round(gpa, 3) if gpa is not None else None,
+            "gpa_credit_denominator": round(denominator, 3),
+            "eligible_attempts": len(records),
+            "counted_attempts": len(counted),
+            "excluded_attempts": len(records) - len(counted),
+            "complete": False,
+            "note": "教务成绩接口当前未返回重修取舍和学期排除口径；这里仅按可用成绩、绩点和学分计算近似汇总，不替代学校最终绩点。",
+        }
+    ] if records else []
+
+
 def _parse_exam_time(value: str) -> tuple[str | None, str | None, str | None]:
     label = value.strip() or None
     match = re.search(
@@ -105,4 +164,3 @@ def exam_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 }
             )
     return records
-

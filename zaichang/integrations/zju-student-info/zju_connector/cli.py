@@ -8,12 +8,21 @@ from typing import Any
 
 from .auth import authenticate
 from .credentials import forget_credentials, load_credentials, show_credentials_dialog
-from .normalize import courses_from_schedule, exam_items, schedule_item
+from .normalize import courses_from_schedule, exam_items, grade_items, grade_summary, schedule_item
 from .storage import forget_bundles, history, load_bundle, save_academic_bundle
-from .zdbk import fetch_exams, fetch_schedule, fetch_todos
+from .zdbk import fetch_exams, fetch_grades, fetch_schedule, fetch_todos
 
 
-SUPPORTED_RESOURCES = {"classes", "courses", "exams", "todos", "source_status"}
+SUPPORTED_RESOURCES = {
+    "classes",
+    "courses",
+    "exams",
+    "todos",
+    "grades",
+    "gpa_overall",
+    "gpa_cumulative",
+    "source_status",
+}
 
 
 def _resource_issue(resource: str, exception: Exception) -> dict[str, str]:
@@ -89,6 +98,7 @@ def _academic(year: str, term: str) -> dict[str, Any]:
     issues: list[dict[str, str]] = []
     raw_schedule: list[dict] = []
     raw_exams: list[dict] = []
+    raw_grades: list[dict] = []
     todos: list[dict] = []
     try:
         raw_schedule = fetch_schedule(session, year, term)
@@ -99,18 +109,28 @@ def _academic(year: str, term: str) -> dict[str, Any]:
     except Exception as exception:
         issues.append(_resource_issue("exams", exception))
     try:
+        raw_grades = fetch_grades(session)
+    except Exception as exception:
+        issues.append(_resource_issue("grades", exception))
+    try:
         todos = fetch_todos(session)
     except Exception as exception:
         issues.append(_resource_issue("todos", exception))
     classes = [record for index, raw in enumerate(raw_schedule) if (record := schedule_item(raw, semester_id, index))]
+    grades = grade_items(raw_grades)
+    gpa = grade_summary(grades)
     normalized = {
         "classes": classes,
         "courses": courses_from_schedule(classes, semester_id),
         "exams": exam_items(raw_exams),
+        "grades": grades,
+        "gpa_overall": gpa,
+        "gpa_cumulative": gpa,
         "todos": todos,
         "source_status": [
             {"name": "教务网课表", "status": "ok" if not any(i["resource"] == "classes" for i in issues) else "failed"},
             {"name": "教务网考试", "status": "ok" if not any(i["resource"] == "exams" for i in issues) else "failed"},
+            {"name": "教务网成绩", "status": "ok" if not any(i["resource"] == "grades" for i in issues) else "failed"},
             {"name": "学在浙大待办", "status": "ok" if not any(i["resource"] == "todos" for i in issues) else "failed"},
         ],
     }
@@ -127,10 +147,15 @@ def _academic(year: str, term: str) -> dict[str, Any]:
         if "exams" in failed_resources and previous.get("exams"):
             normalized["exams"] = previous["exams"]
             preserved_resources.append("exams")
+        if "grades" in failed_resources and previous.get("grades"):
+            normalized["grades"] = previous["grades"]
+            normalized["gpa_overall"] = previous.get("gpa_overall", normalized["gpa_overall"])
+            normalized["gpa_cumulative"] = previous.get("gpa_cumulative", normalized["gpa_cumulative"])
+            preserved_resources.extend(["grades", "gpa_overall", "gpa_cumulative"])
         if "todos" in failed_resources and previous.get("todos"):
             normalized["todos"] = previous["todos"]
             preserved_resources.append("todos")
-    if not any(normalized[key] for key in ("classes", "courses", "exams", "todos")) and issues:
+    if not any(normalized[key] for key in ("classes", "courses", "exams", "grades", "todos")) and issues:
         return {"status": "error", "error": {"code": "ACADEMIC_SYNC_FAILED", "message": issues[0]["message"]}}
     bundle_id = save_academic_bundle(semester_id, normalized)
     return {
@@ -170,8 +195,13 @@ def _quick(args: argparse.Namespace) -> dict[str, Any]:
         fields = {field for field in args.fields.split(",") if field}
         selected = [{key: value for key, value in record.items() if key in fields} for record in selected if isinstance(record, dict)]
     exact_dates = resource != "classes" or all(record.get("startTime") for record in selected)
+    complete = exact_dates
+    note = None if exact_dates else "课表当前保留星期与节次，尚未把校历和调停课展开为逐次日期。"
+    if resource in {"gpa_overall", "gpa_cumulative"}:
+        complete = bool(selected and selected[0].get("complete"))
+        note = selected[0].get("note") if selected else "当前没有可用的成绩汇总。"
     return {
-        "status": "ok" if exact_dates else "partial",
+        "status": "ok" if complete else "partial",
         "resource": resource,
         "records": selected,
         "total_matches": len(records),
@@ -179,9 +209,9 @@ def _quick(args: argparse.Namespace) -> dict[str, Any]:
         "next_offset": offset + limit if offset + limit < len(records) else None,
         "fetched_at": bundle.get("fetched_at"),
         "coverage": {
-            "complete": exact_dates,
+            "complete": complete,
             "scope": bundle.get("semester_id"),
-            "note": None if exact_dates else "课表当前保留星期与节次，尚未把校历和调停课展开为逐次日期。",
+            "note": note,
         },
         "source": {"service": "ZJU local compatibility connector", "evidence": "encrypted normalized cache"},
         "schema_version": 1,
