@@ -12,6 +12,7 @@ sys.path.insert(0, str(ROOT))
 
 from zju_connector.auth import _encrypt_password
 import zju_connector.cli as cli
+from zju_connector.holidays import discover_calendar_pages, parse_calendar_page, parse_holiday_notice
 from zju_connector.normalize import courses_from_schedule, exam_items, grade_alerts, grade_items, grade_semester_summaries, grade_summary, schedule_item
 
 
@@ -85,6 +86,24 @@ class ConnectorTests(unittest.TestCase):
         self.assertEqual([item["level"] for item in alerts], ["failed", "attention"])
         self.assertTrue(all("不代表学校最终" in item["note"] for item in alerts))
 
+    def test_public_calendar_parser_keeps_official_sources_and_explicit_dates(self):
+        index = '''<li><a href="/2026/0710/c28218a3187939/page.htm"><p>浙江大学2026—2027学年校历</p></a></li>'''
+        page = '''<title>浙江大学2026—2027学年校历</title><div pdfsrc="/_upload/calendar.pdf"></div>'''
+        notice = '''<h3>本科生院关于2026年下半年部分节假日教学安排</h3>
+        <p>一、中秋节 9月25日（周五）至27日（周日）放假，共3天。</p>
+        <p>二、国庆节 10月1日（周四）至7日（周三）放假调休，共7天。</p>
+        <p>三、浙江大学学生节 学校于12月31日举办。12月31日停课，安排在2027年1月4日补课。</p>'''
+        pages = discover_calendar_pages(index)
+        self.assertEqual(pages["2026-2027"], "https://ugrs.zju.edu.cn/2026/0710/c28218a3187939/page.htm")
+        calendar = parse_calendar_page(page, pages["2026-2027"])
+        self.assertEqual(calendar["pdf_url"], "https://ugrs.zju.edu.cn/_upload/calendar.pdf")
+        events = parse_holiday_notice(notice, "2026-2027", "https://zdbk.zju.edu.cn/notice")
+        self.assertEqual([(event["title"], event["startDate"], event["endDate"]) for event in events[:2]], [
+            ("中秋节", "2026-09-25", "2026-09-27"),
+            ("国庆节", "2026-10-01", "2026-10-07"),
+        ])
+        self.assertEqual(events[2]["note"], "停课，2027-01-04补课。")
+
     def test_academic_sync_keeps_schedule_when_another_resource_has_a_network_error(self):
         raw_schedule = [{
             "kcb": "高等数学<br>教学班<br>张老师<br>紫金港东1-101",
@@ -131,6 +150,23 @@ class ConnectorTests(unittest.TestCase):
         self.assertIn("courses", result["preserved_resources"])
         self.assertEqual(result["counts"]["classes"], 1)
         self.assertEqual(result["counts"]["exams"], 0)
+
+    def test_calendar_sync_saves_public_snapshot_without_credentials(self):
+        normalized = {
+            "academic_year": "2026-2027",
+            "events": [{"id": "national-day", "title": "国庆节", "startDate": "2026-10-01", "endDate": "2026-10-07"}],
+            "holidays": [{"id": "national-day", "title": "国庆节", "startDate": "2026-10-01", "endDate": "2026-10-07"}],
+            "sources": [{"kind": "official_calendar", "page_url": "https://ugrs.zju.edu.cn/calendar"}],
+            "issues": [],
+            "coverage": {"complete": True},
+        }
+        with patch.object(cli, "history", return_value=[]), \
+             patch.object(cli, "fetch_public_calendar", return_value=normalized), \
+             patch.object(cli, "save_calendar_bundle", return_value="b" * 32):
+            result = cli._calendar("2026-2027", refresh=True)
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["bundle_id"], "b" * 32)
+        self.assertEqual(result["normalized"]["holidays"][0]["title"], "国庆节")
 
 
 if __name__ == "__main__":

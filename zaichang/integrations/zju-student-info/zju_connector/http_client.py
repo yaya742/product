@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import http.cookiejar
 import json
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from urllib.parse import urljoin, urlparse
 from urllib.request import (
     HTTPCookieProcessor,
@@ -17,6 +17,7 @@ ALLOWED_HOSTS = {
     "identity.zju.edu.cn",
     "zdbk.zju.edu.cn",
     "courses.zju.edu.cn",
+    "ugrs.zju.edu.cn",
 }
 USER_AGENT = "Zaichang-ZJU-Connector/0.1 (Windows; read-only)"
 
@@ -65,6 +66,8 @@ class CampusHttpClient:
         except HTTPError as error:
             body = error.read(100_000).decode("utf-8", errors="replace")
             return error.code, body, dict(error.headers.items())
+        except (URLError, TimeoutError, OSError) as error:
+            raise RuntimeError("校园系统请求超时或网络不可达，请稍后重试。") from error
 
     def json(self, url: str, **kwargs):
         status, body, headers = self.request(url, **kwargs)

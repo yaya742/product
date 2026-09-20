@@ -57,6 +57,25 @@ def save_academic_bundle(semester_id: str, normalized: dict[str, Any]) -> str:
     return bundle_id
 
 
+def save_calendar_bundle(academic_year: str, normalized: dict[str, Any]) -> str:
+    now = datetime.now(timezone.utc).isoformat()
+    bundle_id = hashlib.sha256(f"calendar:{academic_year}".encode("utf-8")).hexdigest()[:32]
+    payload = {
+        "schema_version": 1,
+        "kind": "calendar",
+        "academic_year": academic_year,
+        "fetched_at": now,
+        "normalized": normalized,
+    }
+    write_encrypted_json(_bundles_dir() / f"{bundle_id}.dpapi", payload, "Zaichang ZJU public calendar bundle")
+    index = _read_index()
+    items = [item for item in index.get("items", []) if item.get("bundle_id") != bundle_id]
+    items.insert(0, {"bundle_id": bundle_id, "kind": "calendar", "academic_year": academic_year, "fetched_at": now})
+    index["items"] = items[:24]
+    _write_index(index)
+    return bundle_id
+
+
 def load_bundle(bundle_id: str) -> dict[str, Any]:
     if not re_bundle_id(bundle_id):
         raise ValueError("资料包编号不合法。")

@@ -86,7 +86,7 @@ const campusAccountOutput = z
     institutionId: z.string(),
     termId: z.string(),
     live: z.boolean(),
-    origin: z.literal('zju_account'),
+    origin: z.enum(['zju_account', 'zju_public']),
     authenticated: z.boolean(),
     total: z.number().int().nonnegative().optional(),
     cached: z.boolean(),
@@ -299,7 +299,7 @@ export function registerBuiltins(
           reason: connector?.reason || '还没有连接浙大校园账号。',
           simulated: false,
         };
-      if (connector.credentialsConfigured === false)
+      if (connector.credentialsConfigured === false && !(name === 'campus.lookup' && args.domain === 'holidays'))
         return {
           status: 'forbidden',
           sourceId,
@@ -412,12 +412,12 @@ export function registerBuiltins(
             records: (Array.isArray(records) ? records : [records])
               .map((r: any) => safeRecord(r))
               .filter((r: any) => r && typeof r === 'object' && !Array.isArray(r)),
-            source: '浙大本人账号（本机兼容连接）',
+            source: args.domain === 'holidays' ? '浙江大学官方公开校历' : '浙大本人账号（本机兼容连接）',
             institutionId: 'zju',
             termId: String(result.semester_id || 'unspecified'),
             live: args.refresh,
-            origin: 'zju_account',
-            authenticated: connector.authStatus === 'verified' || !!result.authenticated_at,
+            origin: args.domain === 'holidays' ? 'zju_public' : 'zju_account',
+            authenticated: args.domain === 'holidays' ? false : connector.authStatus === 'verified' || !!result.authenticated_at,
             total: typeof result.total_matches === 'number' ? result.total_matches : undefined,
             cached: !args.refresh,
             snapshotAt,

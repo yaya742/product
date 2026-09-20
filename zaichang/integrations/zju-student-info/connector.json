@@ -9,7 +9,8 @@
     "zjuam.zju.edu.cn",
     "identity.zju.edu.cn",
     "zdbk.zju.edu.cn",
-    "courses.zju.edu.cn"
+    "courses.zju.edu.cn",
+    "ugrs.zju.edu.cn"
   ],
   "supportedDomains": [
     "schedule",
@@ -21,6 +22,7 @@
     "gpa",
     "gpa_semesters",
     "gpa_cumulative",
+    "holidays",
     "source_status"
   ],
   "commands": [
@@ -28,6 +30,7 @@
     "credentials forget",
     "auth",
     "academic",
+    "calendar",
     "history",
     "quick"
   ]

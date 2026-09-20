@@ -3,13 +3,15 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import json
+import re
 import sys
 from typing import Any
 
 from .auth import authenticate
 from .credentials import forget_credentials, load_credentials, show_credentials_dialog
 from .normalize import courses_from_schedule, exam_items, grade_alerts, grade_items, grade_semester_summaries, grade_summary, schedule_item
-from .storage import forget_bundles, history, load_bundle, save_academic_bundle
+from .holidays import fetch_public_calendar
+from .storage import forget_bundles, history, load_bundle, save_academic_bundle, save_calendar_bundle
 from .zdbk import fetch_exams, fetch_grades, fetch_schedule, fetch_todos
 
 
@@ -23,6 +25,7 @@ SUPPORTED_RESOURCES = {
     "gpa_overall",
     "gpa_semesters",
     "gpa_cumulative",
+    "holidays",
     "source_status",
 }
 
@@ -71,6 +74,9 @@ def _parser() -> argparse.ArgumentParser:
     academic = commands.add_parser("academic")
     academic.add_argument("--year", required=True)
     academic.add_argument("--term", choices=["1", "2"], required=True)
+    calendar = commands.add_parser("calendar")
+    calendar.add_argument("--year", required=True)
+    calendar.add_argument("--refresh", action="store_true")
     history_parser = commands.add_parser("history")
     history_parser.add_argument("--limit", type=int, default=20)
     quick = commands.add_parser("quick")
@@ -89,6 +95,84 @@ def _parser() -> argparse.ArgumentParser:
     quick.add_argument("--offset", type=int, default=0)
     quick.add_argument("--refresh", action="store_true")
     return parser
+
+
+def _previous_calendar_bundle(academic_year: str) -> tuple[str, dict[str, Any], str] | None:
+    for item in history(100):
+        if item.get("kind") != "calendar" or str(item.get("academic_year") or "") != academic_year:
+            continue
+        bundle_id = item.get("bundle_id")
+        if not isinstance(bundle_id, str):
+            continue
+        try:
+            bundle = load_bundle(bundle_id)
+        except (FileNotFoundError, OSError, ValueError):
+            continue
+        normalized = bundle.get("normalized")
+        fetched_at = bundle.get("fetched_at")
+        if isinstance(normalized, dict) and isinstance(fetched_at, str):
+            return bundle_id, normalized, fetched_at
+    return None
+
+
+def _calendar(academic_year: str, refresh: bool = False) -> dict[str, Any]:
+    if not re.match(r"^20\d{2}-20\d{2}$", academic_year):
+        return {"status": "error", "error": {"code": "INVALID_TERM", "message": "学年格式应为 2026-2027。"}}
+    previous = _previous_calendar_bundle(academic_year)
+    now = datetime.now(timezone.utc)
+    if previous and not refresh:
+        bundle_id, normalized, fetched_at = previous
+        try:
+            age_ms = max(0, (now - datetime.fromisoformat(fetched_at.replace("Z", "+00:00"))).total_seconds() * 1000)
+        except ValueError:
+            age_ms = 49 * 60 * 60 * 1000
+        if age_ms < 48 * 60 * 60 * 1000:
+            return {
+                "status": "ok" if normalized.get("coverage", {}).get("complete") else "partial",
+                "bundle_id": bundle_id,
+                "academic_year": academic_year,
+                "fetched_at": fetched_at,
+                "normalized": normalized,
+                "stale": False,
+                "source": {"service": "ZJU official public calendar", "evidence": "encrypted normalized cache"},
+            }
+        # A stale public calendar is still useful for the foreground question;
+        # the desktop adapter will refresh it in the background.
+        return {
+            "status": "ok" if normalized.get("coverage", {}).get("complete") else "partial",
+            "bundle_id": bundle_id,
+            "academic_year": academic_year,
+            "fetched_at": fetched_at,
+            "normalized": normalized,
+            "stale": True,
+            "source": {"service": "ZJU official public calendar", "evidence": "encrypted normalized cache"},
+        }
+    try:
+        normalized = fetch_public_calendar(academic_year)
+        bundle_id = save_calendar_bundle(academic_year, normalized)
+        return {
+            "status": "ok" if normalized.get("coverage", {}).get("complete") else "partial",
+            "bundle_id": bundle_id,
+            "academic_year": academic_year,
+            "fetched_at": now.isoformat(),
+            "normalized": normalized,
+            "stale": False,
+            "source": {"service": "ZJU official public calendar", "evidence": "live public read"},
+        }
+    except Exception as exception:
+        if previous:
+            bundle_id, normalized, fetched_at = previous
+            return {
+                "status": "partial",
+                "bundle_id": bundle_id,
+                "academic_year": academic_year,
+                "fetched_at": fetched_at,
+                "normalized": normalized,
+                "stale": True,
+                "issues": [{"resource": "calendar", "message": _resource_issue("calendar", exception)["message"]}],
+                "source": {"service": "ZJU official public calendar", "evidence": "previous encrypted cache"},
+            }
+        return {"status": "error", "error": {"code": "CALENDAR_SYNC_FAILED", "message": _resource_issue("calendar", exception)["message"]}}
 
 
 def _academic(year: str, term: str) -> dict[str, Any]:
@@ -193,7 +277,9 @@ def _quick(args: argparse.Namespace) -> dict[str, Any]:
         return {"status": "error", "error": {"code": "DATASET_REQUIRED", "message": "请先同步当前学期的校园资料。"}}
     bundle = load_bundle(args.bundle)
     normalized = bundle.get("normalized", {})
-    records = normalized.get(resource, [])
+    records = normalized.get(resource)
+    if resource == "holidays" and not isinstance(records, list):
+        records = normalized.get("events", [])
     if not isinstance(records, list):
         records = []
     offset = max(0, args.offset)
@@ -215,6 +301,13 @@ def _quick(args: argparse.Namespace) -> dict[str, Any]:
             if complete
             else "当前缓存尚未生成成绩风险提示，请刷新一次校园资料。"
         )
+    if resource == "holidays":
+        complete = bool(normalized.get("coverage", {}).get("complete"))
+        note = normalized.get("coverage", {}).get("note") or (
+            "当前只读到官方校历来源，尚未读到对应的节假日教学安排公告。"
+            if not complete
+            else None
+        )
     return {
         "status": "ok" if complete else "partial",
         "resource": resource,
@@ -225,7 +318,7 @@ def _quick(args: argparse.Namespace) -> dict[str, Any]:
         "fetched_at": bundle.get("fetched_at"),
         "coverage": {
             "complete": complete,
-            "scope": bundle.get("semester_id"),
+            "scope": bundle.get("semester_id") or bundle.get("academic_year"),
             "note": note,
         },
         "source": {"service": "ZJU local compatibility connector", "evidence": "encrypted normalized cache"},
@@ -246,6 +339,8 @@ def main(argv: list[str] | None = None) -> int:
             return emit({"status": "ok", "authenticated_at": datetime.now(timezone.utc).isoformat(), "sso": True})
         if args.command == "academic":
             return emit(_academic(args.year, args.term))
+        if args.command == "calendar":
+            return emit(_calendar(args.year, args.refresh))
         if args.command == "history":
             return emit({"status": "ok", "items": history(args.limit)})
         if args.command == "quick":

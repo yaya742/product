@@ -8,6 +8,8 @@
     { "id": "zdbk.schedule", "host": "zdbk.zju.edu.cn", "status": "implemented", "kind": "read_only" },
     { "id": "zdbk.exams", "host": "zdbk.zju.edu.cn", "status": "implemented", "kind": "read_only" },
     { "id": "zdbk.grades", "host": "zdbk.zju.edu.cn", "status": "implemented", "kind": "read_only" },
-    { "id": "courses.todos", "host": "courses.zju.edu.cn", "status": "implemented", "kind": "read_only" }
+    { "id": "courses.todos", "host": "courses.zju.edu.cn", "status": "implemented", "kind": "read_only" },
+    { "id": "zju.official.calendar", "host": "ugrs.zju.edu.cn", "status": "implemented", "kind": "read_only" },
+    { "id": "zju.official.teaching_notice", "host": "zdbk.zju.edu.cn", "status": "implemented", "kind": "read_only" }
   ]
 }
