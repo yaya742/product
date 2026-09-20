@@ -62,6 +62,16 @@ export interface CampusTodo {
   status: string;
 }
 
+export interface CampusNotice {
+  id: string;
+  title: string;
+  publisher: string;
+  publishedAt: string;
+  summary: string;
+  url: string;
+  pinned: boolean;
+}
+
 export interface MobileCampusData {
   fetchedAt: string;
   academicYear: string;

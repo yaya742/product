@@ -7,10 +7,11 @@ import {
   DeepSeekError,
 } from './deepseek';
 import { findWalkingRoute, loadMapData } from './map';
+import { readPublicNotices } from './campus';
 import { CAMPUS_COORDINATE, fetchWeather, readDeviceLocation } from './weather';
 import type { MobileAttachment, MobileCampusData, MobileConversation, MobileLanguage, MobileMessage, MobileReminder } from './types';
 
-export type AgentStatus = '联系 DeepSeek' | '读取手机时间' | '请求手机定位' | '查询天气' | '查询校园地图' | '规划路线' | '读取校园信息' | '保存本地提醒' | '读取本地提醒' | '搜索历史记录' | '保存长期记忆' | '整理回复';
+export type AgentStatus = '联系 DeepSeek' | '读取手机时间' | '请求手机定位' | '查询天气' | '查询校园地图' | '规划路线' | '读取校园信息' | '搜索校园公告' | '保存本地提醒' | '读取本地提醒' | '搜索历史记录' | '保存长期记忆' | '整理回复';
 
 export interface MobileAgentContext {
   conversations: MobileConversation[];
@@ -169,6 +170,20 @@ async function runLocalTool(call: DeepSeekToolCall, signal: AbortSignal, context
       todos: context.campus.todos,
     };
   }
+  if (call.function.name === 'search_campus_notices') {
+    const args = toolArguments(call);
+    const query = typeof args.query === 'string' ? args.query.trim().slice(0, 100) : '';
+    const page = typeof args.page === 'number' && Number.isFinite(args.page) ? Math.trunc(args.page) : 1;
+    const result = await readPublicNotices(query, page);
+    return {
+      status: result.notices.length ? 'ok' : 'not_found',
+      query,
+      page: result.page,
+      total_available: result.totalAvailable,
+      notices: result.notices,
+      reason: result.notices.length ? undefined : '官方公告中没有找到匹配内容。',
+    };
+  }
   if (call.function.name === 'create_local_reminder') {
     if (!context) return { status: 'unavailable', reason: '手机端提醒存储暂不可用。' };
     const args = toolArguments(call);
@@ -276,6 +291,8 @@ export async function runMobileAgent(
                 ? '规划路线'
                 : call.function.name === 'get_campus_info'
                   ? '读取校园信息'
+                : call.function.name === 'search_campus_notices'
+                  ? '搜索校园公告'
                 : call.function.name === 'create_local_reminder'
                   ? '保存本地提醒'
                   : call.function.name === 'list_local_reminders'

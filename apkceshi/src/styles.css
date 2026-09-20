@@ -303,6 +303,21 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .campus-grade-summary div + div { padding-left: 12px; border-left: 1px solid var(--line); }
 .campus-grade-summary span { color: var(--text-soft); font-size: 10px; }
 .campus-grade-summary strong { color: var(--text); font-size: 18px; font-weight: 600; }
+.notice-search-row { display: flex; gap: 8px; align-items: stretch; margin-bottom: 9px; }
+.notice-search-row input { min-width: 0; flex: 1; }
+.notice-search-row .primary-button { min-height: 42px; padding: 0 13px; }
+.campus-notice-list { display: grid; gap: 0; }
+.campus-notice { display: grid; gap: 6px; padding: 13px 0; border-top: 1px solid var(--line); }
+.campus-notice-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.campus-notice-heading strong { min-width: 0; color: var(--text); font-size: 13px; line-height: 1.45; }
+.campus-notice-heading span { flex: 0 0 auto; padding: 3px 6px; color: var(--text-soft); border: 1px solid var(--line); border-radius: 5px; font-size: 9px; }
+.campus-notice p { margin: 0; color: var(--text-soft); font-size: 11px; line-height: 1.55; }
+.campus-notice small { color: var(--text-faint); font-size: 10px; line-height: 1.4; }
+.campus-notice a { width: fit-content; color: var(--text); font-size: 11px; text-decoration: underline; text-underline-offset: 3px; }
+.notice-pagination { display: flex; align-items: center; justify-content: center; gap: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.notice-pagination button { min-height: 31px; padding: 0 10px; color: var(--text); border: 1px solid var(--line); border-radius: 8px; background: var(--surface-muted); font-size: 10px; }
+.notice-pagination button:disabled { color: var(--text-faint); opacity: .55; }
+.notice-pagination span { color: var(--text-soft); font-size: 10px; }
 .reminders-screen { max-width: 620px; margin: 0 auto; }
 .reminder-form .setting-label { margin-bottom: 0; }
 .reminder-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 0; border-top: 1px solid var(--line); }

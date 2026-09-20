@@ -3,6 +3,7 @@ import type {
   CampusCourse,
   CampusExam,
   CampusGrade,
+  CampusNotice,
   CampusTodo,
   MobileCampusData,
 } from './types';
@@ -16,6 +17,8 @@ const EXAMS_URL = 'https://zdbk.zju.edu.cn/jwglxt/xskscx/kscx_cxXsgrksIndex.html
 const GRADES_URL = 'https://zdbk.zju.edu.cn/jwglxt/cxdy/xscjcx_cxXscjIndex.html?doType=query&queryModel.showCount=5000';
 const COURSES_HOME = 'https://courses.zju.edu.cn/user/index';
 const TODOS_URL = 'https://courses.zju.edu.cn/api/todos';
+const NOTICES_LIST_URL = 'https://zdbk.zju.edu.cn/jwglxt/xtgl/xwck_cxMoreLoginNews.html';
+const NOTICE_DETAIL_PATH = '/jwglxt/xtgl/xwck_ckLoginNews.html';
 
 const TRUSTED_HOSTS = new Set([
   'zjuam.zju.edu.cn',
@@ -392,6 +395,17 @@ function field(value: Record<string, unknown>, keys: string[], fallback = ''): s
   return fallback;
 }
 
+function officialNoticeUrl(value: string, noticeId: string): string {
+  const fallback = `https://zdbk.zju.edu.cn${NOTICE_DETAIL_PATH}?xwbh=${encodeURIComponent(noticeId)}`;
+  try {
+    const parsed = new URL(value || fallback, NOTICES_LIST_URL);
+    if (parsed.protocol !== 'https:' || parsed.hostname.toLowerCase() !== 'zdbk.zju.edu.cn') return fallback;
+    return parsed.toString();
+  } catch {
+    return fallback;
+  }
+}
+
 function listFromPayload(value: unknown, keys: string[] = []): Record<string, unknown>[] {
   if (Array.isArray(value)) return value.filter((item): item is Record<string, unknown> => !!item && typeof item === 'object' && !Array.isArray(item));
   if (!value || typeof value !== 'object') return [];
@@ -558,6 +572,50 @@ async function readTodos(): Promise<CampusTodo[]> {
     if (!item.id || !(item.is_student === true || item.is_student === 1 || item.is_student === '1')) return [];
     return [{ id: String(item.id), name: field(item, ['title', 'name'], '未命名作业'), course: field(item, ['course_name', 'course'], '未知课程'), deadline: field(item, ['end_time', 'deadline'], '未提供截止时间'), status: 'pending' }];
   });
+}
+
+export interface CampusNoticeResult {
+  notices: CampusNotice[];
+  page: number;
+  totalAvailable: number;
+}
+
+export async function readPublicNotices(query = '', page = 1): Promise<CampusNoticeResult> {
+  assertNative();
+  const safeQuery = query.trim().slice(0, 100);
+  const safePage = Math.max(1, Math.min(50, Math.trunc(page) || 1));
+  const params = new URLSearchParams({
+    doType: 'query',
+    'queryModel.currentPage': String(safePage),
+    'queryModel.showCount': '10',
+    'queryModel.sortName': 'sfzd desc,fbsj',
+    'queryModel.sortOrder': 'desc',
+    xwbt: safeQuery,
+  });
+  const response = await followGet(`${NOTICES_LIST_URL}?${params.toString()}`);
+  if (response.status < 200 || response.status >= 300) throw new CampusError(`浙大官方公告暂时无法访问（HTTP ${response.status}）。`, 'network');
+  const payload = parseJson(response, '浙大官方公告');
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new CampusError('浙大官方公告返回格式不正确。', 'response');
+  const rawPayload = payload as Record<string, unknown>;
+  if (!Array.isArray(rawPayload.items) && !Array.isArray(rawPayload.rows) && !Array.isArray(rawPayload.list)) {
+    throw new CampusError('浙大官方公告没有返回可识别的列表。', 'response');
+  }
+  const notices = listFromPayload(payload, ['items', 'rows', 'list']).slice(0, 20).flatMap((item, index) => {
+    const id = field(item, ['xwbh', 'id', 'noticeId'], `notice-${safePage}-${index}`);
+    const title = field(item, ['xwbt', 'title', 'name']);
+    if (!title) return [];
+    return [{
+      id: `zju-notice-${id}`,
+      title: title.slice(0, 240),
+      publisher: field(item, ['xwfbr', 'publisher', 'author'], '浙江大学本科生院').slice(0, 120),
+      publishedAt: field(item, ['fbsj', 'publishedAt', 'publishTime']).slice(0, 40),
+      summary: field(item, ['fbnr', 'summary', 'content', 'jj']).slice(0, 360),
+      url: officialNoticeUrl(field(item, ['fbdz', 'url', 'link']), id),
+      pinned: field(item, ['sfzd', 'pinned']) === '1' || field(item, ['sfzd', 'pinned']).toLowerCase() === 'true',
+    } satisfies CampusNotice];
+  });
+  const totalCandidate = Number(rawPayload.totalCount ?? rawPayload.totalResult ?? rawPayload.total ?? notices.length);
+  return { notices, page: safePage, totalAvailable: Number.isFinite(totalCandidate) && totalCandidate >= 0 ? totalCandidate : notices.length };
 }
 
 function errorText(error: unknown): string {

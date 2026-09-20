@@ -3,13 +3,14 @@ import { MapPanel } from './MapPanel';
 import { WeatherPanel } from './WeatherPanel';
 import { runMobileAgent, type AgentStatus } from './runtime/agent';
 import { completeDeepSeek, DeepSeekError, testDeepSeekConnection, translateText } from './runtime/deepseek';
-import { CampusError, readCampusInfo } from './runtime/campus';
+import { CampusError, readCampusInfo, readPublicNotices } from './runtime/campus';
 import { getUiCopy } from './runtime/i18n';
 import { cancelLocalReminder, scheduleLocalReminder, withNotificationId } from './runtime/reminders';
 import { loadMobileState, saveMobileState } from './runtime/storage';
 import {
   createConversation,
   newId,
+  type CampusNotice,
   type MobileAttachment,
   type MobileConversation,
   type MobileLanguage,
@@ -264,7 +265,13 @@ export function App() {
   const [campusSaved, setCampusSaved] = useState(false);
   const [campusLoading, setCampusLoading] = useState(false);
   const [campusMessage, setCampusMessage] = useState('');
-  const [campusTab, setCampusTab] = useState<'overview' | 'schedule' | 'exams' | 'grades' | 'todos'>('overview');
+  const [campusTab, setCampusTab] = useState<'overview' | 'schedule' | 'exams' | 'grades' | 'todos' | 'notices'>('overview');
+  const [noticeQuery, setNoticeQuery] = useState('');
+  const [notices, setNotices] = useState<CampusNotice[]>([]);
+  const [noticesPage, setNoticesPage] = useState(1);
+  const [noticesTotal, setNoticesTotal] = useState(0);
+  const [noticesLoading, setNoticesLoading] = useState(false);
+  const [noticesMessage, setNoticesMessage] = useState('');
   const [scrollState, setScrollState] = useState({ canUp: false, canDown: false });
   const abortRef = useRef<AbortController | undefined>(undefined);
   const translationAbortRef = useRef<AbortController | undefined>(undefined);
@@ -358,6 +365,28 @@ export function App() {
     } finally {
       setCampusLoading(false);
     }
+  }
+
+  async function refreshNotices(query = noticeQuery, page = 1) {
+    if (noticesLoading) return;
+    setNoticesLoading(true);
+    setNoticesMessage(copy.campusNoticeLoading);
+    try {
+      const result = await readPublicNotices(query, page);
+      setNotices(result.notices);
+      setNoticesPage(result.page);
+      setNoticesTotal(result.totalAvailable);
+      setNoticesMessage(result.notices.length ? '' : copy.campusNoticeEmpty);
+    } catch (error) {
+      setNoticesMessage(campusErrorMessage(error));
+    } finally {
+      setNoticesLoading(false);
+    }
+  }
+
+  function selectCampusTab(tab: 'overview' | 'schedule' | 'exams' | 'grades' | 'todos' | 'notices') {
+    setCampusTab(tab);
+    if (tab === 'notices' && !notices.length && !noticesLoading) void refreshNotices('', 1);
   }
 
   async function handleAvatarFile(file: File) {
@@ -1143,18 +1172,22 @@ export function App() {
                     {campus.warnings.map((warning) => <small key={warning}>{warning}</small>)}
                   </section>
                 )}
-                <div className="campus-tabs" role="tablist" aria-label={copy.campusTitle}>
-                  {([
-                    ['overview', copy.campusOverview],
-                    ['schedule', copy.campusSchedule],
-                    ['exams', copy.campusExams],
-                    ['grades', copy.campusGrades],
-                    ['todos', copy.campusTodos],
-                  ] as const).map(([tab, label]) => (
-                    <button key={tab} className={campusTab === tab ? 'selected' : ''} role="tab" aria-selected={campusTab === tab} onClick={() => setCampusTab(tab)}>{label}</button>
-                  ))}
-                </div>
-
+              </>
+            )}
+            <div className="campus-tabs" role="tablist" aria-label={copy.campusTitle}>
+              {([
+                ['overview', copy.campusOverview],
+                ['schedule', copy.campusSchedule],
+                ['exams', copy.campusExams],
+                ['grades', copy.campusGrades],
+                ['todos', copy.campusTodos],
+                ['notices', copy.campusNotices],
+              ] as const).map(([tab, label]) => (
+                <button key={tab} className={campusTab === tab ? 'selected' : ''} role="tab" aria-selected={campusTab === tab} onClick={() => selectCampusTab(tab)}>{label}</button>
+              ))}
+            </div>
+            {campus && (
+              <>
                 {campusTab === 'overview' && (
                   <section className="campus-overview">
                     <div className="campus-overview-metrics">
@@ -1220,6 +1253,40 @@ export function App() {
                   </section>
                 )}
               </>
+            )}
+            {campusTab === 'notices' && (
+              <section className="profile-section campus-data-card campus-notices-card">
+                <div className="setting-label"><strong>{copy.campusNotices}</strong><span>{copy.campusNoticeHint}</span></div>
+                <div className="notice-search-row">
+                  <input
+                    value={noticeQuery}
+                    placeholder={copy.campusNoticeSearchPlaceholder}
+                    onChange={(event) => setNoticeQuery(event.target.value)}
+                    onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void refreshNotices(noticeQuery, 1); } }}
+                  />
+                  <button className="primary-button" disabled={noticesLoading} onClick={() => void refreshNotices(noticeQuery, 1)}>{copy.campusNoticeSearch}</button>
+                </div>
+                {noticesMessage && <p className="connection-message">{noticesMessage}</p>}
+                {notices.length > 0 && (
+                  <div className="campus-notice-list">
+                    {notices.map((notice) => (
+                      <article className="campus-notice" key={notice.id}>
+                        <div className="campus-notice-heading"><strong>{notice.title}</strong>{notice.pinned && <span>{copy.campusNotices}</span>}</div>
+                        <p>{notice.summary || copy.campusNoticeHint}</p>
+                        <small>{[notice.publisher, notice.publishedAt].filter(Boolean).join(' · ')}</small>
+                        <a href={notice.url} target="_blank" rel="noreferrer">{copy.campusNoticeOpen}</a>
+                      </article>
+                    ))}
+                  </div>
+                )}
+                {(noticesPage > 1 || notices.length >= 10 || noticesTotal > noticesPage * 10) && (
+                  <div className="notice-pagination">
+                    <button disabled={noticesLoading || noticesPage <= 1} onClick={() => void refreshNotices(noticeQuery, noticesPage - 1)}>{copy.campusNoticePrevious}</button>
+                    <span>{noticesPage}{noticesTotal ? ` / ${Math.ceil(noticesTotal / 10)}` : ''}</span>
+                    <button disabled={noticesLoading || (noticesTotal > 0 ? noticesPage * 10 >= noticesTotal : notices.length < 10)} onClick={() => void refreshNotices(noticeQuery, noticesPage + 1)}>{copy.campusNoticeNext}</button>
+                  </div>
+                )}
+              </section>
             )}
           </div>
         </section>
