@@ -3,9 +3,11 @@ import {
   createInitialState,
   DEFAULT_PROFILE,
   type MobileConversation,
+  type MobileAttachment,
   type MobileLanguage,
   type MobileMessage,
   type MobileProfile,
+  type MobileReminder,
   type MobileState,
   type MobileTheme,
 } from './types';
@@ -36,7 +38,65 @@ function parseMessages(value: unknown): MobileMessage[] {
       typeof item.createdAt === 'string' &&
       (item.status === 'running' || item.status === 'done' || item.status === 'error')
     );
-  }).map((item) => ({ ...item, translations: parseTranslations((item as unknown as Record<string, unknown>).translations) }));
+  }).map((item) => {
+    const raw = item as unknown as Record<string, unknown>;
+    const attachment = parseAttachment(raw.attachment);
+    return {
+      ...item,
+      ...(attachment ? { attachment } : {}),
+      translations: parseTranslations(raw.translations),
+    };
+  });
+}
+
+function parseAttachment(value: unknown): MobileAttachment | undefined {
+  if (!isRecord(value) || typeof value.kind !== 'string' || typeof value.name !== 'string') return undefined;
+  if (value.kind === 'text' && typeof value.text === 'string' && value.text.length <= 20_000)
+    return { kind: 'text', name: value.name.slice(0, 160), text: value.text };
+  if (
+    value.kind === 'image' &&
+    value.mimeType === 'image/jpeg' &&
+    typeof value.dataUrl === 'string' &&
+    value.dataUrl.startsWith('data:image/jpeg;base64,') &&
+    value.dataUrl.length <= 2_000_000 &&
+    typeof value.width === 'number' &&
+    typeof value.height === 'number'
+  ) {
+    return {
+      kind: 'image',
+      name: value.name.slice(0, 160),
+      mimeType: 'image/jpeg',
+      dataUrl: value.dataUrl,
+      width: Math.max(1, Math.round(value.width)),
+      height: Math.max(1, Math.round(value.height)),
+    };
+  }
+  return undefined;
+}
+
+function parseReminders(value: unknown): MobileReminder[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!isRecord(item)) return [];
+    if (
+      typeof item.id !== 'string' ||
+      typeof item.title !== 'string' ||
+      typeof item.dueAt !== 'string' ||
+      Number.isNaN(Date.parse(item.dueAt))
+    ) return [];
+    const notificationId = typeof item.notificationId === 'number' && Number.isFinite(item.notificationId)
+      ? Math.trunc(item.notificationId)
+      : Math.abs([...item.id].reduce((hash, char) => ((hash * 31 + char.charCodeAt(0)) | 0), 0));
+    return [{
+      id: item.id,
+      title: item.title.trim().slice(0, 120) || '提醒',
+      notes: typeof item.notes === 'string' ? item.notes.trim().slice(0, 500) : '',
+      dueAt: item.dueAt,
+      createdAt: typeof item.createdAt === 'string' ? item.createdAt : new Date().toISOString(),
+      completed: item.completed === true,
+      notificationId: Math.max(1, notificationId),
+    }];
+  }).sort((a, b) => a.dueAt.localeCompare(b.dueAt)).slice(0, 100);
 }
 
 function parseConversations(value: unknown): MobileConversation[] {
@@ -100,6 +160,7 @@ export function loadMobileState(): MobileState {
       conversations,
       activeConversationId: activeId,
       memories,
+      reminders: parseReminders(value.reminders),
       profile: parseProfile(value.profile),
     };
   } catch {

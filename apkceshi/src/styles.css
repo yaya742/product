@@ -126,6 +126,9 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .message-content { display: grid; gap: 8px; }
 .message-content p { margin: 0; }
 .message-content h4 { margin: 2px 0 0; color: var(--text); font-size: 15px; line-height: 1.45; }
+.message-image { display: block; width: min(100%, 340px); max-height: 360px; margin: 0 0 9px; border-radius: 12px; object-fit: contain; background: var(--surface-muted); }
+.message-file { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; color: var(--accent-strong); font-size: 12px; font-weight: 600; }
+.message-file svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .message-content code { padding: 1px 5px; border-radius: 5px; background: var(--surface-muted); font-size: .9em; }
 .message-list-item { padding-left: 4px; }
 .message-line-break { height: 4px; }
@@ -138,6 +141,15 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .typing::after { content: ""; width: 5px; height: 5px; margin: auto 0 auto 7px; border-radius: 50%; background: var(--accent); animation: blink 1s infinite; }
 
 .composer-area { position: relative; flex: 0 0 auto; z-index: 4; padding: 8px 16px calc(14px + env(safe-area-inset-bottom) + var(--keyboard-height)); background: linear-gradient(180deg, color-mix(in srgb, var(--bg) 0%, transparent), color-mix(in srgb, var(--bg) 94%, transparent) 22%, var(--bg) 46%); }
+.attachment-draft { display: flex; align-items: center; gap: 8px; max-width: 760px; margin: 0 auto 7px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--text-soft); font-size: 11px; }
+.attachment-draft-icon { width: 30px; height: 30px; display: grid; place-items: center; overflow: hidden; border-radius: 8px; background: var(--surface-muted); }
+.attachment-draft-icon img { width: 100%; height: 100%; object-fit: cover; }
+.attachment-draft-icon svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.attachment-draft-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.attachment-draft button { width: 26px; height: 26px; display: grid; place-items: center; color: var(--text-faint); border: 0; border-radius: 8px; background: transparent; }
+.attachment-draft button:hover { color: var(--danger); background: var(--surface-muted); }
+.attachment-draft button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.attachment-message { max-width: 760px; margin: 0 auto 6px; color: var(--danger); font-size: 11px; }
 .connection-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-faint); }
 .connection-dot.active { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
 .scroll-jump { position: absolute; right: 16px; bottom: calc(87px + var(--keyboard-height)); z-index: 8; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--line-strong); border-radius: 14px; background: color-mix(in srgb, var(--surface) 92%, transparent); box-shadow: var(--shadow); backdrop-filter: blur(12px); }
@@ -146,7 +158,7 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .scroll-jump button:hover { background: var(--surface-strong); }
 .scroll-jump button:disabled { color: var(--text-faint); opacity: .35; }
 .scroll-jump svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.composer { display: flex; align-items: flex-end; gap: 8px; padding: 7px; border: 1px solid var(--line-strong); border-radius: 18px; background: var(--surface); box-shadow: var(--shadow); }
+.composer { display: flex; align-items: flex-end; gap: 6px; padding: 7px; border: 1px solid var(--line-strong); border-radius: 18px; background: var(--surface); box-shadow: var(--shadow); }
 .composer:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow); }
 textarea, input, select { color: var(--text); border: 1px solid var(--line); outline: 0; background: var(--surface); border-radius: 12px; }
 textarea { width: 100%; max-height: 132px; resize: none; padding: 9px 10px; border: 0; background: transparent; box-shadow: none; line-height: 1.55; }
@@ -159,11 +171,15 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .send-button { color: #fff; background: var(--accent); }
 .send-button:hover { background: var(--accent-strong); }
 .stop-button { color: var(--text); background: var(--surface-strong); font-size: 12px; }
+.attachment-button { width: 38px; height: 42px; display: grid; place-items: center; flex: 0 0 auto; color: var(--text-faint); border-radius: 12px; cursor: pointer; }
+.attachment-button:hover { color: var(--accent-strong); background: var(--surface-muted); }
+.attachment-button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 .drawer-backdrop { position: fixed; inset: 0; z-index: 19; width: 100%; height: 100%; border: 0; background: rgba(15, 25, 18, .3); backdrop-filter: blur(4px); animation: fade-in .18s ease-out; }
 .history-drawer { position: fixed; top: 0; bottom: 0; left: max(0px, calc(50% - 380px)); z-index: 20; width: min(88vw, 360px); display: flex; flex-direction: column; padding: calc(18px + env(safe-area-inset-top)) 14px calc(16px + env(safe-area-inset-bottom)); color: var(--text); border-right: 1px solid var(--line); background: var(--surface); box-shadow: 18px 0 50px rgba(40, 70, 45, .14); animation: drawer-right .22s ease-out; }
 .drawer-topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 2px 5px 17px; border-bottom: 1px solid var(--line); }
 .drawer-topbar h2 { margin: 0; color: var(--text); font-size: 22px; letter-spacing: -.04em; }
+.history-search { width: 100%; min-height: 38px; margin: 12px 0 3px; padding: 9px 11px; border-radius: 11px; font-size: 12px; }
 .eyebrow { margin: 0 0 5px; color: var(--accent); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; }
 .history-list { flex: 1; overflow-y: auto; padding: 13px 0; }
 .history-item { position: relative; display: flex; align-items: stretch; min-height: 58px; margin-bottom: 4px; border-radius: 13px; }
@@ -209,6 +225,14 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .setting-label strong { color: var(--text); font-size: 14px; }
 .setting-label span { color: var(--text-soft); font-size: 11px; line-height: 1.45; }
 .key-row, .memory-row { display: flex; gap: 8px; }
+.memory-section { display: grid; gap: 11px; }
+.memory-section .setting-label { margin-bottom: 0; }
+.memory-list { display: grid; gap: 6px; }
+.memory-item { display: flex; align-items: center; gap: 8px; padding: 9px 10px; color: var(--text); border-radius: 10px; background: var(--surface-muted); font-size: 12px; line-height: 1.45; }
+.memory-item span { min-width: 0; flex: 1; }
+.memory-item button { width: 25px; height: 25px; display: grid; place-items: center; flex: 0 0 auto; color: var(--text-faint); border: 0; border-radius: 7px; background: transparent; }
+.memory-item button:hover { color: var(--danger); background: var(--surface); }
+.memory-item svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .primary-button, .secondary-button { min-height: 42px; padding: 0 14px; border: 0; border-radius: 12px; white-space: nowrap; }
 .primary-button { color: #fff; background: var(--accent); }
 .secondary-button { color: var(--text); background: var(--surface-strong); }
@@ -240,6 +264,21 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .field-label { display: block; margin: 17px 0 8px; color: var(--text); font-size: 12px; font-weight: 600; }
 .save-wide-button { width: 100%; min-height: 46px; margin-top: 26px; color: #fff; border: 0; border-radius: 13px; background: var(--accent); font-weight: 600; }
 .save-wide-button:hover { background: var(--accent-strong); }
+.reminders-screen { max-width: 620px; margin: 0 auto; }
+.reminder-form .setting-label { margin-bottom: 0; }
+.reminder-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 0; border-top: 1px solid var(--line); }
+.reminder-item:first-of-type { border-top: 0; }
+.reminder-item > div:first-child { min-width: 0; display: grid; gap: 4px; }
+.reminder-item strong { overflow: hidden; color: var(--text); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.reminder-item small { overflow: hidden; color: var(--text-soft); font-size: 10px; line-height: 1.45; text-overflow: ellipsis; white-space: nowrap; }
+.reminder-item.completed { opacity: .5; }
+.reminder-item.completed strong { text-decoration: line-through; }
+.reminder-actions { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+.reminder-actions button { min-height: 29px; padding: 0 8px; color: var(--accent-strong); border: 0; border-radius: 8px; background: var(--surface-muted); font-size: 11px; }
+.reminder-actions button:hover { background: var(--accent-soft); }
+.reminder-actions button:last-child { width: 29px; padding: 0; color: var(--text-faint); background: transparent; }
+.reminder-actions button:last-child:hover { color: var(--danger); background: var(--surface-muted); }
+.reminder-actions svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 .map-panel, .weather-panel { z-index: 30; }
 .map-screen, .weather-screen { height: calc(100svh - 68px); overflow-y: auto; padding: 18px 16px calc(28px + env(safe-area-inset-bottom)); }

@@ -1,21 +1,43 @@
 import { buildSystemPrompt } from './prompt';
 import {
   completeDeepSeek,
+  type DeepSeekContent,
   type DeepSeekMessage,
   type DeepSeekToolCall,
   DeepSeekError,
 } from './deepseek';
 import { findWalkingRoute, loadMapData } from './map';
 import { CAMPUS_COORDINATE, fetchWeather, readDeviceLocation } from './weather';
-import type { MobileLanguage, MobileMessage } from './types';
+import type { MobileAttachment, MobileConversation, MobileLanguage, MobileMessage, MobileReminder } from './types';
 
-export type AgentStatus = '联系 DeepSeek' | '读取手机时间' | '请求手机定位' | '查询天气' | '查询校园地图' | '规划路线' | '整理回复';
+export type AgentStatus = '联系 DeepSeek' | '读取手机时间' | '请求手机定位' | '查询天气' | '查询校园地图' | '规划路线' | '保存本地提醒' | '读取本地提醒' | '搜索历史记录' | '保存长期记忆' | '整理回复';
+
+export interface MobileAgentContext {
+  conversations: MobileConversation[];
+  reminders: MobileReminder[];
+  currentAttachment?: MobileAttachment;
+  createReminder: (input: { title: string; dueAt: string; notes: string }) => Promise<Record<string, unknown>>;
+  saveMemory: (text: string) => Promise<Record<string, unknown>>;
+}
+
+function messageContent(message: MobileMessage): DeepSeekContent {
+  if (message.attachment?.kind === 'image') {
+    return [
+      { type: 'text', text: message.content || `请分析图片附件：${message.attachment.name}` },
+      { type: 'image_url', image_url: { url: message.attachment.dataUrl } },
+    ];
+  }
+  if (message.attachment?.kind === 'text') {
+    return `${message.content ? `${message.content}\n\n` : ''}[附件：${message.attachment.name}]\n${message.attachment.text}`;
+  }
+  return message.content;
+}
 
 function modelHistory(messages: MobileMessage[]): DeepSeekMessage[] {
   return messages
     .filter((message) => message.status !== 'running')
     .slice(-32)
-    .map((message) => ({ role: message.role, content: message.content }));
+    .map((message) => ({ role: message.role, content: messageContent(message) }));
 }
 
 function readLocation(signal: AbortSignal): Promise<Record<string, unknown>> {
@@ -45,7 +67,7 @@ function readLocation(signal: AbortSignal): Promise<Record<string, unknown>> {
   });
 }
 
-async function runLocalTool(call: DeepSeekToolCall, signal: AbortSignal): Promise<Record<string, unknown>> {
+async function runLocalTool(call: DeepSeekToolCall, signal: AbortSignal, context?: MobileAgentContext): Promise<Record<string, unknown>> {
   if (call.function.name === 'get_local_time') {
     return {
       status: 'ok',
@@ -131,6 +153,47 @@ async function runLocalTool(call: DeepSeekToolCall, signal: AbortSignal): Promis
       ? { status: 'ok', origin: origin.name, destination: destination.name, distance_m: Math.round(route.meters), coordinates: route.coordinates }
       : { status: 'unavailable', origin: origin.name, destination: destination.name, reason: '本地步行路网没有找到连通路线。' };
   }
+  if (call.function.name === 'create_local_reminder') {
+    if (!context) return { status: 'unavailable', reason: '手机端提醒存储暂不可用。' };
+    const args = toolArguments(call);
+    const title = typeof args.title === 'string' ? args.title.trim().slice(0, 120) : '';
+    const dueAt = typeof args.due_at === 'string' ? args.due_at.trim() : '';
+    const notes = typeof args.notes === 'string' ? args.notes.trim().slice(0, 500) : '';
+    if (!title || !dueAt || Number.isNaN(Date.parse(dueAt)) || Date.parse(dueAt) <= Date.now())
+      return { status: 'invalid', reason: '提醒标题或时间无效，时间必须是未来时间。' };
+    return context.createReminder({ title, dueAt: new Date(dueAt).toISOString(), notes });
+  }
+  if (call.function.name === 'list_local_reminders') {
+    if (!context) return { status: 'unavailable', reason: '手机端提醒存储暂不可用。' };
+    return {
+      status: 'ok',
+      reminders: context.reminders
+        .filter((reminder) => !reminder.completed && Date.parse(reminder.dueAt) >= Date.now() - 60_000)
+        .sort((a, b) => a.dueAt.localeCompare(b.dueAt))
+        .slice(0, 30)
+        .map(({ id, title, notes, dueAt }) => ({ id, title, notes, due_at: dueAt })),
+    };
+  }
+  if (call.function.name === 'search_local_history') {
+    if (!context) return { status: 'unavailable', reason: '手机端历史记录暂不可用。' };
+    const query = typeof toolArguments(call).query === 'string' ? String(toolArguments(call).query).trim().toLowerCase() : '';
+    if (!query) return { status: 'invalid', reason: '没有提供搜索内容。' };
+    const results = context.conversations.flatMap((conversation) => conversation.messages
+      .filter((message) => message.content.toLowerCase().includes(query))
+      .map((message) => ({
+        conversation: conversation.title,
+        role: message.role === 'user' ? '用户' : '在场',
+        time: message.createdAt,
+        excerpt: message.content.slice(0, 500),
+      }))).slice(-20);
+    return { status: results.length ? 'ok' : 'not_found', query, results };
+  }
+  if (call.function.name === 'save_memory') {
+    if (!context) return { status: 'unavailable', reason: '手机端记忆存储暂不可用。' };
+    const text = typeof toolArguments(call).text === 'string' ? String(toolArguments(call).text).trim().slice(0, 300) : '';
+    if (!text) return { status: 'invalid', reason: '没有提供要保存的内容。' };
+    return context.saveMemory(text);
+  }
   return { status: 'unavailable', reason: '手机端没有提供这项能力。' };
 }
 
@@ -156,11 +219,19 @@ export async function runMobileAgent(
   signal: AbortSignal,
   onText: (text: string) => void,
   onStatus: (status: AgentStatus) => void,
+  context?: MobileAgentContext,
 ): Promise<string> {
   const wire: DeepSeekMessage[] = [
     { role: 'system', content: buildSystemPrompt(memories, language) },
     ...modelHistory(messages),
-    { role: 'user', content: userText },
+    { role: 'user', content: context?.currentAttachment ? messageContent({
+      id: 'current-user',
+      role: 'user',
+      content: userText,
+      attachment: context.currentAttachment,
+      createdAt: new Date().toISOString(),
+      status: 'done',
+    }) : userText },
   ];
   for (let round = 0; round < 6; round++) {
     signal.throwIfAborted();
@@ -171,7 +242,10 @@ export async function runMobileAgent(
       onText(text);
     });
     wire.push(completion.message);
-    if (!completion.message.tool_calls?.length) return streamedText || completion.message.content || '这次没有返回可显示的内容。';
+    if (!completion.message.tool_calls?.length) {
+      const finalText = typeof completion.message.content === 'string' ? completion.message.content : '';
+      return streamedText || finalText || '这次没有返回可显示的内容。';
+    }
 
     for (const call of completion.message.tool_calls) {
       signal.throwIfAborted();
@@ -184,11 +258,19 @@ export async function runMobileAgent(
               ? '查询校园地图'
               : call.function.name === 'plan_campus_route'
                 ? '规划路线'
-                : '请求手机定位',
+                : call.function.name === 'create_local_reminder'
+                  ? '保存本地提醒'
+                  : call.function.name === 'list_local_reminders'
+                    ? '读取本地提醒'
+                    : call.function.name === 'search_local_history'
+                      ? '搜索历史记录'
+                      : call.function.name === 'save_memory'
+                        ? '保存长期记忆'
+                        : '请求手机定位',
       );
       let result: Record<string, unknown>;
       try {
-        result = await runLocalTool(call, signal);
+        result = await runLocalTool(call, signal, context);
       } catch (error) {
         result = {
           status: 'unavailable',

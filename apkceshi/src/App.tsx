@@ -4,14 +4,17 @@ import { WeatherPanel } from './WeatherPanel';
 import { runMobileAgent, type AgentStatus } from './runtime/agent';
 import { completeDeepSeek, DeepSeekError, testDeepSeekConnection, translateText } from './runtime/deepseek';
 import { getUiCopy } from './runtime/i18n';
+import { cancelLocalReminder, scheduleLocalReminder, withNotificationId } from './runtime/reminders';
 import { loadMobileState, saveMobileState } from './runtime/storage';
 import {
   createConversation,
   newId,
+  type MobileAttachment,
   type MobileConversation,
   type MobileLanguage,
   type MobileMessage,
   type MobileProfile,
+  type MobileReminder,
   type MobileState,
   type MobileTheme,
 } from './runtime/types';
@@ -36,6 +39,16 @@ function formatHistoryDate(value: string, language: MobileLanguage): string {
 function compactTitle(value: string, fallback: string): string {
   const clean = value.replace(/[\r\n]+/g, ' ').replace(/^\s*["“”'‘’]+|["“”'‘’]+\s*$/g, '').trim();
   return (clean || fallback).slice(0, 28);
+}
+
+function localDateTimeValue(value = new Date(Date.now() + 60 * 60 * 1000)): string {
+  const offset = value.getTimezoneOffset() * 60_000;
+  return new Date(value.getTime() - offset).toISOString().slice(0, 16);
+}
+
+function formatReminderDate(value: string, language: MobileLanguage): string {
+  const locale = language === 'en' ? 'en-US' : language;
+  return new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
 }
 
 function Avatar({ value, className }: { value: string; className: string }) {
@@ -189,6 +202,22 @@ function ChevronDownIcon() {
   );
 }
 
+function AttachmentIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m20.2 11.2-7.7 7.7a5 5 0 0 1-7.1-7.1l8.1-8.1a3.4 3.4 0 0 1 4.8 4.8l-8.2 8.2a1.8 1.8 0 0 1-2.6-2.6l7.5-7.5" />
+    </svg>
+  );
+}
+
+function BellIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M18 9.5a6 6 0 0 0-12 0c0 7-3 7-3 8.5h18c0-1.5-3-1.5-3-8.5ZM10 21h4" />
+    </svg>
+  );
+}
+
 function ShieldIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -202,6 +231,8 @@ export function App() {
   const initial = useMemo(() => loadMobileState(), []);
   const [state, setState] = useState<MobileState>(initial);
   const [draft, setDraft] = useState('');
+  const [attachmentDraft, setAttachmentDraft] = useState<MobileAttachment | null>(null);
+  const [attachmentMessage, setAttachmentMessage] = useState('');
   const [memoryDraft, setMemoryDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [, setStatus] = useState<AgentStatus | '空闲'>('空闲');
@@ -210,11 +241,17 @@ export function App() {
   const [translationMessage, setTranslationMessage] = useState('');
   const [translating, setTranslating] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyQuery, setHistoryQuery] = useState('');
   const [historyMenuId, setHistoryMenuId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState('');
   const [profileOpen, setProfileOpen] = useState(false);
   const [campusOpen, setCampusOpen] = useState(false);
+  const [remindersOpen, setRemindersOpen] = useState(false);
+  const [reminderTitleDraft, setReminderTitleDraft] = useState('');
+  const [reminderNotesDraft, setReminderNotesDraft] = useState('');
+  const [reminderTimeDraft, setReminderTimeDraft] = useState(() => localDateTimeValue());
+  const [reminderMessage, setReminderMessage] = useState('');
   const [mapOpen, setMapOpen] = useState(false);
   const [weatherOpen, setWeatherOpen] = useState(false);
   const [avatarMessage, setAvatarMessage] = useState('');
@@ -232,6 +269,9 @@ export function App() {
   const sortedConversations = state.conversations
     .filter((conversation) => conversation.messages.length > 0)
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  const visibleConversations = historyQuery.trim()
+    ? sortedConversations.filter((conversation) => `${conversation.title} ${conversation.messages.map((message) => message.content).join(' ')}`.toLowerCase().includes(historyQuery.trim().toLowerCase()))
+    : sortedConversations;
 
   useEffect(() => {
     saveMobileState(state);
@@ -310,6 +350,62 @@ export function App() {
       setAvatarMessage(error instanceof Error ? error.message : failedMessage);
     } finally {
       URL.revokeObjectURL(objectUrl);
+    }
+  }
+
+  async function handleAttachmentFile(file: File) {
+    setAttachmentMessage('');
+    const isText = file.type.startsWith('text/') || /\.(txt|md|json|csv|log)$/i.test(file.name);
+    const isImage = file.type.startsWith('image/');
+    if (!isText && !isImage) {
+      setAttachmentMessage(copy.attachmentInvalid);
+      return;
+    }
+    try {
+      if (isText) {
+        const text = await file.text();
+        if (!text.trim() || text.length > 20_000) {
+          setAttachmentMessage(copy.attachmentTooLarge);
+          return;
+        }
+        setAttachmentDraft({ kind: 'text', name: file.name.slice(0, 160), text });
+        return;
+      }
+      const objectUrl = URL.createObjectURL(file);
+      try {
+        const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+          const element = new Image();
+          element.onload = () => resolve(element);
+          element.onerror = () => reject(new Error(copy.attachmentInvalid));
+          element.src = objectUrl;
+        });
+        const scale = Math.min(1, 1280 / Math.max(image.naturalWidth, image.naturalHeight));
+        const width = Math.max(1, Math.round(image.naturalWidth * scale));
+        const height = Math.max(1, Math.round(image.naturalHeight * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext('2d');
+        if (!context) throw new Error(copy.attachmentInvalid);
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, width, height);
+        context.drawImage(image, 0, 0, width, height);
+        let quality = .82;
+        let dataUrl = canvas.toDataURL('image/jpeg', quality);
+        while (dataUrl.length > 1_800_000 && quality > .48) {
+          quality -= .08;
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+        }
+        if (dataUrl.length > 1_800_000) {
+          setAttachmentMessage(copy.attachmentTooLarge);
+          return;
+        }
+        setAttachmentDraft({ kind: 'image', name: file.name.slice(0, 160), mimeType: 'image/jpeg', dataUrl, width, height });
+      } finally {
+        URL.revokeObjectURL(objectUrl);
+      }
+    } catch (error) {
+      setAttachmentMessage(error instanceof Error ? error.message : copy.attachmentInvalid);
     }
   }
 
@@ -402,7 +498,7 @@ export function App() {
         AbortSignal.timeout(15_000),
         [],
       );
-      title = compactTitle(completion.message.content || '', fallback);
+      title = compactTitle(typeof completion.message.content === 'string' ? completion.message.content : '', fallback);
     } catch {
       title = fallback;
     }
@@ -414,7 +510,8 @@ export function App() {
 
   async function send() {
     const text = draft.trim();
-    if (!text || busy) return;
+    const attachment = attachmentDraft;
+    if ((!text && !attachment) || busy) return;
     if (!state.apiKey.trim()) {
       setHistoryOpen(false);
       setProfileOpen(false);
@@ -429,8 +526,9 @@ export function App() {
     const userMessage: MobileMessage = {
       id: newId('user'),
       role: 'user',
-      content: text,
-      translations: { [conversationLanguage]: text },
+      content: text || (attachment?.kind === 'image' ? copy.imageReady : copy.textAttachmentReady),
+      ...(attachment ? { attachment } : {}),
+      translations: { [conversationLanguage]: text || (attachment?.kind === 'image' ? copy.imageReady : copy.textAttachmentReady) },
       createdAt: new Date().toISOString(),
       status: 'done',
     };
@@ -444,6 +542,8 @@ export function App() {
       status: 'running',
     };
     setDraft('');
+    setAttachmentDraft(null);
+    setAttachmentMessage('');
     setBusy(true);
     setStatus('联系 DeepSeek');
     updateActiveMessages((current) => [...current, userMessage, assistantMessage]);
@@ -463,6 +563,16 @@ export function App() {
           ));
         },
         setStatus,
+        {
+          conversations: state.conversations,
+          reminders: state.reminders,
+          currentAttachment: attachment || undefined,
+          createReminder: createReminderRecord,
+          saveMemory: async (memory) => {
+            setState((current) => ({ ...current, memories: [...current.memories.filter((item) => item !== memory), memory].slice(-16) }));
+            return { status: 'ok', saved: memory };
+          },
+        },
       );
       updateActiveMessages((current) => current.map((message) =>
         message.id === assistantId ? {
@@ -533,20 +643,68 @@ export function App() {
   function addMemory() {
     const text = memoryDraft.trim();
     if (!text) return;
-    updateState({ memories: [...state.memories, text].slice(-16) });
+    updateState({ memories: [...state.memories.filter((item) => item !== text), text].slice(-16) });
     setMemoryDraft('');
+  }
+
+  function removeMemory(text: string) {
+    updateState({ memories: state.memories.filter((item) => item !== text) });
+  }
+
+  async function createReminderRecord(input: { title: string; dueAt: string; notes: string }): Promise<Record<string, unknown>> {
+    const reminder = withNotificationId({
+      id: newId('reminder'),
+      title: input.title.trim().slice(0, 120),
+      notes: input.notes.trim().slice(0, 500),
+      dueAt: input.dueAt,
+      createdAt: new Date().toISOString(),
+      completed: false,
+    });
+    setState((current) => ({ ...current, reminders: [...current.reminders, reminder].sort((a, b) => a.dueAt.localeCompare(b.dueAt)).slice(0, 100) }));
+    try {
+      const notification = await scheduleLocalReminder(reminder);
+      return { status: 'ok', reminder: { title: reminder.title, due_at: reminder.dueAt }, notification };
+    } catch (error) {
+      return { status: 'ok', reminder: { title: reminder.title, due_at: reminder.dueAt }, notification: 'not-scheduled', reason: error instanceof Error ? error.message : '系统通知未安排。' };
+    }
+  }
+
+  async function addReminder() {
+    const title = reminderTitleDraft.trim();
+    const dueAt = new Date(reminderTimeDraft);
+    if (!title || Number.isNaN(dueAt.getTime()) || dueAt.getTime() <= Date.now()) {
+      setReminderMessage(state.profile.language === 'en' ? 'Enter a future time and reminder.' : state.profile.language === 'zh-TW' ? '請輸入未來的時間和提醒內容。' : '请输入未来的时间和提醒内容。');
+      return;
+    }
+    const result = await createReminderRecord({ title, dueAt: dueAt.toISOString(), notes: reminderNotesDraft });
+    setReminderTitleDraft('');
+    setReminderNotesDraft('');
+    setReminderTimeDraft(localDateTimeValue());
+    setReminderMessage(result.notification === 'permission-denied' ? copy.notificationDenied : result.notification === 'web' ? copy.webReminderNote : copy.reminderSaved);
+  }
+
+  async function completeReminder(reminder: MobileReminder) {
+    await cancelLocalReminder(reminder).catch(() => {});
+    updateState({ reminders: state.reminders.map((item) => item.id === reminder.id ? { ...item, completed: true } : item) });
+  }
+
+  async function deleteReminder(reminder: MobileReminder) {
+    await cancelLocalReminder(reminder).catch(() => {});
+    updateState({ reminders: state.reminders.filter((item) => item.id !== reminder.id) });
   }
 
   function openHistory() {
     setHistoryOpen(true);
     setProfileOpen(false);
     setCampusOpen(false);
+    setRemindersOpen(false);
   }
 
   function closeOverlays() {
     setHistoryOpen(false);
     setProfileOpen(false);
     setCampusOpen(false);
+    setRemindersOpen(false);
     setHistoryMenuId(null);
     setRenamingId(null);
   }
@@ -609,6 +767,13 @@ export function App() {
     setHistoryOpen(false);
     setProfileOpen(true);
     setCampusOpen(false);
+    setRemindersOpen(false);
+  }
+
+  function openReminders() {
+    setCampusOpen(false);
+    setRemindersOpen(true);
+    setReminderMessage('');
   }
 
   function openMap() {
@@ -664,6 +829,8 @@ export function App() {
               <time>{formatTime(message.createdAt, state.profile.language)}</time>
             </div>
             <div className="message-bubble">
+              {message.attachment?.kind === 'image' && <img className="message-image" src={message.attachment.dataUrl} alt={message.attachment.name} />}
+              {message.attachment?.kind === 'text' && <div className="message-file"><AttachmentIcon /><span>{message.attachment.name}</span></div>}
               {message.content ? <MessageContent content={message.content} /> : (message.status === 'running' ? <span className="typing">{copy.typing}</span> : '')}
             </div>
           </article>
@@ -678,7 +845,25 @@ export function App() {
       )}
 
       <footer className="composer-area" ref={composerRef}>
+        {attachmentDraft && (
+          <div className="attachment-draft">
+            <span className="attachment-draft-icon">{attachmentDraft.kind === 'image' ? <img src={attachmentDraft.dataUrl} alt="" /> : <AttachmentIcon />}</span>
+            <span className="attachment-draft-name">{attachmentDraft.name}</span>
+            <button type="button" aria-label={copy.removeAttachment} onClick={() => setAttachmentDraft(null)}><CloseIcon /></button>
+          </div>
+        )}
+        {attachmentMessage && <p className="attachment-message">{attachmentMessage}</p>}
         <div className="composer">
+          <label className="attachment-button" htmlFor="message-attachment" aria-label={copy.attachFile}>
+            <AttachmentIcon />
+          </label>
+          <input
+            id="message-attachment"
+            className="avatar-file-input"
+            type="file"
+            accept="image/*,.txt,.md,.json,.csv,.log"
+            onChange={(event) => { const file = event.target.files?.[0]; if (file) void handleAttachmentFile(file); event.currentTarget.value = ''; }}
+          />
           <textarea
             value={draft}
             disabled={busy}
@@ -696,7 +881,7 @@ export function App() {
           {busy ? (
             <button className="stop-button" onClick={stop}>{copy.stop}</button>
           ) : (
-            <button className="send-button" disabled={!draft.trim()} onClick={() => void send()} aria-label="发送">
+            <button className="send-button" disabled={!draft.trim() && !attachmentDraft} onClick={() => void send()} aria-label="发送">
               <ArrowIcon />
             </button>
           )}
@@ -714,8 +899,9 @@ export function App() {
               </div>
               <button className="icon-button" aria-label={copy.close} onClick={closeOverlays}><CloseIcon /></button>
             </div>
+            <input className="history-search" value={historyQuery} placeholder={copy.historySearchPlaceholder} onChange={(event) => setHistoryQuery(event.target.value)} />
             <div className="history-list">
-              {sortedConversations.length ? sortedConversations.map((conversation) => (
+              {visibleConversations.length ? visibleConversations.map((conversation) => (
                 <div className={`history-item ${conversation.id === activeConversation?.id ? 'active' : ''}`} key={conversation.id}>
                   {renamingId === conversation.id ? (
                     <div className="rename-row">
@@ -741,7 +927,7 @@ export function App() {
                     </div>
                   )}
                 </div>
-              )) : <p className="empty-history">{copy.historyEmpty}</p>}
+              )) : <p className="empty-history">{historyQuery.trim() ? copy.historyEmpty : copy.historyEmpty}</p>}
             </div>
             <button className="profile-entry" onClick={openProfile}>
               <Avatar className="profile-avatar" value={state.profile.avatar} />
@@ -752,7 +938,7 @@ export function App() {
         </>
       )}
 
-      {profileOpen && !campusOpen && (
+      {profileOpen && !campusOpen && !remindersOpen && (
         <section className="full-screen-panel" aria-label={copy.profileTitle}>
           <header className="secondary-topbar">
             <button className="back-button" onClick={() => { setProfileOpen(false); setHistoryOpen(true); }}><BackIcon /><span>{copy.back}</span></button>
@@ -792,6 +978,26 @@ export function App() {
                 <button className={state.profile.theme === 'dark' ? 'selected' : ''} onClick={() => updateProfile({ theme: 'dark' as MobileTheme })}>{copy.dark}</button>
               </div>
             </section>
+            <section className="profile-section memory-section">
+              <div className="setting-label"><strong>{copy.memoryTitle}</strong><span>{copy.memoryEyebrow}</span></div>
+              {state.memories.length > 0 && (
+                <div className="memory-list">
+                  {state.memories.map((memory) => (
+                    <div className="memory-item" key={memory}>
+                      <span>{memory}</span>
+                      <button type="button" aria-label={copy.memoryRemove} onClick={() => removeMemory(memory)}><CloseIcon /></button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="memory-row">
+                <input value={memoryDraft} placeholder={copy.memoryPlaceholder} onChange={(event) => setMemoryDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addMemory(); } }} />
+                <button className="primary-button" disabled={!memoryDraft.trim()} onClick={addMemory}>{copy.save}</button>
+              </div>
+            </section>
+            <button className="profile-link" onClick={openReminders}>
+              <span><strong>{copy.reminders}</strong><small>{copy.remindersHint}</small></span><BellIcon />
+            </button>
             <button className="profile-link" onClick={() => { setCampusOpen(true); setCampusSaved(false); }}>
               <span><strong>{copy.campus}</strong><small>{copy.campusHint}</small></span><ArrowIcon />
             </button>
@@ -811,6 +1017,41 @@ export function App() {
                 </button>
               </div>
               {connectionMessage && <p className="connection-message">{connectionMessage}</p>}
+            </section>
+          </div>
+        </section>
+      )}
+
+      {profileOpen && remindersOpen && !campusOpen && (
+        <section className="full-screen-panel" aria-label={copy.remindersTitle}>
+          <header className="secondary-topbar">
+            <button className="back-button" onClick={() => setRemindersOpen(false)}><BackIcon /><span>{copy.back}</span></button>
+            <h2>{copy.remindersTitle}</h2>
+            <span className="topbar-spacer" />
+          </header>
+          <div className="settings-scroll reminders-screen">
+            <section className="profile-section reminder-form">
+              <div className="setting-label"><strong>{copy.addReminder}</strong><span>{copy.remindersHint}</span></div>
+              <label className="field-label" htmlFor="reminder-title">{copy.reminderTitle}</label>
+              <input id="reminder-title" value={reminderTitleDraft} placeholder={copy.reminderTitle} onChange={(event) => setReminderTitleDraft(event.target.value)} />
+              <label className="field-label" htmlFor="reminder-time">{copy.reminderTime}</label>
+              <input id="reminder-time" type="datetime-local" value={reminderTimeDraft} onChange={(event) => setReminderTimeDraft(event.target.value)} />
+              <label className="field-label" htmlFor="reminder-notes">{copy.reminderNotes}</label>
+              <input id="reminder-notes" value={reminderNotesDraft} placeholder={copy.reminderNotes} onChange={(event) => setReminderNotesDraft(event.target.value)} />
+              <button className="save-wide-button" onClick={() => void addReminder()}>{copy.addReminder}</button>
+              {reminderMessage && <p className="connection-message">{reminderMessage}</p>}
+            </section>
+            <section className="profile-section reminder-list-section">
+              <div className="setting-label"><strong>{copy.remindersTitle}</strong><span>{state.reminders.length ? `${state.reminders.length}` : copy.reminderEmpty}</span></div>
+              {state.reminders.length > 0 ? state.reminders.map((reminder) => (
+                <div className={`reminder-item ${reminder.completed ? 'completed' : ''}`} key={reminder.id}>
+                  <div><strong>{reminder.title}</strong><small>{formatReminderDate(reminder.dueAt, state.profile.language)}{reminder.notes ? ` · ${reminder.notes}` : ''}</small></div>
+                  <div className="reminder-actions">
+                    {!reminder.completed && <button type="button" onClick={() => void completeReminder(reminder)}>{copy.complete}</button>}
+                    <button type="button" aria-label={copy.delete} onClick={() => void deleteReminder(reminder)}><CloseIcon /></button>
+                  </div>
+                </div>
+              )) : <p className="empty-history">{copy.reminderEmpty}</p>}
             </section>
           </div>
         </section>

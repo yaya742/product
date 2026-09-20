@@ -2,10 +2,36 @@ export type MobileMessageRole = 'user' | 'assistant';
 export type MobileLanguage = 'zh-CN' | 'zh-TW' | 'en';
 export type MobileTheme = 'light' | 'dark';
 
+export type MobileAttachment =
+  | {
+      kind: 'image';
+      name: string;
+      mimeType: 'image/jpeg';
+      dataUrl: string;
+      width: number;
+      height: number;
+    }
+  | {
+      kind: 'text';
+      name: string;
+      text: string;
+    };
+
+export interface MobileReminder {
+  id: string;
+  title: string;
+  notes: string;
+  dueAt: string;
+  createdAt: string;
+  completed: boolean;
+  notificationId: number;
+}
+
 export interface MobileMessage {
   id: string;
   role: MobileMessageRole;
   content: string;
+  attachment?: MobileAttachment;
   translations?: Partial<Record<MobileLanguage, string>>;
   createdAt: string;
   status: 'running' | 'done' | 'error';
@@ -32,6 +58,7 @@ export interface MobileState {
   conversations: MobileConversation[];
   activeConversationId: string;
   memories: string[];
+  reminders: MobileReminder[];
   profile: MobileProfile;
 }
 
@@ -59,6 +86,7 @@ export function createInitialState(): MobileState {
     conversations: [conversation],
     activeConversationId: conversation.id,
     memories: [],
+    reminders: [],
     profile: { ...DEFAULT_PROFILE },
   };
 }

@@ -6,6 +6,11 @@ export const DEEPSEEK_MODEL = 'deepseek-flash';
 
 export type DeepSeekRole = 'system' | 'user' | 'assistant' | 'tool';
 
+export type DeepSeekContent = string | Array<
+  | { type: 'text'; text: string }
+  | { type: 'image_url'; image_url: { url: string } }
+>;
+
 export interface DeepSeekToolCall {
   id: string;
   type: 'function';
@@ -14,7 +19,7 @@ export interface DeepSeekToolCall {
 
 export interface DeepSeekMessage {
   role: DeepSeekRole;
-  content: string | null;
+  content: DeepSeekContent | null;
   tool_calls?: DeepSeekToolCall[];
   tool_call_id?: string;
 }
@@ -97,6 +102,57 @@ export const LOCAL_TOOL_SPECS: DeepSeekToolSpec[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'create_local_reminder',
+      description: '在手机本地创建一个提醒。只有用户明确要求提醒、记住某个时间或安排待办时使用；时间必须是 ISO 8601 格式并带时区。',
+      parameters: {
+        type: 'object',
+        properties: {
+          title: { type: 'string', description: '提醒标题' },
+          due_at: { type: 'string', description: '提醒时间，使用带时区的 ISO 8601 时间' },
+          notes: { type: 'string', description: '可选的提醒说明' },
+        },
+        required: ['title', 'due_at'],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_local_reminders',
+      description: '读取手机本地尚未完成的提醒。用户询问自己的待办或提醒时使用。',
+      parameters: { type: 'object', properties: {}, additionalProperties: false },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'search_local_history',
+      description: '搜索当前手机保存的历史对话。只在用户明确要求查找以前聊过的内容时使用。',
+      parameters: {
+        type: 'object',
+        properties: { query: { type: 'string', description: '要搜索的关键词或问题' } },
+        required: ['query'],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'save_memory',
+      description: '保存一条用户明确要求长期记住的信息。没有明确的“记住、保存、以后都这样”等意思时不要使用。',
+      parameters: {
+        type: 'object',
+        properties: { text: { type: 'string', description: '要保存的简短信息' } },
+        required: ['text'],
+        additionalProperties: false,
+      },
+    },
+  },
 ];
 
 function apiErrorMessage(payload: unknown): string | undefined {
@@ -170,7 +226,7 @@ function completionFromJson(payload: unknown, onText?: (text: string) => void): 
   const message = value.choices?.[0]?.message;
   if (!message || message.role !== 'assistant')
     throw new DeepSeekError('DeepSeek 没有返回可用回复，请重试。', 'protocol');
-  if (message.content) onText?.(message.content);
+  if (typeof message.content === 'string' && message.content) onText?.(message.content);
   return { message, usage: value.usage };
 }
 
@@ -357,5 +413,5 @@ export async function translateText(
     signal,
     [],
   );
-  return completion.message.content?.trim() || text;
+  return typeof completion.message.content === 'string' ? completion.message.content.trim() || text : text;
 }

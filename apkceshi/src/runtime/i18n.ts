@@ -63,6 +63,26 @@ export interface UiCopy {
   typing: string;
   draftPlaceholder: string;
   titleFallback: string;
+  attachFile: string;
+  removeAttachment: string;
+  attachmentTooLarge: string;
+  attachmentInvalid: string;
+  imageReady: string;
+  textAttachmentReady: string;
+  reminders: string;
+  remindersHint: string;
+  remindersTitle: string;
+  reminderEmpty: string;
+  reminderTitle: string;
+  reminderNotes: string;
+  reminderTime: string;
+  addReminder: string;
+  complete: string;
+  reminderSaved: string;
+  notificationDenied: string;
+  webReminderNote: string;
+  memoryRemove: string;
+  historySearchPlaceholder: string;
 }
 
 const SIMPLIFIED: UiCopy = {
@@ -128,6 +148,26 @@ const SIMPLIFIED: UiCopy = {
   typing: '正在整理…',
   draftPlaceholder: '说说眼前的事…',
   titleFallback: '未命名对话',
+  attachFile: '添加附件',
+  removeAttachment: '移除附件',
+  attachmentTooLarge: '附件太大，请选择较小的文件。',
+  attachmentInvalid: '暂不支持这个文件，请选择图片或文字文件。',
+  imageReady: '请看看这张图片',
+  textAttachmentReady: '请阅读这个文字附件',
+  reminders: '日程提醒',
+  remindersHint: '只保存在本机，到时间提醒你',
+  remindersTitle: '日程提醒',
+  reminderEmpty: '还没有安排提醒',
+  reminderTitle: '提醒内容',
+  reminderNotes: '备注（可选）',
+  reminderTime: '提醒时间',
+  addReminder: '添加提醒',
+  complete: '完成',
+  reminderSaved: '已保存到本机',
+  notificationDenied: '已保存，但系统通知权限未开启。',
+  webReminderNote: '浏览器预览不会发送系统通知，安装 APK 后才会提醒。',
+  memoryRemove: '移除记忆',
+  historySearchPlaceholder: '搜索历史对话',
 };
 
 const TRADITIONAL: UiCopy = {
@@ -149,6 +189,9 @@ const TRADITIONAL: UiCopy = {
   translatingConversation: '正在翻譯目前對話…', translatedConversation: '對話語言已切換。', translationNeedKey: '切換對話語言需要先設定 DeepSeek API Key。', translationFailed: '部分訊息翻譯失敗，已保留原文。', back: '返回',
   contacting: '聯絡 DeepSeek', readingTime: '讀取手機時間', locating: '請求手機定位', composing: '整理回覆',
   assistant: '在場', user: '你', typing: '正在整理…', draftPlaceholder: '說說眼前的事…', titleFallback: '未命名對話',
+  attachFile: '添加附件', removeAttachment: '移除附件', attachmentTooLarge: '附件太大，請選擇較小的檔案。', attachmentInvalid: '暫不支援這個檔案，請選擇圖片或文字檔案。',
+  imageReady: '請看看這張圖片', textAttachmentReady: '請閱讀這個文字附件', reminders: '日程提醒', remindersHint: '只保存在本機，到時間提醒你', remindersTitle: '日程提醒', reminderEmpty: '還沒有安排提醒',
+  reminderTitle: '提醒內容', reminderNotes: '備註（可選）', reminderTime: '提醒時間', addReminder: '添加提醒', complete: '完成', reminderSaved: '已儲存到本機', notificationDenied: '已儲存，但系統通知權限未開啟。', webReminderNote: '瀏覽器預覽不會發送系統通知，安裝 APK 後才會提醒。', memoryRemove: '移除記憶', historySearchPlaceholder: '搜尋歷史對話',
 };
 
 const ENGLISH: UiCopy = {
@@ -168,6 +211,8 @@ const ENGLISH: UiCopy = {
   translatingConversation: 'Translating this conversation…', translatedConversation: 'Conversation language switched.', translationNeedKey: 'Add a DeepSeek API key before translating this conversation.', translationFailed: 'Some messages could not be translated and were kept as-is.', back: 'Back', contacting: 'Contacting DeepSeek',
   readingTime: 'Reading phone time', locating: 'Requesting location', composing: 'Preparing reply', assistant: 'Zaichang', user: 'You', typing: 'Preparing…',
   draftPlaceholder: 'Tell me what is on your mind…', titleFallback: 'Untitled chat',
+  attachFile: 'Add attachment', removeAttachment: 'Remove attachment', attachmentTooLarge: 'The attachment is too large. Choose a smaller file.', attachmentInvalid: 'This file is not supported. Choose an image or text file.', imageReady: 'Please look at this image', textAttachmentReady: 'Please read this text attachment',
+  reminders: 'Reminders', remindersHint: 'Stored on this device and shown on time', remindersTitle: 'Reminders', reminderEmpty: 'No reminders yet', reminderTitle: 'Reminder', reminderNotes: 'Notes (optional)', reminderTime: 'Time', addReminder: 'Add reminder', complete: 'Done', reminderSaved: 'Saved on this device', notificationDenied: 'Saved, but system notifications are disabled.', webReminderNote: 'Browser preview cannot send system notifications; install the APK to receive them.', memoryRemove: 'Remove memory', historySearchPlaceholder: 'Search chat history',
 };
 
 export function getUiCopy(language: MobileLanguage): UiCopy {
