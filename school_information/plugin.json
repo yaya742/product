@@ -1,0 +1,119 @@
+{
+  "apiVersion": 1,
+  "id": "campus.zju-public",
+  "version": "1.0.0",
+  "displayName": "浙江大学校园公开信息",
+  "description": "读取浙江大学官方校历、教学通知和学院官网索引的只读插件，不访问个人账号资料。",
+  "entry": "index.mjs",
+  "capabilities": [
+    {
+      "name": "school.calendar.read",
+      "displayName": "读取官方校历",
+      "description": "读取指定学年的浙江大学官方校历页面、原件链接和公告中明确写出的日期。",
+      "version": "1.0.0",
+      "effect": "read",
+      "requiredScopes": ["school:read"],
+      "subjects": ["self"],
+      "worlds": ["real"],
+      "timeoutMs": 30000,
+      "maxBytes": 120000,
+      "supportsIdempotency": false,
+      "supportsInspect": false,
+      "supportsCancel": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "academicYear": { "type": "string", "minLength": 9, "maxLength": 9 }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": ["status", "sourceId", "simulated"],
+        "properties": {
+          "status": { "type": "string" },
+          "sourceId": { "type": "string", "const": "plugin:campus.zju-public" },
+          "simulated": { "type": "boolean", "const": false },
+          "data": { "type": "object" },
+          "reason": { "type": "string", "maxLength": 500 }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "school.notices.search",
+      "displayName": "搜索官方教学通知",
+      "description": "搜索浙江大学本科教学管理信息服务平台公开通知，可按关键词和页码读取有界摘要。",
+      "version": "1.0.0",
+      "effect": "read",
+      "requiredScopes": ["school:read"],
+      "subjects": ["self"],
+      "worlds": ["real"],
+      "timeoutMs": 30000,
+      "maxBytes": 120000,
+      "supportsIdempotency": false,
+      "supportsInspect": false,
+      "supportsCancel": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "maxLength": 100 },
+          "page": { "type": "integer", "minimum": 1, "maximum": 50 },
+          "detail": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": ["status", "sourceId", "simulated"],
+        "properties": {
+          "status": { "type": "string" },
+          "sourceId": { "type": "string", "const": "plugin:campus.zju-public" },
+          "simulated": { "type": "boolean", "const": false },
+          "data": { "type": "object" },
+          "reason": { "type": "string", "maxLength": 500 }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "school.college.directory",
+      "displayName": "查询学院官网索引",
+      "description": "从浙江大学官方学院目录中定位学院官网，返回官方链接和目录摘要，不抓取个人信息。",
+      "version": "1.0.0",
+      "effect": "read",
+      "requiredScopes": ["school:read"],
+      "subjects": ["self"],
+      "worlds": ["real"],
+      "timeoutMs": 30000,
+      "maxBytes": 120000,
+      "supportsIdempotency": false,
+      "supportsInspect": false,
+      "supportsCancel": false,
+      "inputSchema": {
+        "type": "object",
+        "required": ["college"],
+        "properties": {
+          "college": { "type": "string", "minLength": 1, "maxLength": 80 }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": ["status", "sourceId", "simulated"],
+        "properties": {
+          "status": { "type": "string" },
+          "sourceId": { "type": "string", "const": "plugin:campus.zju-public" },
+          "simulated": { "type": "boolean", "const": false },
+          "data": { "type": "object" },
+          "reason": { "type": "string", "maxLength": 500 }
+        },
+        "additionalProperties": false
+      }
+    }
+  ],
+  "egressHosts": ["ugrs.zju.edu.cn", "zdbk.zju.edu.cn", "www.zju.edu.cn"],
+  "platforms": ["win32", "darwin", "linux"],
+  "offline": "unsupported",
+  "license": "MIT"
+}
