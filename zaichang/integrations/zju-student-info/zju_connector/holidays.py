@@ -13,7 +13,7 @@ from datetime import date
 import html
 import re
 from typing import Any
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 from .http_client import CampusHttpClient
 
@@ -65,6 +65,8 @@ def parse_calendar_page(page_html: str, page_url: str) -> dict[str, Any]:
     academic_year = f"{year_match.group(1)}-{year_match.group(2)}" if year_match else None
     pdf_match = re.search(r"pdfsrc=[\"']([^\"']+)[\"']", page_html, flags=re.I)
     pdf_url = urljoin(page_url, html.unescape(pdf_match.group(1))) if pdf_match else None
+    if pdf_url and urlparse(pdf_url).hostname != "ugrs.zju.edu.cn":
+        pdf_url = None
     return {"title": title, "academic_year": academic_year, "page_url": page_url, "pdf_url": pdf_url}
 
 
