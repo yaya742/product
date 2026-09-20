@@ -293,8 +293,10 @@ async function clearCampusCookies() {
 }
 
 async function authenticate(studentId: string, password: string) {
-  // execution is tied to the CAS cookie created by the initial GET.
-  const loginPage = await request({ url: LOGIN_URL, responseType: 'text', disableRedirects: true });
+  // The CAS entry point may redirect to the current trusted identity host.
+  // Follow only trusted ZJU redirects so the execution token remains tied to
+  // the same manual cookie jar without treating a normal HTTP 302 as failure.
+  const loginPage = await followGet(LOGIN_URL);
   if (loginPage.status !== 200) throw new CampusError(`无法打开统一身份认证（HTTP ${loginPage.status}）。`, 'authentication');
   const execution = parseExecution(responseText(loginPage));
   const publicKeyResponse = await request({ url: PUBLIC_KEY_URL, responseType: 'text', disableRedirects: true });
