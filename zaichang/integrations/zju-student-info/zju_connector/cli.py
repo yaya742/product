@@ -209,7 +209,10 @@ def _notices(
 ) -> dict[str, Any]:
     query = (query or "").strip()[:100] or None
     page = max(1, min(50, int(page)))
-    include_details = bool(detail or query)
+    # Keyword searches are the latency-sensitive path. Keep them to one list
+    # request; fetching up to three detail pages is opt-in so the assistant can
+    # answer quickly with titles, summaries and official links first.
+    include_details = bool(detail)
     scope = "latest" if not query and page == 1 and not include_details else f"search:{query or ''}:{page}:{int(include_details)}"
     previous = _previous_notices_bundle(scope)
     now = datetime.now(timezone.utc)

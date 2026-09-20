@@ -242,6 +242,21 @@ class ConnectorTests(unittest.TestCase):
         self.assertEqual(result["normalized"]["notices"][0]["title"], "通知")
         fetch.assert_called_once_with(query="选课", page=2, include_details=True)
 
+    def test_notices_keyword_search_skips_detail_fetch_by_default(self):
+        normalized = {
+            "notices": [{"id": "zju-notice-1", "title": "通知", "url": "https://zdbk.zju.edu.cn/notice"}],
+            "sources": [{"kind": "official_notice_index", "url": "https://zdbk.zju.edu.cn/list"}],
+            "coverage": {"complete": True},
+        }
+        with patch.object(cli, "history", return_value=[]), \
+             patch.object(cli, "fetch_public_notices", return_value=normalized) as fetch, \
+             patch.object(cli, "save_notices_bundle", return_value="d" * 32):
+            result = cli._notices(refresh=True, query="选课", page=1, detail=False)
+
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["normalized"]["notices"][0]["title"], "通知")
+        fetch.assert_called_once_with(query="选课", page=1, include_details=False)
+
 
 if __name__ == "__main__":
     unittest.main()

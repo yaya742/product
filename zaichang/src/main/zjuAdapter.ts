@@ -939,7 +939,9 @@ export class ZjuAdapter {
   ) {
     const normalizedQuery = query?.trim() || '';
     const normalizedPage = Math.max(1, Math.min(50, Math.floor(page || 1)));
-    const includeDetails = detail || Boolean(normalizedQuery);
+    // A keyword search only needs the official list. Full article fetches are
+    // deliberately opt-in because they add up to three extra network calls.
+    const includeDetails = detail;
     const key = `official:${normalizedQuery}:${normalizedPage}:${includeDetails ? 1 : 0}`;
     let pending = this.noticesInFlight.get(key);
     if (!pending) {
@@ -974,7 +976,9 @@ export class ZjuAdapter {
     const unsupportedFields = (args.fields || []).filter(field => !SAFE_MODEL_FIELDS.has(field));
     if (unsupportedFields.length) throw new Error('该字段不在安全摘要范围内，请缩小到工具提供的可读字段。');
     const page = Math.max(1, Math.min(50, Math.floor(args.page || 1)));
-    const includeDetails = Boolean(args.detail || args.query);
+    // Keep the common search path fast; callers can request full official
+    // article bodies explicitly with detail=true.
+    const includeDetails = Boolean(args.detail);
     const notices = await this.bootstrapNotices(signal, !!args.refresh, args.query, page, includeDetails);
     if (!notices?.bundle_id) {
       return {
