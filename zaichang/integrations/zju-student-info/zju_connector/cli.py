@@ -12,6 +12,7 @@ from .credentials import forget_credentials, load_credentials, show_credentials_
 from .normalize import courses_from_schedule, exam_items, grade_alerts, grade_items, grade_semester_summaries, grade_summary, schedule_item
 from .holidays import fetch_public_calendar
 from .notices import fetch_public_notices
+from .college_notices import fetch_college_notices
 from .storage import forget_bundles, history, load_bundle, save_academic_bundle, save_calendar_bundle, save_notices_bundle
 from .zdbk import fetch_exams, fetch_grades, fetch_schedule, fetch_todos
 
@@ -81,6 +82,7 @@ def _parser() -> argparse.ArgumentParser:
     calendar.add_argument("--refresh", action="store_true")
     notices = commands.add_parser("notices")
     notices.add_argument("--query", default="")
+    notices.add_argument("--college", default="")
     notices.add_argument("--page", type=int, default=1)
     notices.add_argument("--detail", action="store_true")
     notices.add_argument("--refresh", action="store_true")
@@ -201,19 +203,33 @@ def _previous_notices_bundle(scope: str = "latest") -> tuple[str, dict[str, Any]
     return None
 
 
+def _notice_source(normalized: dict[str, Any], evidence: str) -> dict[str, str]:
+    coverage = normalized.get("coverage") if isinstance(normalized, dict) else None
+    college = coverage.get("college") if isinstance(coverage, dict) else None
+    if isinstance(college, str) and college.strip():
+        return {"service": f"ZJU official {college} site", "evidence": evidence}
+    return {"service": "ZJU official undergraduate notice board", "evidence": evidence}
+
+
 def _notices(
     refresh: bool = False,
     query: str | None = None,
     page: int = 1,
     detail: bool = False,
+    college: str | None = None,
 ) -> dict[str, Any]:
     query = (query or "").strip()[:100] or None
+    college = (college or "").strip()[:80] or None
     page = max(1, min(50, int(page)))
     # Keyword searches are the latency-sensitive path. Keep them to one list
     # request; fetching up to three detail pages is opt-in so the assistant can
     # answer quickly with titles, summaries and official links first.
     include_details = bool(detail)
-    scope = "latest" if not query and page == 1 and not include_details else f"search:{query or ''}:{page}:{int(include_details)}"
+    scope = (
+        "latest"
+        if not college and not query and page == 1 and not include_details
+        else f"college:{college or ''}:search:{query or ''}:{page}:{int(include_details)}"
+    )
     previous = _previous_notices_bundle(scope)
     now = datetime.now(timezone.utc)
     if previous and not refresh:
@@ -228,10 +244,14 @@ def _notices(
             "fetched_at": fetched_at,
             "normalized": normalized,
             "stale": age_ms >= 48 * 60 * 60 * 1000,
-            "source": {"service": "ZJU official undergraduate notice board", "evidence": "encrypted normalized cache"},
+            "source": _notice_source(normalized, "encrypted normalized cache"),
         }
     try:
-        normalized = fetch_public_notices(query=query, page=page, include_details=include_details)
+        normalized = (
+            fetch_college_notices(college, query=query, page=page, include_details=include_details)
+            if college
+            else fetch_public_notices(query=query, page=page, include_details=include_details)
+        )
         bundle_id = save_notices_bundle(normalized, scope)
         return {
             "status": "ok" if normalized.get("coverage", {}).get("complete") else "partial",
@@ -239,7 +259,7 @@ def _notices(
             "fetched_at": now.isoformat(),
             "normalized": normalized,
             "stale": False,
-            "source": {"service": "ZJU official undergraduate notice board", "evidence": "live public read"},
+            "source": _notice_source(normalized, "live public read"),
         }
     except Exception as exception:
         if previous:
@@ -251,7 +271,7 @@ def _notices(
                 "normalized": normalized,
                 "stale": True,
                 "issues": [{"resource": "notices", "message": _resource_issue("notices", exception)["message"]}],
-                "source": {"service": "ZJU official undergraduate notice board", "evidence": "previous encrypted cache"},
+                "source": _notice_source(normalized, "previous encrypted cache"),
             }
         return {"status": "error", "error": {"code": "NOTICES_SYNC_FAILED", "message": _resource_issue("notices", exception)["message"]}}
 
@@ -435,7 +455,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "calendar":
             return emit(_calendar(args.year, args.refresh))
         if args.command == "notices":
-            return emit(_notices(args.refresh, args.query, args.page, args.detail))
+            return emit(_notices(args.refresh, args.query, args.page, args.detail, args.college))
         if args.command == "history":
             return emit({"status": "ok", "items": history(args.limit)})
         if args.command == "quick":

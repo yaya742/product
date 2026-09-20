@@ -14,6 +14,7 @@ from zju_connector.auth import _encrypt_password
 import zju_connector.cli as cli
 from zju_connector.holidays import discover_calendar_pages, parse_calendar_page, parse_holiday_notice
 from zju_connector.notices import fetch_public_notices, parse_notice_detail, parse_public_notices
+from zju_connector.college_notices import fetch_college_notices
 from zju_connector.normalize import courses_from_schedule, exam_items, grade_alerts, grade_items, grade_semester_summaries, grade_summary, schedule_item
 
 
@@ -227,6 +228,24 @@ class ConnectorTests(unittest.TestCase):
         self.assertEqual(params["queryModel.showCount"], ["10"])
         self.assertEqual(params["xwbt"], ["选课"])
 
+    def test_college_notices_resolve_official_site_and_keep_source_boundary(self):
+        class FakeClient:
+            pages = {
+                "https://www.zju.edu.cn/599/listm.htm": '<a href="https://www.math.zju.edu.cn/">数学科学学院</a>',
+                "https://www.math.zju.edu.cn/": '<a href="/bkstz/list12.psp">本科生通知公告</a>',
+                "https://www.math.zju.edu.cn/bkstz/list12.psp": '<a href="/2026/notice.htm">关于转专业名额的通知</a><span>2026-09-20</span>',
+            }
+
+            def request(self, url, **kwargs):
+                return 200, self.pages[url], {}
+
+        result = fetch_college_notices("数学学院", query="转专业", client=FakeClient())
+        self.assertEqual(result["coverage"]["college"], "数学科学学院")
+        self.assertEqual(result["notices"][0]["publisher"], "数学科学学院")
+        self.assertEqual(result["notices"][0]["title"], "关于转专业名额的通知")
+        self.assertTrue(result["notices"][0]["url"].startswith("https://www.math.zju.edu.cn/"))
+        self.assertTrue(all(source["url"].startswith("https://") for source in result["sources"]))
+
     def test_notices_sync_saves_public_snapshot_without_credentials(self):
         normalized = {
             "notices": [{"id": "zju-notice-1", "title": "通知", "url": "https://zdbk.zju.edu.cn/notice"}],
@@ -256,6 +275,20 @@ class ConnectorTests(unittest.TestCase):
         self.assertEqual(result["status"], "ok")
         self.assertEqual(result["normalized"]["notices"][0]["title"], "通知")
         fetch.assert_called_once_with(query="选课", page=1, include_details=False)
+
+    def test_college_notice_sync_keeps_college_source_label(self):
+        normalized = {
+            "notices": [{"id": "college-1", "title": "转专业通知", "url": "https://www.math.zju.edu.cn/notice"}],
+            "sources": [{"kind": "official_college_notice_page", "url": "https://www.math.zju.edu.cn/"}],
+            "coverage": {"complete": True, "college": "数学科学学院"},
+        }
+        with patch.object(cli, "history", return_value=[]), \
+             patch.object(cli, "fetch_college_notices", return_value=normalized) as fetch, \
+             patch.object(cli, "save_notices_bundle", return_value="e" * 32):
+            result = cli._notices(refresh=True, query="转专业", page=1, detail=False, college="数学学院")
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["source"]["service"], "ZJU official 数学科学学院 site")
+        fetch.assert_called_once_with("数学学院", query="转专业", page=1, include_details=False)
 
 
 if __name__ == "__main__":

@@ -51,6 +51,7 @@ export interface CampusReadArgs {
   filters?: string[];
   sort?: string;
   query?: string;
+  college?: string;
   page?: number;
   detail?: boolean;
   limit?: number;
@@ -934,23 +935,26 @@ export class ZjuAdapter {
     signal: AbortSignal,
     refresh = false,
     query?: string,
+    college?: string,
     page = 1,
     detail = false,
   ) {
     const normalizedQuery = query?.trim() || '';
+    const normalizedCollege = college?.trim() || '';
     const normalizedPage = Math.max(1, Math.min(50, Math.floor(page || 1)));
     // A keyword search only needs the official list. Full article fetches are
     // deliberately opt-in because they add up to three extra network calls.
     const includeDetails = detail;
-    const key = `official:${normalizedQuery}:${normalizedPage}:${includeDetails ? 1 : 0}`;
+    const key = `official:${normalizedCollege}:${normalizedQuery}:${normalizedPage}:${includeDetails ? 1 : 0}`;
     let pending = this.noticesInFlight.get(key);
     if (!pending) {
       const args = ['notices'];
       if (normalizedQuery) args.push('--query', normalizedQuery);
+      if (normalizedCollege) args.push('--college', normalizedCollege);
       if (normalizedPage !== 1) args.push('--page', String(normalizedPage));
       if (includeDetails) args.push('--detail');
       if (refresh) args.push('--refresh');
-      pending = this.run(args, signal, 45_000).finally(() => {
+      pending = this.run(args, signal, normalizedCollege ? 90_000 : 45_000).finally(() => {
         this.noticesInFlight.delete(key);
       });
       this.noticesInFlight.set(key, pending);
@@ -960,13 +964,13 @@ export class ZjuAdapter {
     return result;
   }
 
-  private queueNoticesRefresh() {
+  private queueNoticesRefresh(query = '', college = '', page = 1, detail = false) {
     const keyPrefix = 'official:';
     if (CAMPUS_AUTO_REFRESH_DISABLED || [...this.noticesInFlight.keys()].some(key => key.startsWith(keyPrefix))) return;
     queueMicrotask(() => {
       if ([...this.noticesInFlight.keys()].some(key => key.startsWith(keyPrefix))) return;
       const controller = new AbortController();
-      void this.bootstrapNotices(controller.signal, true).catch(() => undefined);
+      void this.bootstrapNotices(controller.signal, true, query, college, page, detail).catch(() => undefined);
     });
   }
 
@@ -979,7 +983,7 @@ export class ZjuAdapter {
     // Keep the common search path fast; callers can request full official
     // article bodies explicitly with detail=true.
     const includeDetails = Boolean(args.detail);
-    const notices = await this.bootstrapNotices(signal, !!args.refresh, args.query, page, includeDetails);
+    const notices = await this.bootstrapNotices(signal, !!args.refresh, args.query, args.college, page, includeDetails);
     if (!notices?.bundle_id) {
       return {
         domain: args.domain,
@@ -994,7 +998,7 @@ export class ZjuAdapter {
         },
       };
     }
-    if (notices.stale && !args.refresh) this.queueNoticesRefresh();
+    if (notices.stale && !args.refresh) this.queueNoticesRefresh(args.query, args.college, page, includeDetails);
     const cli = ['quick', 'notices', '--bundle', String(notices.bundle_id)];
     if (args.query) cli.push('--query', args.query);
     if (args.fields?.length) cli.push('--fields', args.fields.join(','));

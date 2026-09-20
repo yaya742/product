@@ -22,10 +22,21 @@ ALLOWED_HOSTS = {
 USER_AGENT = "Zaichang-ZJU-Connector/0.1 (Windows; read-only)"
 
 
+def _allowed_host(hostname: str | None, allow_official_subdomains: bool = False) -> bool:
+    host = (hostname or "").lower().rstrip(".")
+    if host in ALLOWED_HOSTS:
+        return True
+    return allow_official_subdomains and (host == "zju.edu.cn" or host.endswith(".zju.edu.cn"))
+
+
 class SafeRedirectHandler(HTTPRedirectHandler):
+    def __init__(self, allow_official_subdomains: bool = False) -> None:
+        super().__init__()
+        self.allow_official_subdomains = allow_official_subdomains
+
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         target = urlparse(urljoin(req.full_url, newurl))
-        if target.scheme != "https" or target.hostname not in ALLOWED_HOSTS:
+        if target.scheme != "https" or not _allowed_host(target.hostname, self.allow_official_subdomains):
             raise RuntimeError("校园系统返回了不受信任的跳转地址，已停止连接。")
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
@@ -36,9 +47,10 @@ class NoRedirectHandler(HTTPRedirectHandler):
 
 
 class CampusHttpClient:
-    def __init__(self) -> None:
+    def __init__(self, allow_official_subdomains: bool = False) -> None:
+        self.allow_official_subdomains = allow_official_subdomains
         self.cookies = http.cookiejar.CookieJar()
-        self.opener = build_opener(HTTPCookieProcessor(self.cookies), SafeRedirectHandler())
+        self.opener = build_opener(HTTPCookieProcessor(self.cookies), SafeRedirectHandler(allow_official_subdomains))
         self.no_redirect_opener = build_opener(HTTPCookieProcessor(self.cookies), NoRedirectHandler())
 
     def request(
@@ -54,7 +66,7 @@ class CampusHttpClient:
         follow_redirects: bool = True,
     ) -> tuple[int, str, dict[str, str]]:
         parsed = urlparse(url)
-        if parsed.scheme != "https" or parsed.hostname not in ALLOWED_HOSTS:
+        if parsed.scheme != "https" or not _allowed_host(parsed.hostname, self.allow_official_subdomains):
             raise RuntimeError("连接器拒绝访问未列入清单的网络地址。")
         request_headers = {"User-Agent": USER_AGENT, **(headers or {})}
         request = Request(url, data=data, headers=request_headers, method="POST" if data is not None else "GET")
