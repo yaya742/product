@@ -641,6 +641,7 @@ export class ZjuAdapter {
         }, signal);
         const data = result?.data && typeof result.data === 'object' ? result.data as Record<string, any> : {};
         if (['error', 'unavailable', 'auth_required'].includes(String(data.status))) throw new Error(String(data.reason || '学院官网暂时不可用。'));
+        if (data.stale === true || data.freshness?.stale === true) throw new Error('学院官网刷新失败，继续保留上一份资料并稍后重试。');
         const records = this.subscriptionRecords(data.records);
         const fingerprint = createHash('sha256').update(JSON.stringify(records)).digest('hex');
         const checkedAt = new Date().toISOString();
