@@ -223,6 +223,8 @@ def _notices(
     query = (query or "").strip()[:100] or None
     college = (college or "").strip()[:80] or None
     category = category if category in SUPPORTED_CATEGORIES else "all"
+    if not college:
+        category = "all"
     page = max(1, min(50, int(page)))
     # Keyword searches are the latency-sensitive path. Keep them to one list
     # request; fetching up to three detail pages is opt-in so the assistant can
