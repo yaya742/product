@@ -135,6 +135,7 @@ const campusDomains = [
   'calendar_pending',
   'cancelled_classes',
   'holidays',
+  'notices',
   'source_status',
 ] as const;
 const campusOverviewRequest = (text: string) =>

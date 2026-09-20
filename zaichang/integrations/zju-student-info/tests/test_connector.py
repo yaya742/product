@@ -13,6 +13,7 @@ sys.path.insert(0, str(ROOT))
 from zju_connector.auth import _encrypt_password
 import zju_connector.cli as cli
 from zju_connector.holidays import discover_calendar_pages, parse_calendar_page, parse_holiday_notice
+from zju_connector.notices import parse_public_notices
 from zju_connector.normalize import courses_from_schedule, exam_items, grade_alerts, grade_items, grade_semester_summaries, grade_summary, schedule_item
 
 
@@ -167,6 +168,49 @@ class ConnectorTests(unittest.TestCase):
         self.assertEqual(result["status"], "ok")
         self.assertEqual(result["bundle_id"], "b" * 32)
         self.assertEqual(result["normalized"]["holidays"][0]["title"], "国庆节")
+
+    def test_public_notices_parser_keeps_bounded_official_metadata(self):
+        payload = {
+            "totalCount": 2,
+            "items": [
+                {
+                    "xwbh": "ABC123",
+                    "xwbt": "关于秋学期选课的通知",
+                    "xwfbr": "本科生院",
+                    "fbsj": "2026-09-20 09:30:50",
+                    "sfzd": "1",
+                    "fbnr": "<p>各位同学，请按时登录系统。</p>" * 100,
+                },
+                {
+                    "xwbh": "DEF456",
+                    "xwbt": "关于考试安排的通知",
+                    "xwfbr": "教务处",
+                    "fbsj": "2026-09-19 08:00:00",
+                    "sfzd": "0",
+                    "fbnr": "<script>alert(1)</script><p>请查看详情。</p>",
+                    "fbdz": "https://evil.example/notices/1",
+                },
+            ],
+        }
+        normalized = parse_public_notices(payload)
+        self.assertEqual([record["title"] for record in normalized["notices"]], ["关于秋学期选课的通知", "关于考试安排的通知"])
+        self.assertLessEqual(len(normalized["notices"][0]["summary"]), 360)
+        self.assertNotIn("alert", normalized["notices"][1]["summary"])
+        self.assertTrue(normalized["notices"][1]["url"].startswith("https://zdbk.zju.edu.cn/"))
+
+    def test_notices_sync_saves_public_snapshot_without_credentials(self):
+        normalized = {
+            "notices": [{"id": "zju-notice-1", "title": "通知", "url": "https://zdbk.zju.edu.cn/notice"}],
+            "sources": [{"kind": "official_notice_index", "url": "https://zdbk.zju.edu.cn/list"}],
+            "coverage": {"complete": True},
+        }
+        with patch.object(cli, "history", return_value=[]), \
+             patch.object(cli, "fetch_public_notices", return_value=normalized), \
+             patch.object(cli, "save_notices_bundle", return_value="c" * 32):
+            result = cli._notices(refresh=True)
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["bundle_id"], "c" * 32)
+        self.assertEqual(result["normalized"]["notices"][0]["title"], "通知")
 
 
 if __name__ == "__main__":

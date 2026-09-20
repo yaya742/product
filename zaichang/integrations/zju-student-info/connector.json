@@ -23,6 +23,7 @@
     "gpa_semesters",
     "gpa_cumulative",
     "holidays",
+    "notices",
     "source_status"
   ],
   "commands": [
@@ -31,6 +32,7 @@
     "auth",
     "academic",
     "calendar",
+    "notices",
     "history",
     "quick"
   ]

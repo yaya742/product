@@ -33,6 +33,7 @@ export type CampusDomain =
   | 'calendar_pending'
   | 'cancelled_classes'
   | 'holidays'
+  | 'notices'
   | 'source_status';
 export type CampusRefreshScope = 'academic' | 'domain';
 
@@ -49,6 +50,7 @@ export interface CampusReadArgs {
   fields?: string[];
   filters?: string[];
   sort?: string;
+  query?: string;
   limit?: number;
   offset?: number;
   refresh?: boolean;
@@ -107,6 +109,7 @@ const DOMAIN_RESOURCE: Record<CampusDomain, string> = {
   calendar_pending: 'calendar_pending',
   cancelled_classes: 'cancelled_classes',
   holidays: 'holidays',
+  notices: 'notices',
   source_status: 'source_status',
 };
 
@@ -121,6 +124,7 @@ const SUMMARY_FIELDS: Partial<Record<CampusDomain, string[]>> = {
   gpa_semesters: ['semester_id', 'gpa', 'gpa_credit_denominator', 'eligible_attempts', 'counted_attempts', 'excluded_attempts', 'complete'],
   gpa_cumulative: ['through_semester', 'gpa', 'gpa_credit_denominator', 'eligible_attempts', 'counted_attempts', 'complete'],
   holidays: ['id', 'title', 'startDate', 'endDate', 'kind', 'note', 'source'],
+  notices: ['id', 'title', 'publishedAt', 'publisher', 'url', 'summary', 'pinned', 'source'],
   retakes: ['course_key', 'course_code', 'name', 'attempts', 'selected', 'selection_policy'],
   projects: ['id', 'projectName', 'categoryName', 'score', 'statusLabel', 'approved', 'countsTowardTotal', 'activityStart', 'activityEnd'],
   activities: ['activity_id', 'course_id', 'name', 'type', 'starts_at', 'deadline', 'scores', 'completion'],
@@ -164,6 +168,7 @@ const DOMAIN_LABEL: Record<CampusDomain, string> = {
   calendar_pending: '待公布补课日期',
   cancelled_classes: '停课与替代课次',
   holidays: '校历与假期',
+  notices: '浙大官方通知',
   source_status: '数据连接状态',
 };
 
@@ -211,6 +216,7 @@ const SENSITIVE_DOMAINS = new Set<CampusDomain>([
 ]);
 const DIRECT_REFRESH_DOMAINS = new Set<CampusDomain>([
   'holidays',
+  'notices',
   'reservations',
   'reservation_violations',
   'card',
@@ -266,7 +272,7 @@ function readManifest(root: string): ConnectorManifest | null {
       !Array.isArray(manifest.allowedHosts) ||
       !manifest.allowedHosts.includes('zjuam.zju.edu.cn') ||
       !Array.isArray(manifest.supportedDomains) ||
-      !manifest.supportedDomains.every((domain) => ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'holidays', 'source_status'].includes(domain))
+      !manifest.supportedDomains.every((domain) => ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'holidays', 'notices', 'source_status'].includes(domain))
     ) return null;
     return manifest;
   } catch {
@@ -464,8 +470,10 @@ export class ZjuAdapter {
   private authInFlight?: Promise<any>;
   private academicInFlight = new Map<string, Promise<any>>();
   private calendarInFlight = new Map<string, Promise<any>>();
+  private noticesInFlight = new Map<string, Promise<any>>();
   private academicBundles = new Map<string, string>();
   private calendarBundles = new Map<string, string>();
+  private noticesBundles = new Map<string, string>();
   private learningBundles = new Map<string, string>();
   private resolvedPython?: string;
 
@@ -524,7 +532,7 @@ export class ZjuAdapter {
         label: '浙大校园账号',
         sourceKind: 'zju_account',
         accessMode: 'compatibility_local',
-        supportedDomains: ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'holidays', 'source_status'],
+        supportedDomains: ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'holidays', 'notices', 'source_status'],
         authStatus: 'needs_login',
         credentialsConfigured: false,
         reason: '还没有找到浙大个人信息技能。可以安装技能，或在连接设置中选择它。',
@@ -587,7 +595,7 @@ export class ZjuAdapter {
         label: '浙大校园账号',
         sourceKind: 'zju_account',
         accessMode: 'compatibility_local',
-        supportedDomains: ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'holidays', 'source_status'],
+        supportedDomains: ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'holidays', 'notices', 'source_status'],
         authStatus: this.credentialsConfigured() ? 'credentials_saved' : 'needs_login',
         credentialsConfigured: this.credentialsConfigured(),
         reason: '技能目录可用，但连接状态摘要暂时不可读。',
@@ -634,6 +642,7 @@ export class ZjuAdapter {
     this.learningBundles.clear();
     this.academicBundles.clear();
     this.calendarBundles.clear();
+    this.noticesBundles.clear();
   }
 
   async configureCredentials(): Promise<void> {
@@ -659,6 +668,7 @@ export class ZjuAdapter {
     this.learningBundles.clear();
     this.academicBundles.clear();
     this.calendarBundles.clear();
+    this.noticesBundles.clear();
   }
 
   async forgetCredentials(signal: AbortSignal = new AbortController().signal) {
@@ -675,6 +685,7 @@ export class ZjuAdapter {
         this.learningBundles.clear();
         this.academicBundles.clear();
         this.calendarBundles.clear();
+        this.noticesBundles.clear();
       }
       return result;
     } finally {
@@ -754,7 +765,7 @@ export class ZjuAdapter {
   async run(args: string[], signal: AbortSignal, timeoutMs = 45_000): Promise<any> {
     const root = this.root();
     if (!root) return { status: 'unavailable', reason: '浙大个人信息连接器尚未配置。', connector: this.describe() };
-    const allowedCommands = new Set(['auth', 'academic', 'calendar', 'history', 'quick', 'credentials']);
+    const allowedCommands = new Set(['auth', 'academic', 'calendar', 'notices', 'history', 'quick', 'credentials']);
     if (!args[0] || !allowedCommands.has(args[0]))
       return { status: 'error', error: { code: 'COMMAND_NOT_ALLOWED', message: '连接器命令不在宿主允许范围内。' }, connector: this.describe() };
     const python = this.pythonCommand();
@@ -917,6 +928,82 @@ export class ZjuAdapter {
     });
   }
 
+  private async bootstrapNotices(signal: AbortSignal, refresh = false) {
+    const key = 'official';
+    let pending = this.noticesInFlight.get(key);
+    if (!pending) {
+      const args = ['notices'];
+      if (refresh) args.push('--refresh');
+      pending = this.run(args, signal, 45_000).finally(() => {
+        this.noticesInFlight.delete(key);
+      });
+      this.noticesInFlight.set(key, pending);
+    }
+    const result = await pending;
+    if (result?.bundle_id) this.noticesBundles.set(key, String(result.bundle_id));
+    return result;
+  }
+
+  private queueNoticesRefresh() {
+    if (CAMPUS_AUTO_REFRESH_DISABLED || this.noticesInFlight.has('official')) return;
+    queueMicrotask(() => {
+      if (this.noticesInFlight.has('official')) return;
+      const controller = new AbortController();
+      void this.bootstrapNotices(controller.signal, true).catch(() => undefined);
+    });
+  }
+
+  private async readPublicNotices(args: CampusReadArgs, signal: AbortSignal) {
+    const blockedFields = (args.fields || []).filter(field => SENSITIVE_FIELD.test(field) || /(身份证|学号|手机号|邮箱)/.test(field));
+    if (blockedFields.length) throw new Error('为保护本人身份信息，该字段不能作为模型读取字段。');
+    const unsupportedFields = (args.fields || []).filter(field => !SAFE_MODEL_FIELDS.has(field));
+    if (unsupportedFields.length) throw new Error('该字段不在安全摘要范围内，请缩小到工具提供的可读字段。');
+    const notices = await this.bootstrapNotices(signal, !!args.refresh);
+    if (!notices?.bundle_id) {
+      return {
+        domain: args.domain,
+        label: DOMAIN_LABEL[args.domain],
+        cached: !args.refresh,
+        connector: this.describe(),
+        data: {
+          status: notices?.status || 'partial',
+          reason: notices?.error?.message || '暂时没有可用的浙大官方通知缓存。',
+          origin: 'zju_public',
+          authenticated: false,
+        },
+      };
+    }
+    if (notices.stale && !args.refresh) this.queueNoticesRefresh();
+    const cli = ['quick', 'notices', '--bundle', String(notices.bundle_id)];
+    if (args.query) cli.push('--query', args.query);
+    if (args.fields?.length) cli.push('--fields', args.fields.join(','));
+    for (const filter of args.filters || []) cli.push('--filter', filter);
+    if (args.sort) cli.push('--sort', args.sort);
+    cli.push('--limit', String(Math.min(50, Math.max(1, args.limit || 8))));
+    cli.push('--offset', String(Math.max(0, args.offset || 0)));
+    const result = await this.run(cli, signal, 25_000);
+    const compact = compactResult(result, args.domain);
+    const observedAt = result?.fetched_at || notices.fetched_at;
+    const freshness = this.cacheFreshness(observedAt);
+    return {
+      domain: args.domain,
+      label: DOMAIN_LABEL[args.domain],
+      cached: !args.refresh,
+      connector: this.describe(),
+      data: {
+        ...(compact && typeof compact === 'object' ? compact : { result: compact }),
+        origin: 'zju_public',
+        authenticated: false,
+        freshness: {
+          ...freshness,
+          stale: Boolean(notices.stale || freshness.stale),
+          policy: 'two_day_snapshot',
+          refreshScheduled: !args.refresh && Boolean(notices.stale || freshness.stale) && !CAMPUS_AUTO_REFRESH_DISABLED,
+        },
+      },
+    };
+  }
+
   private async readPublicCalendar(args: CampusReadArgs, signal: AbortSignal) {
     const blockedFields = (args.fields || []).filter(field => SENSITIVE_FIELD.test(field) || /(身份证|学号|手机号|邮箱)/.test(field));
     if (blockedFields.length) throw new Error('为保护本人身份信息，该字段不能作为模型读取字段。');
@@ -980,6 +1067,7 @@ export class ZjuAdapter {
     const academicYear = this.defaultAcademicYear();
     const term = this.defaultTerm();
     let publicCalendar: any = { status: 'skipped', reason: '校历尚未到刷新时间。' };
+    let publicNotices: any = { status: 'skipped', reason: '官方通知尚未到刷新时间。' };
     try {
       const calendarHistory = await this.run(['history', '--limit', '100'], signal, 20_000);
       const calendarItem = (Array.isArray(calendarHistory?.items) ? calendarHistory.items : []).find(
@@ -993,29 +1081,43 @@ export class ZjuAdapter {
     } catch (error) {
       publicCalendar = { status: 'partial', reason: error instanceof Error ? error.message : '校历后台刷新未完成。' };
     }
+    try {
+      const noticesHistory = await this.run(['history', '--limit', '100'], signal, 20_000);
+      const noticesItem = (Array.isArray(noticesHistory?.items) ? noticesHistory.items : []).find(
+        (entry: any) => entry?.kind === 'notices',
+      );
+      if (!noticesItem?.bundle_id) {
+        publicNotices = await this.bootstrapNotices(signal, false);
+      } else if (this.cacheFreshness(noticesItem.fetched_at).stale) {
+        publicNotices = await this.bootstrapNotices(signal, true);
+      }
+    } catch (error) {
+      publicNotices = { status: 'partial', reason: error instanceof Error ? error.message : '官方通知后台刷新未完成。' };
+    }
     if (!connector.credentialsConfigured)
-      return { status: publicCalendar.status === 'error' ? 'partial' : 'ok', publicCalendar, reason: '未配置账号，仅刷新公开校历。' };
+      return { status: publicCalendar.status === 'error' || publicNotices.status === 'error' ? 'partial' : 'ok', publicCalendar, publicNotices, reason: '未配置账号，仅刷新公开校历和官方通知。' };
     const history = await this.run(['history', '--limit', '100'], signal, 20_000);
     const wanted = `${academicYear}-${term}`;
     const item = (Array.isArray(history?.items) ? history.items : []).find(
       (entry: any) => entry?.kind === 'academic' && String(entry.semester_id || '') === wanted,
     );
     if (!item?.bundle_id)
-      return { status: 'skipped', publicCalendar, reason: '当前学期还没有校园资料快照。' };
+      return { status: 'skipped', publicCalendar, publicNotices, reason: '当前学期还没有校园资料快照。' };
     const freshness = this.cacheFreshness(item.fetched_at);
-    if (!freshness.stale) return { status: 'cached', bundle_id: String(item.bundle_id), freshness, publicCalendar };
+    if (!freshness.stale) return { status: 'cached', bundle_id: String(item.bundle_id), freshness, publicCalendar, publicNotices };
     try {
       const authenticated = await this.ensureAuthenticated(signal);
       if (authenticated?.status !== 'ok')
-        return { status: 'partial', reason: '后台刷新前的浙大统一身份认证没有完成。', freshness, publicCalendar };
+        return { status: 'partial', reason: '后台刷新前的浙大统一身份认证没有完成。', freshness, publicCalendar, publicNotices };
       const result = await this.bootstrapAcademic(signal, academicYear, term);
-      return { ...result, freshness: this.cacheFreshness(result?.fetched_at), publicCalendar };
+      return { ...result, freshness: this.cacheFreshness(result?.fetched_at), publicCalendar, publicNotices };
     } catch (error) {
       return {
         status: 'partial',
         reason: error instanceof Error ? error.message : '后台刷新未完成，继续使用上次校园资料。',
         freshness,
         publicCalendar,
+        publicNotices,
       };
     }
   }
@@ -1165,6 +1267,7 @@ export class ZjuAdapter {
         data: { status: 'unavailable', reason: connector.reason, origin: 'zju_account' },
       };
     if (args.domain === 'holidays') return this.readPublicCalendar(args, signal);
+    if (args.domain === 'notices') return this.readPublicNotices(args, signal);
     if (!connector.credentialsConfigured)
       return {
         domain: args.domain,
@@ -1294,6 +1397,7 @@ export class ZjuAdapter {
     if (args.from) cli.push('--from', args.from);
     if (args.to) cli.push('--to', args.to);
     if (args.at) cli.push('--at', args.at);
+    if (args.query) cli.push('--query', args.query);
     if (args.timeMode) cli.push('--time-mode', args.timeMode);
     const blockedFields = (args.fields || []).filter(field => SENSITIVE_FIELD.test(field) || /(身份证|学号|手机号|邮箱)/.test(field));
     if (blockedFields.length) throw new Error('为保护本人身份信息，该字段不能作为模型读取字段。');
@@ -1346,6 +1450,10 @@ export class ZjuAdapter {
     if (args.scope === 'domain' && args.domain === 'holidays') {
       const result = await this.read({ domain: 'holidays', academicYear: args.academicYear, refresh: true, limit: 20 }, signal);
       return { ...result, scope: args.scope, label: '校历与假期同步' };
+    }
+    if (args.scope === 'domain' && args.domain === 'notices') {
+      const result = await this.read({ domain: 'notices', refresh: true, limit: 20 }, signal);
+      return { ...result, scope: args.scope, label: '浙大官方通知同步' };
     }
     if (!connector.credentialsConfigured) return { scope: args.scope, label: '校园资料同步', connector, data: { status: 'auth_required', reason: '请先在资料面板设置本机校园账号。' } };
     if (args.scope === 'academic') {

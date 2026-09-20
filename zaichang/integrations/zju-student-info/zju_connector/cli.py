@@ -11,7 +11,8 @@ from .auth import authenticate
 from .credentials import forget_credentials, load_credentials, show_credentials_dialog
 from .normalize import courses_from_schedule, exam_items, grade_alerts, grade_items, grade_semester_summaries, grade_summary, schedule_item
 from .holidays import fetch_public_calendar
-from .storage import forget_bundles, history, load_bundle, save_academic_bundle, save_calendar_bundle
+from .notices import fetch_public_notices
+from .storage import forget_bundles, history, load_bundle, save_academic_bundle, save_calendar_bundle, save_notices_bundle
 from .zdbk import fetch_exams, fetch_grades, fetch_schedule, fetch_todos
 
 
@@ -26,6 +27,7 @@ SUPPORTED_RESOURCES = {
     "gpa_semesters",
     "gpa_cumulative",
     "holidays",
+    "notices",
     "source_status",
 }
 
@@ -77,6 +79,8 @@ def _parser() -> argparse.ArgumentParser:
     calendar = commands.add_parser("calendar")
     calendar.add_argument("--year", required=True)
     calendar.add_argument("--refresh", action="store_true")
+    notices = commands.add_parser("notices")
+    notices.add_argument("--refresh", action="store_true")
     history_parser = commands.add_parser("history")
     history_parser.add_argument("--limit", type=int, default=20)
     quick = commands.add_parser("quick")
@@ -90,6 +94,7 @@ def _parser() -> argparse.ArgumentParser:
     quick.add_argument("--time-mode")
     quick.add_argument("--fields")
     quick.add_argument("--filter", action="append", default=[])
+    quick.add_argument("--query")
     quick.add_argument("--sort")
     quick.add_argument("--limit", type=int, default=8)
     quick.add_argument("--offset", type=int, default=0)
@@ -173,6 +178,67 @@ def _calendar(academic_year: str, refresh: bool = False) -> dict[str, Any]:
                 "source": {"service": "ZJU official public calendar", "evidence": "previous encrypted cache"},
             }
         return {"status": "error", "error": {"code": "CALENDAR_SYNC_FAILED", "message": _resource_issue("calendar", exception)["message"]}}
+
+
+def _previous_notices_bundle() -> tuple[str, dict[str, Any], str] | None:
+    for item in history(100):
+        if item.get("kind") != "notices":
+            continue
+        bundle_id = item.get("bundle_id")
+        if not isinstance(bundle_id, str):
+            continue
+        try:
+            bundle = load_bundle(bundle_id)
+        except (FileNotFoundError, OSError, ValueError):
+            continue
+        normalized = bundle.get("normalized")
+        fetched_at = bundle.get("fetched_at")
+        if isinstance(normalized, dict) and isinstance(fetched_at, str):
+            return bundle_id, normalized, fetched_at
+    return None
+
+
+def _notices(refresh: bool = False) -> dict[str, Any]:
+    previous = _previous_notices_bundle()
+    now = datetime.now(timezone.utc)
+    if previous and not refresh:
+        bundle_id, normalized, fetched_at = previous
+        try:
+            age_ms = max(0, (now - datetime.fromisoformat(fetched_at.replace("Z", "+00:00"))).total_seconds() * 1000)
+        except ValueError:
+            age_ms = 49 * 60 * 60 * 1000
+        return {
+            "status": "ok" if normalized.get("coverage", {}).get("complete") else "partial",
+            "bundle_id": bundle_id,
+            "fetched_at": fetched_at,
+            "normalized": normalized,
+            "stale": age_ms >= 48 * 60 * 60 * 1000,
+            "source": {"service": "ZJU official undergraduate notice board", "evidence": "encrypted normalized cache"},
+        }
+    try:
+        normalized = fetch_public_notices()
+        bundle_id = save_notices_bundle(normalized)
+        return {
+            "status": "ok" if normalized.get("coverage", {}).get("complete") else "partial",
+            "bundle_id": bundle_id,
+            "fetched_at": now.isoformat(),
+            "normalized": normalized,
+            "stale": False,
+            "source": {"service": "ZJU official undergraduate notice board", "evidence": "live public read"},
+        }
+    except Exception as exception:
+        if previous:
+            bundle_id, normalized, fetched_at = previous
+            return {
+                "status": "partial",
+                "bundle_id": bundle_id,
+                "fetched_at": fetched_at,
+                "normalized": normalized,
+                "stale": True,
+                "issues": [{"resource": "notices", "message": _resource_issue("notices", exception)["message"]}],
+                "source": {"service": "ZJU official undergraduate notice board", "evidence": "previous encrypted cache"},
+            }
+        return {"status": "error", "error": {"code": "NOTICES_SYNC_FAILED", "message": _resource_issue("notices", exception)["message"]}}
 
 
 def _academic(year: str, term: str) -> dict[str, Any]:
@@ -282,6 +348,13 @@ def _quick(args: argparse.Namespace) -> dict[str, Any]:
         records = normalized.get("events", [])
     if not isinstance(records, list):
         records = []
+    if resource == "notices" and args.query:
+        query = args.query.casefold().strip()
+        records = [
+            record for record in records
+            if isinstance(record, dict)
+            and query in " ".join(str(record.get(key) or "") for key in ("title", "publisher", "summary")).casefold()
+        ]
     offset = max(0, args.offset)
     limit = max(1, min(50, args.limit))
     selected = records[offset : offset + limit]
@@ -307,6 +380,11 @@ def _quick(args: argparse.Namespace) -> dict[str, Any]:
             "当前只读到官方校历来源，尚未读到对应的节假日教学安排公告。"
             if not complete
             else None
+        )
+    if resource == "notices":
+        complete = bool(normalized.get("coverage", {}).get("complete"))
+        note = normalized.get("coverage", {}).get("note") or (
+            "当前没有读到浙大官方通知公告。" if not complete else None
         )
     return {
         "status": "ok" if complete else "partial",
@@ -341,6 +419,8 @@ def main(argv: list[str] | None = None) -> int:
             return emit(_academic(args.year, args.term))
         if args.command == "calendar":
             return emit(_calendar(args.year, args.refresh))
+        if args.command == "notices":
+            return emit(_notices(args.refresh))
         if args.command == "history":
             return emit({"status": "ok", "items": history(args.limit)})
         if args.command == "quick":
