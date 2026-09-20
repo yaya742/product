@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Browser } from '@capacitor/browser';
 import { MapPanel } from './MapPanel';
 import { WeatherPanel } from './WeatherPanel';
 import { runMobileAgent, type AgentStatus } from './runtime/agent';
@@ -381,6 +382,17 @@ export function App() {
       setNoticesMessage(campusErrorMessage(error));
     } finally {
       setNoticesLoading(false);
+    }
+  }
+
+  async function openNoticeInBrowser(url: string) {
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== 'https:' || parsed.hostname.toLowerCase() !== 'zdbk.zju.edu.cn') return;
+      await Browser.open({ url: parsed.toString() });
+    } catch {
+      // Browser.open is unavailable in a browser preview; keep a web fallback.
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
   }
 
@@ -1274,7 +1286,7 @@ export function App() {
                         <div className="campus-notice-heading"><strong>{notice.title}</strong>{notice.pinned && <span>{copy.campusNotices}</span>}</div>
                         <p>{notice.summary || copy.campusNoticeHint}</p>
                         <small>{[notice.publisher, notice.publishedAt].filter(Boolean).join(' · ')}</small>
-                        <a href={notice.url} target="_blank" rel="noreferrer">{copy.campusNoticeOpen}</a>
+                        <button className="notice-open-button" onClick={() => void openNoticeInBrowser(notice.url)}>{copy.campusNoticeOpen}</button>
                       </article>
                     ))}
                   </div>

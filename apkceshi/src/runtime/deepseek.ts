@@ -114,7 +114,7 @@ export const LOCAL_TOOL_SPECS: DeepSeekToolSpec[] = [
     type: 'function',
     function: {
       name: 'search_campus_notices',
-      description: '搜索浙江大学本科教学管理信息服务平台公开通知公告。用户询问选课、考试安排、开学、教学安排或学校公告时使用；不需要校园账号，返回官方公告标题、发布信息、摘要和详情链接。',
+      description: '搜索浙江大学本科教学管理信息服务平台公开通知公告。用户询问某个学院、选课、考试安排、开学、教学安排或学校公告时使用；学院名称可使用核心关键词，例如“数学”或“计算机”；不需要校园账号，返回官方公告标题、发布信息、摘要和详情链接。',
       parameters: {
         type: 'object',
         properties: {

@@ -584,23 +584,35 @@ export async function readPublicNotices(query = '', page = 1): Promise<CampusNot
   assertNative();
   const safeQuery = query.trim().slice(0, 100);
   const safePage = Math.max(1, Math.min(50, Math.trunc(page) || 1));
-  const params = new URLSearchParams({
-    doType: 'query',
-    'queryModel.currentPage': String(safePage),
-    'queryModel.showCount': '10',
-    'queryModel.sortName': 'sfzd desc,fbsj',
-    'queryModel.sortOrder': 'desc',
-    xwbt: safeQuery,
-  });
-  const response = await followGet(`${NOTICES_LIST_URL}?${params.toString()}`);
-  if (response.status < 200 || response.status >= 300) throw new CampusError(`浙大官方公告暂时无法访问（HTTP ${response.status}）。`, 'network');
-  const payload = parseJson(response, '浙大官方公告');
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new CampusError('浙大官方公告返回格式不正确。', 'response');
-  const rawPayload = payload as Record<string, unknown>;
-  if (!Array.isArray(rawPayload.items) && !Array.isArray(rawPayload.rows) && !Array.isArray(rawPayload.list)) {
+  const searchTerms = [safeQuery];
+  const collegeCore = safeQuery.match(/([\u4e00-\u9fa5]{2,})(?=学院|系|书院)/)?.[1];
+  const withoutCollege = safeQuery.replace(/学院|系|书院/g, '').trim();
+  for (const candidate of [collegeCore, withoutCollege, '转专业', '选课', '考试', '开学', '奖学金', '毕业']) {
+    if (candidate && candidate !== safeQuery && !searchTerms.includes(candidate) && (candidate === collegeCore || safeQuery.includes(candidate))) searchTerms.push(candidate);
+  }
+  let rawPayload: Record<string, unknown> = {};
+  let rawItems: Record<string, unknown>[] = [];
+  for (const searchTerm of searchTerms) {
+    const params = new URLSearchParams({
+      doType: 'query',
+      'queryModel.currentPage': String(safePage),
+      'queryModel.showCount': '10',
+      'queryModel.sortName': 'sfzd desc,fbsj',
+      'queryModel.sortOrder': 'desc',
+      xwbt: searchTerm,
+    });
+    const response = await followGet(`${NOTICES_LIST_URL}?${params.toString()}`);
+    if (response.status < 200 || response.status >= 300) throw new CampusError(`浙大官方公告暂时无法访问（HTTP ${response.status}）。`, 'network');
+    const payload = parseJson(response, '浙大官方公告');
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new CampusError('浙大官方公告返回格式不正确。', 'response');
+    rawPayload = payload as Record<string, unknown>;
+    rawItems = listFromPayload(payload, ['items', 'rows', 'list']);
+    if (rawItems.length || searchTerm === searchTerms[searchTerms.length - 1]) break;
+  }
+  if (!rawItems.length && !Array.isArray(rawPayload.items) && !Array.isArray(rawPayload.rows) && !Array.isArray(rawPayload.list)) {
     throw new CampusError('浙大官方公告没有返回可识别的列表。', 'response');
   }
-  const notices = listFromPayload(payload, ['items', 'rows', 'list']).slice(0, 20).flatMap((item, index) => {
+  const notices = rawItems.slice(0, 20).flatMap((item, index) => {
     const id = field(item, ['xwbh', 'id', 'noticeId'], `notice-${safePage}-${index}`);
     const title = field(item, ['xwbt', 'title', 'name']);
     if (!title) return [];

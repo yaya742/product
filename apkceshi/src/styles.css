@@ -313,7 +313,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .campus-notice-heading span { flex: 0 0 auto; padding: 3px 6px; color: var(--text-soft); border: 1px solid var(--line); border-radius: 5px; font-size: 9px; }
 .campus-notice p { margin: 0; color: var(--text-soft); font-size: 11px; line-height: 1.55; }
 .campus-notice small { color: var(--text-faint); font-size: 10px; line-height: 1.4; }
-.campus-notice a { width: fit-content; color: var(--text); font-size: 11px; text-decoration: underline; text-underline-offset: 3px; }
+.notice-open-button { width: fit-content; padding: 0; color: var(--text); border: 0; background: transparent; font-size: 11px; text-decoration: underline; text-underline-offset: 3px; }
 .notice-pagination { display: flex; align-items: center; justify-content: center; gap: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
 .notice-pagination button { min-height: 31px; padding: 0 10px; color: var(--text); border: 1px solid var(--line); border-radius: 8px; background: var(--surface-muted); font-size: 10px; }
 .notice-pagination button:disabled { color: var(--text-faint); opacity: .55; }

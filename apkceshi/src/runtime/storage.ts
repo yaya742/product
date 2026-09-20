@@ -18,7 +18,7 @@ import {
 } from './types';
 
 const STORAGE_KEY = 'zaichang.mobile.local.v2';
-const LEGACY_DUPLICATE_HISTORY_TITLES = new Set(['查看课表请求', '查询课表', '查看课表']);
+const LEGACY_DUPLICATE_HISTORY_TITLES = new Set(['查看课表请求', '查询课表', '查看课表', '数学学院转专业名额咨询']);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
