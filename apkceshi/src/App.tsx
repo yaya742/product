@@ -1117,11 +1117,6 @@ export function App() {
             <span className="topbar-spacer" />
           </header>
           <div className="settings-scroll campus-screen">
-            <div className="campus-intro">
-              <p className="eyebrow">{copy.campus}</p>
-              <h1>{copy.campusTitle}</h1>
-              <p>{copy.campusReadOnly}</p>
-            </div>
             <section className="profile-section campus-account-card">
               <div className="setting-label"><strong>{copy.campus}</strong><span>{copy.campusHint}</span></div>
               <label className="field-label" htmlFor="student-id">{copy.studentId}</label>

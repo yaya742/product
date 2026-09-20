@@ -49,8 +49,12 @@ function responseText(result: HttpResult): string {
   return asText(result.data);
 }
 
-function casLoginUrl(): string {
+function casServiceLoginUrl(): string {
   return `${LOGIN_URL}?service=${encodeURIComponent(ZDBK_SERVICE)}`;
+}
+
+function responseHost(url: string): string {
+  try { return new URL(url).hostname.toLowerCase(); } catch { return ''; }
 }
 
 async function request(options: {
@@ -145,10 +149,11 @@ async function clearCampusCookies() {
 }
 
 async function authenticate(studentId: string, password: string) {
-  // Keep the CAS service target on both GET and POST. Without it, some mobile
-  // network paths return an intermediate identity page without `execution`.
-  const loginUrl = casLoginUrl();
-  const loginPage = await request({ url: loginUrl, responseType: 'text' });
+  // Start at the CAS login page itself. The PC connector uses this sequence:
+  // first obtain the execution token, then POST credentials, then enter the
+  // academic-system service URL. Starting with the service query can return an
+  // intermediate identity page on some mobile network paths.
+  const loginPage = await request({ url: LOGIN_URL, responseType: 'text' });
   if (loginPage.status !== 200) throw new CampusError(`无法打开统一身份认证（HTTP ${loginPage.status}）。`, 'authentication');
   const execution = parseExecution(responseText(loginPage));
   const publicKey = await request({ url: PUBLIC_KEY_URL, responseType: 'json' });
@@ -157,7 +162,7 @@ async function authenticate(studentId: string, password: string) {
   const exponent = field(key, ['exponent']);
   if (!modulus || !exponent) throw new CampusError('统一身份认证没有返回可用公钥。', 'authentication');
   const loginResult = await request({
-    url: loginUrl,
+    url: LOGIN_URL,
     method: 'POST',
     data: {
       username: studentId,
@@ -172,15 +177,23 @@ async function authenticate(studentId: string, password: string) {
   });
   const body = responseText(loginResult);
   if (body.includes('验证码') || body.toLowerCase().includes('captcha')) throw new CampusError('统一身份认证要求验证码，手机端暂不绕过安全校验。', 'captcha');
-  if (loginResult.status >= 400 || body.includes('name="execution"')) throw new CampusError('校园登录未完成，请检查学号、密码或账号状态。', 'authentication');
+  // Capacitor's public getCookies() API reads WebView document.cookie rather
+  // than the native HttpURLConnection cookie jar for third-party hosts. Do
+  // not use it as a session check: the native cookie handler carries the CAS
+  // cookie to the service request below, just like the PC connector does.
+  if (loginResult.status >= 400 || body.includes('name="execution"')) {
+    throw new CampusError('统一身份认证未建立登录会话，请检查学号、密码或账号状态后重试。', 'authentication');
+  }
 }
 
 async function loginZdbk() {
-  const serviceLogin = `${LOGIN_URL}?service=${encodeURIComponent(ZDBK_SERVICE)}`;
+  const serviceLogin = casServiceLoginUrl();
   const result = await request({ url: serviceLogin, responseType: 'text' });
   if (result.status < 200 || result.status >= 400) throw new CampusError(`教务网登录失败（HTTP ${result.status}）。`, 'authentication');
   const body = responseText(result);
-  if (body.includes('统一身份认证') && body.includes('execution')) throw new CampusError('教务网登录态未建立，请重新验证账号。', 'authentication');
+  if (responseHost(result.url) !== 'zdbk.zju.edu.cn' || (body.includes('统一身份认证') && body.includes('execution'))) {
+    throw new CampusError('教务网登录态未建立，请重新验证账号。', 'authentication');
+  }
 }
 
 function ajaxHeaders() {
@@ -208,26 +221,39 @@ function scheduleParts(value: string): string[] {
     .replace(/<br\s*\/?>(\s*)/gi, '\n')
     .replace(/zwf.*$/i, '')
     .split(/\r?\n/)
-    .map((part) => part.replace(/<[^>]+>/g, '').trim())
+    .map((part) => part.replace(/<[^>]+>/g, '').replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').trim())
     .filter(Boolean);
 }
 
-function normalizeCourse(item: Record<string, unknown>, index: number): CampusCourse {
+function weekdayLabel(value: string): string {
+  const clean = value.trim();
+  if (!clean) return '';
+  if (/^(周|星期)/.test(clean)) return clean.replace(/^星期/, '周');
+  const numeric = Number(clean.replace(/\D/g, ''));
+  if (numeric >= 1 && numeric <= 7) return `周${['一', '二', '三', '四', '五', '六', '日'][numeric - 1]}`;
+  return `周${clean}`;
+}
+
+function normalizeCourse(item: Record<string, unknown>, index: number): CampusCourse | null {
   const parts = scheduleParts(field(item, ['kcb']));
-  const day = field(item, ['xqj', 'week_day']);
+  const rawName = field(item, ['kcmc', 'course_name', 'courseName', 'jxbmc', 'kcm']);
+  const rawTeacher = field(item, ['jsxx', 'jsxm', 'teacher', 'teacherName', 'jsmc']);
+  const rawLocation = field(item, ['cdmc', 'jxcdmc', 'jxcd', 'classroom', 'room', 'location']);
+  if (!parts.length && !rawName && !rawTeacher && !rawLocation) return null;
+  const day = weekdayLabel(field(item, ['xqj', 'week_day', 'weekday']));
   const firstPeriod = numberValue(field(item, ['djj', 'start_period']));
   const duration = numberValue(field(item, ['skcd', 'period_count']));
   const lastPeriod = firstPeriod && duration ? firstPeriod + duration - 1 : undefined;
   const periodLabel = firstPeriod && lastPeriod
     ? `第${firstPeriod}-${lastPeriod}节`
-    : field(item, ['jcs', 'period']);
-  const weeks = field(item, ['zcd', 'weeks']) || [field(item, ['xxq']), field(item, ['dsz']) === '0' ? '单周' : field(item, ['dsz']) === '1' ? '双周' : ''].filter(Boolean).join(' · ');
+    : field(item, ['jcs', 'period', 'skjc', 'time']);
+  const weeks = field(item, ['zcd', 'zc', 'weeks', 'week', 'week_range', 'weekRange']) || [field(item, ['xxq']), field(item, ['dsz']) === '0' ? '单周' : field(item, ['dsz']) === '1' ? '双周' : ''].filter(Boolean).join(' · ');
   return {
-    id: field(item, ['jxb_id', 'kch_id', 'kch'], `course-${index}`),
-    name: field(item, ['kcmc', 'course_name'], parts[0] || '未命名课程'),
-    teacher: field(item, ['jsxx', 'jsxm', 'teacher'], parts[2] || '教师未提供'),
-    location: field(item, ['cdmc', 'jxcdmc', 'classroom'], parts[3] || '地点未提供'),
-    time: [day ? `周${day}` : '', periodLabel].filter(Boolean).join(' · ') || '时间未提供',
+    id: field(item, ['jxb_id', 'kch_id', 'kch', 'course_id'], `course-${index}`),
+    name: rawName || parts[0] || '未命名课程',
+    teacher: rawTeacher || parts[2] || '教师未提供',
+    location: rawLocation || parts[3] || '地点未提供',
+    time: [day, periodLabel].filter(Boolean).join(' · ') || '时间未提供',
     weeks: weeks || '周次未提供',
   };
 }
@@ -285,7 +311,7 @@ async function readSchedule(year: string, term: string): Promise<CampusCourse[]>
     if (body.trim() === 'null' || response.data === null) continue;
     const items = listFromPayload(response.data, 'kbList').filter((item) => field(item, ['sfyjskc']) !== '1');
     if (!items.length && response.data && typeof response.data === 'object' && !('kbList' in (response.data as Record<string, unknown>))) throw new CampusError('教务网课表返回了无法识别的数据。', 'response');
-    result.push(...items.map(normalizeCourse));
+    result.push(...items.map(normalizeCourse).filter((item): item is CampusCourse => item !== null));
   }
   return result;
 }
@@ -323,6 +349,9 @@ async function readTodos(): Promise<CampusTodo[]> {
     current = target;
   }
   const response = await request({ url: TODOS_URL, responseType: 'json' });
+  if (response.status === 401 || response.status === 403 || !response.data || typeof response.data !== 'object' || !('todo_list' in (response.data as Record<string, unknown>))) {
+    throw new CampusError('学在浙大没有建立可用登录会话，请稍后重试。', 'authentication');
+  }
   const todos = listFromPayload(response.data, 'todo_list');
   return todos.flatMap((item) => {
     if (!item.id || !(item.is_student === true || item.is_student === 1 || item.is_student === '1')) return [];
