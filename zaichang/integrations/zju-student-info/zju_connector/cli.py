@@ -80,6 +80,9 @@ def _parser() -> argparse.ArgumentParser:
     calendar.add_argument("--year", required=True)
     calendar.add_argument("--refresh", action="store_true")
     notices = commands.add_parser("notices")
+    notices.add_argument("--query", default="")
+    notices.add_argument("--page", type=int, default=1)
+    notices.add_argument("--detail", action="store_true")
     notices.add_argument("--refresh", action="store_true")
     history_parser = commands.add_parser("history")
     history_parser.add_argument("--limit", type=int, default=20)
@@ -180,9 +183,9 @@ def _calendar(academic_year: str, refresh: bool = False) -> dict[str, Any]:
         return {"status": "error", "error": {"code": "CALENDAR_SYNC_FAILED", "message": _resource_issue("calendar", exception)["message"]}}
 
 
-def _previous_notices_bundle() -> tuple[str, dict[str, Any], str] | None:
+def _previous_notices_bundle(scope: str = "latest") -> tuple[str, dict[str, Any], str] | None:
     for item in history(100):
-        if item.get("kind") != "notices":
+        if item.get("kind") != "notices" or str(item.get("scope") or "latest") != scope:
             continue
         bundle_id = item.get("bundle_id")
         if not isinstance(bundle_id, str):
@@ -198,8 +201,17 @@ def _previous_notices_bundle() -> tuple[str, dict[str, Any], str] | None:
     return None
 
 
-def _notices(refresh: bool = False) -> dict[str, Any]:
-    previous = _previous_notices_bundle()
+def _notices(
+    refresh: bool = False,
+    query: str | None = None,
+    page: int = 1,
+    detail: bool = False,
+) -> dict[str, Any]:
+    query = (query or "").strip()[:100] or None
+    page = max(1, min(50, int(page)))
+    include_details = bool(detail or query)
+    scope = "latest" if not query and page == 1 and not include_details else f"search:{query or ''}:{page}:{int(include_details)}"
+    previous = _previous_notices_bundle(scope)
     now = datetime.now(timezone.utc)
     if previous and not refresh:
         bundle_id, normalized, fetched_at = previous
@@ -216,8 +228,8 @@ def _notices(refresh: bool = False) -> dict[str, Any]:
             "source": {"service": "ZJU official undergraduate notice board", "evidence": "encrypted normalized cache"},
         }
     try:
-        normalized = fetch_public_notices()
-        bundle_id = save_notices_bundle(normalized)
+        normalized = fetch_public_notices(query=query, page=page, include_details=include_details)
+        bundle_id = save_notices_bundle(normalized, scope)
         return {
             "status": "ok" if normalized.get("coverage", {}).get("complete") else "partial",
             "bundle_id": bundle_id,
@@ -420,7 +432,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "calendar":
             return emit(_calendar(args.year, args.refresh))
         if args.command == "notices":
-            return emit(_notices(args.refresh))
+            return emit(_notices(args.refresh, args.query, args.page, args.detail))
         if args.command == "history":
             return emit({"status": "ok", "items": history(args.limit)})
         if args.command == "quick":

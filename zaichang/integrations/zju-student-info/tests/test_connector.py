@@ -13,7 +13,7 @@ sys.path.insert(0, str(ROOT))
 from zju_connector.auth import _encrypt_password
 import zju_connector.cli as cli
 from zju_connector.holidays import discover_calendar_pages, parse_calendar_page, parse_holiday_notice
-from zju_connector.notices import parse_public_notices
+from zju_connector.notices import fetch_public_notices, parse_notice_detail, parse_public_notices
 from zju_connector.normalize import courses_from_schedule, exam_items, grade_alerts, grade_items, grade_semester_summaries, grade_summary, schedule_item
 
 
@@ -198,6 +198,35 @@ class ConnectorTests(unittest.TestCase):
         self.assertNotIn("alert", normalized["notices"][1]["summary"])
         self.assertTrue(normalized["notices"][1]["url"].startswith("https://zdbk.zju.edu.cn/"))
 
+    def test_public_notice_detail_parser_extracts_only_official_content(self):
+        detail = '''<h3>关于选课的通知</h3><h5><span>发布人：本科生院</span><span>发布时间：2026-09-20 09:00:00</span></h5>
+        <div class="news_con"><p>第一段正文。</p><div><table><tr><td>时间</td><td>9月20日</td></tr></table></div></div>
+        <div class="footer">页面导航不应进入正文。</div>'''
+        parsed = parse_notice_detail(detail, "https://zdbk.zju.edu.cn/jwglxt/xtgl/xwck_ckLoginNews.html?xwbh=ABC")
+        self.assertEqual(parsed["title"], "关于选课的通知")
+        self.assertEqual(parsed["publisher"], "本科生院")
+        self.assertIn("第一段正文", parsed["detail"])
+        self.assertIn("9月20日", parsed["detail"])
+        self.assertNotIn("页面导航", parsed["detail"])
+
+    def test_public_notice_fetch_uses_server_pagination_contract(self):
+        class FakeClient:
+            def __init__(self):
+                self.url = ""
+
+            def request(self, url, **kwargs):
+                self.url = url
+                return 200, json.dumps({"totalCount": 21, "items": []}), {}
+
+        client = FakeClient()
+        fetch_public_notices(query="选课", page=2, client=client)
+        from urllib.parse import parse_qs, urlparse
+
+        params = parse_qs(urlparse(client.url).query)
+        self.assertEqual(params["queryModel.currentPage"], ["2"])
+        self.assertEqual(params["queryModel.showCount"], ["10"])
+        self.assertEqual(params["xwbt"], ["选课"])
+
     def test_notices_sync_saves_public_snapshot_without_credentials(self):
         normalized = {
             "notices": [{"id": "zju-notice-1", "title": "通知", "url": "https://zdbk.zju.edu.cn/notice"}],
@@ -205,12 +234,13 @@ class ConnectorTests(unittest.TestCase):
             "coverage": {"complete": True},
         }
         with patch.object(cli, "history", return_value=[]), \
-             patch.object(cli, "fetch_public_notices", return_value=normalized), \
+             patch.object(cli, "fetch_public_notices", return_value=normalized) as fetch, \
              patch.object(cli, "save_notices_bundle", return_value="c" * 32):
-            result = cli._notices(refresh=True)
+            result = cli._notices(refresh=True, query="选课", page=2, detail=True)
         self.assertEqual(result["status"], "ok")
         self.assertEqual(result["bundle_id"], "c" * 32)
         self.assertEqual(result["normalized"]["notices"][0]["title"], "通知")
+        fetch.assert_called_once_with(query="选课", page=2, include_details=True)
 
 
 if __name__ == "__main__":

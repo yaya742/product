@@ -51,6 +51,8 @@ export interface CampusReadArgs {
   filters?: string[];
   sort?: string;
   query?: string;
+  page?: number;
+  detail?: boolean;
   limit?: number;
   offset?: number;
   refresh?: boolean;
@@ -124,7 +126,7 @@ const SUMMARY_FIELDS: Partial<Record<CampusDomain, string[]>> = {
   gpa_semesters: ['semester_id', 'gpa', 'gpa_credit_denominator', 'eligible_attempts', 'counted_attempts', 'excluded_attempts', 'complete'],
   gpa_cumulative: ['through_semester', 'gpa', 'gpa_credit_denominator', 'eligible_attempts', 'counted_attempts', 'complete'],
   holidays: ['id', 'title', 'startDate', 'endDate', 'kind', 'note', 'source'],
-  notices: ['id', 'title', 'publishedAt', 'publisher', 'url', 'summary', 'pinned', 'source'],
+  notices: ['id', 'title', 'publishedAt', 'publisher', 'url', 'summary', 'detail', 'detailSource', 'pinned', 'source'],
   retakes: ['course_key', 'course_code', 'name', 'attempts', 'selected', 'selection_policy'],
   projects: ['id', 'projectName', 'categoryName', 'score', 'statusLabel', 'approved', 'countsTowardTotal', 'activityStart', 'activityEnd'],
   activities: ['activity_id', 'course_id', 'name', 'type', 'starts_at', 'deadline', 'scores', 'completion'],
@@ -928,11 +930,23 @@ export class ZjuAdapter {
     });
   }
 
-  private async bootstrapNotices(signal: AbortSignal, refresh = false) {
-    const key = 'official';
+  private async bootstrapNotices(
+    signal: AbortSignal,
+    refresh = false,
+    query?: string,
+    page = 1,
+    detail = false,
+  ) {
+    const normalizedQuery = query?.trim() || '';
+    const normalizedPage = Math.max(1, Math.min(50, Math.floor(page || 1)));
+    const includeDetails = detail || Boolean(normalizedQuery);
+    const key = `official:${normalizedQuery}:${normalizedPage}:${includeDetails ? 1 : 0}`;
     let pending = this.noticesInFlight.get(key);
     if (!pending) {
       const args = ['notices'];
+      if (normalizedQuery) args.push('--query', normalizedQuery);
+      if (normalizedPage !== 1) args.push('--page', String(normalizedPage));
+      if (includeDetails) args.push('--detail');
       if (refresh) args.push('--refresh');
       pending = this.run(args, signal, 45_000).finally(() => {
         this.noticesInFlight.delete(key);
@@ -945,9 +959,10 @@ export class ZjuAdapter {
   }
 
   private queueNoticesRefresh() {
-    if (CAMPUS_AUTO_REFRESH_DISABLED || this.noticesInFlight.has('official')) return;
+    const keyPrefix = 'official:';
+    if (CAMPUS_AUTO_REFRESH_DISABLED || [...this.noticesInFlight.keys()].some(key => key.startsWith(keyPrefix))) return;
     queueMicrotask(() => {
-      if (this.noticesInFlight.has('official')) return;
+      if ([...this.noticesInFlight.keys()].some(key => key.startsWith(keyPrefix))) return;
       const controller = new AbortController();
       void this.bootstrapNotices(controller.signal, true).catch(() => undefined);
     });
@@ -958,7 +973,9 @@ export class ZjuAdapter {
     if (blockedFields.length) throw new Error('为保护本人身份信息，该字段不能作为模型读取字段。');
     const unsupportedFields = (args.fields || []).filter(field => !SAFE_MODEL_FIELDS.has(field));
     if (unsupportedFields.length) throw new Error('该字段不在安全摘要范围内，请缩小到工具提供的可读字段。');
-    const notices = await this.bootstrapNotices(signal, !!args.refresh);
+    const page = Math.max(1, Math.min(50, Math.floor(args.page || 1)));
+    const includeDetails = Boolean(args.detail || args.query);
+    const notices = await this.bootstrapNotices(signal, !!args.refresh, args.query, page, includeDetails);
     if (!notices?.bundle_id) {
       return {
         domain: args.domain,

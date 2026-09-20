@@ -76,19 +76,21 @@ def save_calendar_bundle(academic_year: str, normalized: dict[str, Any]) -> str:
     return bundle_id
 
 
-def save_notices_bundle(normalized: dict[str, Any]) -> str:
+def save_notices_bundle(normalized: dict[str, Any], scope: str = "latest") -> str:
     now = datetime.now(timezone.utc).isoformat()
-    bundle_id = hashlib.sha256(b"notices:zdbk-official").hexdigest()[:32]
+    safe_scope = str(scope or "latest")[:180]
+    bundle_id = hashlib.sha256(f"notices:zdbk-official:{safe_scope}".encode("utf-8")).hexdigest()[:32]
     payload = {
         "schema_version": 1,
         "kind": "notices",
+        "scope": safe_scope,
         "fetched_at": now,
         "normalized": normalized,
     }
     write_encrypted_json(_bundles_dir() / f"{bundle_id}.dpapi", payload, "Zaichang ZJU public notices bundle")
     index = _read_index()
     items = [item for item in index.get("items", []) if item.get("bundle_id") != bundle_id]
-    items.insert(0, {"bundle_id": bundle_id, "kind": "notices", "fetched_at": now})
+    items.insert(0, {"bundle_id": bundle_id, "kind": "notices", "scope": safe_scope, "fetched_at": now})
     index["items"] = items[:24]
     _write_index(index)
     return bundle_id
