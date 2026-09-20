@@ -209,8 +209,12 @@ def _quick(args: argparse.Namespace) -> dict[str, Any]:
         complete = bool(selected and selected[0].get("complete"))
         note = selected[0].get("note") if selected else "当前没有可用的成绩汇总。"
     if resource == "grade_alerts":
-        complete = isinstance(normalized.get("grades"), list)
-        note = "提示由已读取的成绩记录推导，不代表学校最终的补考、重修或学籍认定。"
+        complete = resource in normalized and isinstance(normalized.get("grades"), list)
+        note = (
+            "提示由已读取的成绩记录推导，不代表学校最终的补考、重修或学籍认定。"
+            if complete
+            else "当前缓存尚未生成成绩风险提示，请刷新一次校园资料。"
+        )
     return {
         "status": "ok" if complete else "partial",
         "resource": resource,
