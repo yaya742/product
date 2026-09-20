@@ -100,7 +100,7 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .header-icon-button:hover, .header-icon-button:active, .icon-button:hover, .icon-button:active { color: var(--accent-strong); border-color: var(--line); background: var(--surface-muted); }
 .icon-button.small { width: 36px; height: 36px; }
 
-.conversation { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 16px 24px; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+.conversation { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 16px calc(112px + env(safe-area-inset-bottom) + var(--keyboard-height)); overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
 .welcome-card { max-width: 500px; margin: 7vh auto 0; padding: 25px 10px 36px; text-align: center; }
 .welcome-orb, .message-avatar, .profile-avatar { display: grid; place-items: center; color: #fff; background: var(--accent); font-weight: 800; }
 .welcome-orb { width: 64px; height: 64px; margin: 24px auto 19px; border-radius: 22px; font-size: 28px; box-shadow: 0 14px 38px rgba(61, 121, 80, .18); }
@@ -138,7 +138,7 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .typing { display: inline-flex; color: var(--text-soft); }
 .typing::after { content: ""; width: 5px; height: 5px; margin: auto 0 auto 7px; border-radius: 50%; background: var(--accent); animation: blink 1s infinite; }
 
-.composer-area { position: relative; flex: 0 0 auto; z-index: 4; padding: 8px 16px calc(14px + env(safe-area-inset-bottom) + var(--keyboard-height)); background: linear-gradient(180deg, color-mix(in srgb, var(--bg) 0%, transparent), color-mix(in srgb, var(--bg) 94%, transparent) 22%, var(--bg) 46%); }
+.composer-area { position: fixed; left: 50%; bottom: var(--keyboard-height); transform: translateX(-50%); width: min(100%, 760px); z-index: 10; padding: 8px 16px calc(14px + env(safe-area-inset-bottom)); background: linear-gradient(180deg, color-mix(in srgb, var(--bg) 0%, transparent), color-mix(in srgb, var(--bg) 94%, transparent) 22%, var(--bg) 46%); transition: bottom .12s ease-out; }
 .attachment-draft { display: flex; align-items: center; gap: 8px; max-width: 760px; margin: 0 auto 7px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--text-soft); font-size: 11px; }
 .attachment-draft-icon { width: 30px; height: 30px; display: grid; place-items: center; overflow: hidden; border-radius: 8px; background: var(--surface-muted); }
 .attachment-draft-icon img { width: 100%; height: 100%; object-fit: cover; }

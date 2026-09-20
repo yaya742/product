@@ -306,17 +306,23 @@ export function App() {
 
   useEffect(() => {
     const viewport = window.visualViewport;
-    if (!viewport) return;
     const updateKeyboardHeight = () => {
-      const keyboardHeight = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+      const visibleBottom = viewport ? viewport.height + viewport.offsetTop : window.innerHeight;
+      const keyboardHeight = Math.max(0, window.innerHeight - visibleBottom);
       document.documentElement.style.setProperty('--keyboard-height', `${Math.round(keyboardHeight)}px`);
     };
     updateKeyboardHeight();
-    viewport.addEventListener('resize', updateKeyboardHeight);
-    viewport.addEventListener('scroll', updateKeyboardHeight);
+    viewport?.addEventListener('resize', updateKeyboardHeight);
+    viewport?.addEventListener('scroll', updateKeyboardHeight);
+    window.addEventListener('resize', updateKeyboardHeight);
+    window.addEventListener('focusin', updateKeyboardHeight);
+    window.addEventListener('focusout', updateKeyboardHeight);
     return () => {
-      viewport.removeEventListener('resize', updateKeyboardHeight);
-      viewport.removeEventListener('scroll', updateKeyboardHeight);
+      viewport?.removeEventListener('resize', updateKeyboardHeight);
+      viewport?.removeEventListener('scroll', updateKeyboardHeight);
+      window.removeEventListener('resize', updateKeyboardHeight);
+      window.removeEventListener('focusin', updateKeyboardHeight);
+      window.removeEventListener('focusout', updateKeyboardHeight);
       document.documentElement.style.removeProperty('--keyboard-height');
     };
   }, []);
@@ -652,10 +658,18 @@ export function App() {
   }
 
   function keepComposerVisible() {
-    window.setTimeout(() => {
-      composerRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    const reveal = () => {
+      const viewport = window.visualViewport;
+      const visibleBottom = viewport ? viewport.height + viewport.offsetTop : window.innerHeight;
+      const composer = composerRef.current;
+      if (composer) {
+        const overlap = Math.max(0, composer.getBoundingClientRect().bottom - visibleBottom);
+        const currentKeyboardHeight = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--keyboard-height')) || 0;
+        document.documentElement.style.setProperty('--keyboard-height', `${Math.ceil(Math.max(currentKeyboardHeight, overlap))}px`);
+      }
       scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-    }, 180);
+    };
+    [0, 120, 300, 600].forEach((delay) => window.setTimeout(reveal, delay));
   }
 
   async function testConnection() {
