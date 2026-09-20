@@ -846,7 +846,6 @@ export function App() {
       <section className="conversation" ref={scrollRef} aria-live="polite">
         {!messages.length && (
           <div className="welcome-card">
-            <div className="welcome-kicker"><span />{copy.onlineKicker}</div>
             <div className="welcome-orb">在</div>
             <h1>{copy.welcomeTitle}</h1>
             <p>{copy.welcomeBody}</p>
@@ -907,6 +906,7 @@ export function App() {
             value={draft}
             disabled={busy}
             placeholder={copy.draftPlaceholder}
+            aria-label={copy.user}
             rows={1}
             onFocus={keepComposerVisible}
             onChange={(event) => setDraft(event.target.value)}
@@ -970,7 +970,7 @@ export function App() {
             </div>
             <button className="profile-entry" onClick={openProfile}>
               <Avatar className="profile-avatar" value={state.profile.avatar} />
-              <span className="profile-entry-copy"><strong>{copy.profileEyebrow}</strong><small>{copy.profileTitle}</small></span>
+              <span className="profile-entry-copy"><strong>{copy.profileEyebrow}</strong></span>
               <SettingsIcon />
             </button>
           </aside>
@@ -981,16 +981,15 @@ export function App() {
         <section className="full-screen-panel" aria-label={copy.profileTitle}>
           <header className="secondary-topbar">
             <button className="back-button" onClick={() => { setProfileOpen(false); setHistoryOpen(true); }}><BackIcon /><span>{copy.back}</span></button>
-            <h2>{copy.profileTitle}</h2>
+            <h2>{copy.profileEyebrow}</h2>
             <span className="topbar-spacer" />
           </header>
           <div className="settings-scroll">
-            <section className="profile-hero">
-              <Avatar className="profile-avatar profile-avatar-large" value={state.profile.avatar} />
-              <div><p className="eyebrow">{copy.profileEyebrow}</p><h1>{copy.profileTitle}</h1></div>
-            </section>
-            <section className="profile-section">
-              <div className="setting-label"><strong>{copy.avatar}</strong><span>{copy.avatarHint}</span></div>
+            <section className="profile-section avatar-section">
+              <div className="avatar-setting-row">
+                <Avatar className="profile-avatar profile-avatar-large" value={state.profile.avatar} />
+                <div className="setting-label"><strong>{copy.avatar}</strong></div>
+              </div>
               <label className="avatar-upload-button" htmlFor="avatar-file">
                 <span>{copy.avatarHint}</span><ArrowIcon />
               </label>

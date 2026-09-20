@@ -18,6 +18,7 @@ import {
 } from './types';
 
 const STORAGE_KEY = 'zaichang.mobile.local.v2';
+const LEGACY_DUPLICATE_HISTORY_TITLE = '查看课表请求';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
@@ -163,7 +164,7 @@ function parseConversations(value: unknown): MobileConversation[] {
       createdAt,
       updatedAt,
     }];
-  });
+  }).filter((conversation) => conversation.title !== LEGACY_DUPLICATE_HISTORY_TITLE);
 }
 
 function parseProfile(value: unknown): MobileProfile {
