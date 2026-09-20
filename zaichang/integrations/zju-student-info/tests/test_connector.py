@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT))
 
 from zju_connector.auth import _encrypt_password
 import zju_connector.cli as cli
-from zju_connector.normalize import courses_from_schedule, exam_items, grade_items, grade_summary, schedule_item
+from zju_connector.normalize import courses_from_schedule, exam_items, grade_alerts, grade_items, grade_semester_summaries, grade_summary, schedule_item
 
 
 class ConnectorTests(unittest.TestCase):
@@ -63,6 +63,27 @@ class ConnectorTests(unittest.TestCase):
         self.assertEqual(summary["gpa"], 4.0)
         self.assertFalse(summary["complete"])
         self.assertIn("重修", summary["note"])
+
+    def test_grade_semester_summary_only_uses_explicit_source_term(self):
+        records = grade_items([
+            {"xkkh": "A", "kcmc": "课程A", "xf": "2", "cj": "90", "jd": "4", "xnmmc": "2025-2026", "xqm": "1"},
+            {"xkkh": "B", "kcmc": "课程B", "xf": "2", "cj": "88", "jd": "3.7"},
+        ])
+        self.assertEqual(records[0]["semester_id"], "2025-2026-1")
+        summaries = grade_semester_summaries(records)
+        self.assertEqual(len(summaries), 1)
+        self.assertEqual(summaries[0]["semester_id"], "2025-2026-1")
+        self.assertFalse(summaries[0]["complete"])
+
+    def test_grade_alerts_are_bounded_and_not_school_policy(self):
+        records = grade_items([
+            {"xkkh": "A", "kcmc": "课程A", "xf": "2", "cj": "59", "jd": "1.5"},
+            {"xkkh": "B", "kcmc": "课程B", "xf": "2", "cj": "68", "jd": "2.5"},
+            {"xkkh": "C", "kcmc": "课程C", "xf": "2", "cj": "90", "jd": "4"},
+        ])
+        alerts = grade_alerts(records)
+        self.assertEqual([item["level"] for item in alerts], ["failed", "attention"])
+        self.assertTrue(all("不代表学校最终" in item["note"] for item in alerts))
 
     def test_academic_sync_keeps_schedule_when_another_resource_has_a_network_error(self):
         raw_schedule = [{

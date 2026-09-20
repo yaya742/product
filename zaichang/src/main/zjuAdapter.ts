@@ -15,6 +15,7 @@ export type CampusDomain =
   | 'exams'
   | 'assignments'
   | 'grades'
+  | 'grade_alerts'
   | 'gpa'
   | 'gpa_semesters'
   | 'gpa_cumulative'
@@ -88,6 +89,7 @@ const DOMAIN_RESOURCE: Record<CampusDomain, string> = {
   exams: 'exams',
   assignments: 'todos',
   grades: 'grades',
+  grade_alerts: 'grade_alerts',
   gpa: 'gpa_overall',
   gpa_semesters: 'gpa_semesters',
   gpa_cumulative: 'gpa_cumulative',
@@ -115,6 +117,7 @@ const SUMMARY_FIELDS: Partial<Record<CampusDomain, string[]>> = {
   exams: ['id', 'name', 'type', 'startTime', 'endTime', 'dateLabel', 'location', 'seat', 'time_precision'],
   assignments: ['id', 'name', 'course', 'deadline', 'status'],
   grades: ['id', 'name', 'semester_id', 'credit', 'original', 'fivePoint', 'gpaIncluded', 'gpa_exclusion_reason'],
+  grade_alerts: ['id', 'course_key', 'name', 'credit', 'original', 'fivePoint', 'level', 'note'],
   gpa_semesters: ['semester_id', 'gpa', 'gpa_credit_denominator', 'eligible_attempts', 'counted_attempts', 'excluded_attempts', 'complete'],
   gpa_cumulative: ['through_semester', 'gpa', 'gpa_credit_denominator', 'eligible_attempts', 'counted_attempts', 'complete'],
   retakes: ['course_key', 'course_code', 'name', 'attempts', 'selected', 'selection_policy'],
@@ -142,6 +145,7 @@ const DOMAIN_LABEL: Record<CampusDomain, string> = {
   exams: '考试安排',
   assignments: '作业与待办',
   grades: '成绩记录',
+  grade_alerts: '成绩风险提示',
   gpa: '绩点汇总',
   gpa_semesters: '分学期绩点',
   gpa_cumulative: '累计绩点',
@@ -172,6 +176,7 @@ const FULL_CONTEXT_DOMAINS: CampusDomain[] = [
   'exams',
   'assignments',
   'grades',
+  'grade_alerts',
   'gpa',
   'gpa_semesters',
   'gpa_cumulative',
@@ -191,6 +196,7 @@ const FULL_CONTEXT_DOMAINS: CampusDomain[] = [
 ];
 const SENSITIVE_DOMAINS = new Set<CampusDomain>([
   'grades',
+  'grade_alerts',
   'gpa',
   'gpa_semesters',
   'gpa_cumulative',
@@ -216,6 +222,7 @@ const ACADEMIC_RESOURCES = new Set<CampusDomain>([
   'exams',
   'assignments',
   'grades',
+  'grade_alerts',
   'gpa',
   'gpa_semesters',
   'gpa_cumulative',
@@ -258,7 +265,7 @@ function readManifest(root: string): ConnectorManifest | null {
       !Array.isArray(manifest.allowedHosts) ||
       !manifest.allowedHosts.includes('zjuam.zju.edu.cn') ||
       !Array.isArray(manifest.supportedDomains) ||
-      !manifest.supportedDomains.every((domain) => ['schedule', 'courses', 'exams', 'assignments', 'grades', 'gpa', 'gpa_cumulative', 'source_status'].includes(domain))
+      !manifest.supportedDomains.every((domain) => ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'source_status'].includes(domain))
     ) return null;
     return manifest;
   } catch {
@@ -514,7 +521,7 @@ export class ZjuAdapter {
         label: '浙大校园账号',
         sourceKind: 'zju_account',
         accessMode: 'compatibility_local',
-        supportedDomains: ['schedule', 'courses', 'exams', 'assignments', 'grades', 'gpa', 'gpa_cumulative', 'source_status'],
+        supportedDomains: ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'source_status'],
         authStatus: 'needs_login',
         credentialsConfigured: false,
         reason: '还没有找到浙大个人信息技能。可以安装技能，或在连接设置中选择它。',
@@ -577,7 +584,7 @@ export class ZjuAdapter {
         label: '浙大校园账号',
         sourceKind: 'zju_account',
         accessMode: 'compatibility_local',
-        supportedDomains: ['schedule', 'courses', 'exams', 'assignments', 'grades', 'gpa', 'gpa_cumulative', 'source_status'],
+        supportedDomains: ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'source_status'],
         authStatus: this.credentialsConfigured() ? 'credentials_saved' : 'needs_login',
         credentialsConfigured: this.credentialsConfigured(),
         reason: '技能目录可用，但连接状态摘要暂时不可读。',

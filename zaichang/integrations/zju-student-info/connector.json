@@ -17,7 +17,9 @@
     "exams",
     "assignments",
     "grades",
+    "grade_alerts",
     "gpa",
+    "gpa_semesters",
     "gpa_cumulative",
     "source_status"
   ],

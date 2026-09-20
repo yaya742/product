@@ -8,7 +8,7 @@ from typing import Any
 
 from .auth import authenticate
 from .credentials import forget_credentials, load_credentials, show_credentials_dialog
-from .normalize import courses_from_schedule, exam_items, grade_items, grade_summary, schedule_item
+from .normalize import courses_from_schedule, exam_items, grade_alerts, grade_items, grade_semester_summaries, grade_summary, schedule_item
 from .storage import forget_bundles, history, load_bundle, save_academic_bundle
 from .zdbk import fetch_exams, fetch_grades, fetch_schedule, fetch_todos
 
@@ -19,7 +19,9 @@ SUPPORTED_RESOURCES = {
     "exams",
     "todos",
     "grades",
+    "grade_alerts",
     "gpa_overall",
+    "gpa_semesters",
     "gpa_cumulative",
     "source_status",
 }
@@ -118,13 +120,17 @@ def _academic(year: str, term: str) -> dict[str, Any]:
         issues.append(_resource_issue("todos", exception))
     classes = [record for index, raw in enumerate(raw_schedule) if (record := schedule_item(raw, semester_id, index))]
     grades = grade_items(raw_grades)
+    alerts = grade_alerts(grades)
     gpa = grade_summary(grades)
+    gpa_semesters = grade_semester_summaries(grades)
     normalized = {
         "classes": classes,
         "courses": courses_from_schedule(classes, semester_id),
         "exams": exam_items(raw_exams),
         "grades": grades,
+        "grade_alerts": alerts,
         "gpa_overall": gpa,
+        "gpa_semesters": gpa_semesters,
         "gpa_cumulative": gpa,
         "todos": todos,
         "source_status": [
@@ -149,9 +155,11 @@ def _academic(year: str, term: str) -> dict[str, Any]:
             preserved_resources.append("exams")
         if "grades" in failed_resources and previous.get("grades"):
             normalized["grades"] = previous["grades"]
+            normalized["grade_alerts"] = previous.get("grade_alerts", normalized["grade_alerts"])
             normalized["gpa_overall"] = previous.get("gpa_overall", normalized["gpa_overall"])
+            normalized["gpa_semesters"] = previous.get("gpa_semesters", normalized["gpa_semesters"])
             normalized["gpa_cumulative"] = previous.get("gpa_cumulative", normalized["gpa_cumulative"])
-            preserved_resources.extend(["grades", "gpa_overall", "gpa_cumulative"])
+            preserved_resources.extend(["grades", "grade_alerts", "gpa_overall", "gpa_semesters", "gpa_cumulative"])
         if "todos" in failed_resources and previous.get("todos"):
             normalized["todos"] = previous["todos"]
             preserved_resources.append("todos")
@@ -197,9 +205,12 @@ def _quick(args: argparse.Namespace) -> dict[str, Any]:
     exact_dates = resource != "classes" or all(record.get("startTime") for record in selected)
     complete = exact_dates
     note = None if exact_dates else "课表当前保留星期与节次，尚未把校历和调停课展开为逐次日期。"
-    if resource in {"gpa_overall", "gpa_cumulative"}:
+    if resource in {"gpa_overall", "gpa_cumulative", "gpa_semesters"}:
         complete = bool(selected and selected[0].get("complete"))
         note = selected[0].get("note") if selected else "当前没有可用的成绩汇总。"
+    if resource == "grade_alerts":
+        complete = isinstance(normalized.get("grades"), list)
+        note = "提示由已读取的成绩记录推导，不代表学校最终的补考、重修或学籍认定。"
     return {
         "status": "ok" if complete else "partial",
         "resource": resource,

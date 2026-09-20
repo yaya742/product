@@ -81,6 +81,7 @@ def grade_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
         credit = _decimal(raw.get("xf"))
         original = _text(raw.get("cj")) or None
         five_point = _decimal(raw.get("jd"))
+        semester_id = _grade_semester_id(raw)
         if not course_key and not original and name == "未知课程":
             continue
         included = five_point is not None and credit is not None and credit > 0
@@ -88,7 +89,7 @@ def grade_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
             {
                 "id": course_key or f"grade:{index}",
                 "name": name.replace("(", "（").replace(")", "）"),
-                "semester_id": None,
+                "semester_id": semester_id,
                 "course_key": course_key or None,
                 "credit": credit,
                 "original": original,
@@ -98,6 +99,27 @@ def grade_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
             }
         )
     return records
+
+
+def _grade_semester_id(raw: dict[str, Any]) -> str | None:
+    """Best-effort semester extraction; unknown source fields stay private."""
+    direct = (
+        raw.get("semester_id"),
+        raw.get("semester"),
+        raw.get("xq_id"),
+    )
+    for value in direct:
+        text = _text(value)
+        if text and ("-" in text or "学期" in text or "秋" in text or "春" in text):
+            return text
+    year = _text(raw.get("academic_year") or raw.get("xnmmc") or raw.get("xnm"))
+    term = _text(raw.get("term") or raw.get("xqm") or raw.get("xqmmc"))
+    if not year or not term:
+        return None
+    if re.fullmatch(r"20\d{2}-20\d{2}", year):
+        term_code = {"1": "1", "3": "1", "秋冬": "1", "2": "2", "12": "2", "春夏": "2"}.get(term, term)
+        return f"{year}-{term_code}"
+    return f"{year}-{term}"
 
 
 def grade_summary(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -121,6 +143,46 @@ def grade_summary(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
             "note": "教务成绩接口当前未返回重修取舍和学期排除口径；这里仅按可用成绩、绩点和学分计算近似汇总，不替代学校最终绩点。",
         }
     ] if records else []
+
+
+def grade_semester_summaries(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return grouped summaries only when the source actually supplies terms."""
+    groups: dict[str, list[dict[str, Any]]] = {}
+    for record in records:
+        semester_id = _text(record.get("semester_id"))
+        if semester_id:
+            groups.setdefault(semester_id, []).append(record)
+    summaries: list[dict[str, Any]] = []
+    for semester_id in sorted(groups):
+        summary = grade_summary(groups[semester_id])
+        if summary:
+            summaries.append({"semester_id": semester_id, **summary[0]})
+    return summaries
+
+
+def grade_alerts(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Surface objective low-score signals without claiming school policy."""
+    alerts: list[dict[str, Any]] = []
+    for record in records:
+        original = _text(record.get("original"))
+        numeric = _decimal(original)
+        failed = (numeric is not None and numeric < 60) or bool(re.search(r"不及格|不通过|挂科|未通过", original))
+        attention = (numeric is not None and 60 <= numeric < 70) or (
+            not failed and isinstance(record.get("fivePoint"), (int, float)) and float(record["fivePoint"]) < 3
+        )
+        if not failed and not attention:
+            continue
+        alerts.append({
+            "id": record.get("id"),
+            "course_key": record.get("course_key"),
+            "name": record.get("name"),
+            "credit": record.get("credit"),
+            "original": original or None,
+            "fivePoint": record.get("fivePoint"),
+            "level": "failed" if failed else "attention",
+            "note": "按成绩原值/绩点做的提示，不代表学校最终的补考、重修或学籍认定。",
+        })
+    return alerts
 
 
 def _parse_exam_time(value: str) -> tuple[str | None, str | None, str | None]:
