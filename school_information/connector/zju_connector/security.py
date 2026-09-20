@@ -80,4 +80,3 @@ def write_encrypted_json(path: Path, value: Any, description: str) -> None:
 def read_encrypted_json(path: Path) -> Any:
     protected = base64.b64decode(path.read_text(encoding="ascii"), validate=True)
     return json.loads(unprotect(protected).decode("utf-8"))
-

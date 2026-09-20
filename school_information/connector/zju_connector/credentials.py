@@ -87,4 +87,3 @@ def show_credentials_dialog() -> bool:
     root.bind("<Escape>", lambda _event: root.destroy())
     root.mainloop()
     return result["saved"]
-
