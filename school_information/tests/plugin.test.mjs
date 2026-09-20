@@ -100,3 +100,17 @@ test('network failures are returned as controlled plugin failures', async () => 
   assert.equal(result.status, 'failed');
   assert.match(result.reason, /network/);
 });
+
+test('bundled connector exposes a redacted local account status', async () => {
+  const result = await plugin.invoke({
+    name: 'school.account.status',
+    args: {},
+    context: {},
+  });
+
+  assert.equal(result.status, 'fresh');
+  assert.equal(result.data.available, true);
+  assert.ok(result.data.supportedDomains.includes('grades'));
+  assert.equal(Object.hasOwn(result.data, 'username'), false);
+  assert.equal(Object.hasOwn(result.data, 'password'), false);
+});

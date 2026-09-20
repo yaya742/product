@@ -5,7 +5,28 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const output = path.join(root, 'dist', 'campus-zju-public-plugin.zip');
-const files = ['plugin.json', 'index.mjs'];
+const files = [
+  'plugin.json',
+  'index.mjs',
+  'connector/connector.json',
+  'connector/LICENSE',
+  'connector/SKILL.md',
+  'connector/references/endpoints.json',
+  'connector/scripts/zju.py',
+  'connector/zju_connector/__init__.py',
+  'connector/zju_connector/auth.py',
+  'connector/zju_connector/cli.py',
+  'connector/zju_connector/college_notices.py',
+  'connector/zju_connector/credentials.py',
+  'connector/zju_connector/holidays.py',
+  'connector/zju_connector/http_client.py',
+  'connector/zju_connector/normalize.py',
+  'connector/zju_connector/notices.py',
+  'connector/zju_connector/security.py',
+  'connector/zju_connector/storage.py',
+  'connector/zju_connector/sztz.py',
+  'connector/zju_connector/zdbk.py',
+];
 const local = [];
 const central = [];
 let offset = 0;

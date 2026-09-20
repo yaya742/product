@@ -1,4 +1,11 @@
+import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 const SOURCE_ID = 'plugin:campus.zju-public';
+const PLUGIN_ROOT = path.dirname(fileURLToPath(import.meta.url));
+const CONNECTOR_SCRIPT = path.join(PLUGIN_ROOT, 'connector', 'scripts', 'zju.py');
 const CALENDAR_INDEX_URL = 'https://ugrs.zju.edu.cn/28218/list1.htm';
 const NOTICE_INDEX_URL = 'https://zdbk.zju.edu.cn/jwglxt/xtgl/xwck_cxMoreLoginNews.html';
 const NOTICE_DETAIL_PATH = '/jwglxt/xtgl/xwck_ckLoginNews.html';
@@ -8,6 +15,52 @@ const OFFICIAL_HOST_SUFFIX = '.zju.edu.cn';
 const MAX_RESPONSE_CHARS = 300_000;
 const MAX_DETAIL_CHARS = 6_000;
 const MAX_RECORDS = 20;
+const MAX_CONNECTOR_OUTPUT_BYTES = 480_000;
+const ACADEMIC_RESOURCES = new Set([
+  'schedule',
+  'courses',
+  'exams',
+  'assignments',
+  'grades',
+  'grade_alerts',
+  'gpa',
+  'gpa_semesters',
+  'gpa_cumulative',
+  'practice',
+  'sports',
+  'projects',
+]);
+const RESOURCE_NAMES = {
+  schedule: 'classes',
+  courses: 'courses',
+  exams: 'exams',
+  assignments: 'todos',
+  grades: 'grades',
+  grade_alerts: 'grade_alerts',
+  gpa: 'gpa_overall',
+  gpa_semesters: 'gpa_semesters',
+  gpa_cumulative: 'gpa_cumulative',
+  practice: 'practice_summary',
+  sports: 'practice_summary',
+  projects: 'projects',
+};
+const SUPPORTED_PERSONAL_DOMAINS = new Set([
+  ...ACADEMIC_RESOURCES,
+  'holidays',
+  'notices',
+  'source_status',
+]);
+const SENSITIVE_FIELD = /^(?:password|passwd|token|ticket|cookie|authorization|synjones|secret|openid|unionid|accesskey|qrcode|qr_code|barcode|voucher|body_b64|student.?no|student.?id|card.?no|card_number|identity.?no|identity.?id|id.?card|phone|mobile|email|account|sno|xh|yhm|xm|zgh|custid|custmemberid|acctid|cardid|bankacc|cert|schcode|yktschoolcode)$/i;
+const SAFE_FIELDS = new Set([
+  'uid', 'summary', 'startTime', 'endTime', 'location', 'teacher', 'weekday', 'periods', 'half', 'weekPattern', 'rescheduled', 'time_precision',
+  'key', 'name', 'semester_id', 'credit', 'teachers', 'confirmed', 'online', 'id', 'course_code', 'start_date', 'end_date', 'study_completeness',
+  'type', 'dateLabel', 'seat', 'deadline', 'status', 'original', 'fivePoint', 'gpaIncluded', 'gpa_exclusion_reason', 'level', 'note',
+  'through_semester', 'gpa', 'gpa_credit_denominator', 'eligible_attempts', 'counted_attempts', 'excluded_attempts', 'complete',
+  'course_key', 'attempts', 'selected', 'selection_policy', 'categoryId', 'categoryName', 'projectName', 'projectType', 'qualityType', 'score',
+  'statusValue', 'statusLabel', 'approved', 'deleted', 'countsTowardTotal', 'activityStart', 'activityEnd', 'updatedAt',
+  'dektJf', 'dsktJf', 'dsiktJf', 'dektXf', 'dsktXf', 'dsiktXf', 'dektDj', 'dsktDj', 'dsiktDj', 'dektTg', 'dsktTg', 'dsiktTg', 'myTg', 'lyTg',
+  'title', 'publishedAt', 'publisher', 'url', 'summary', 'category', 'detail', 'detailSource', 'pinned', 'source', 'startDate', 'endDate', 'kind',
+]);
 
 const CATEGORY_HINTS = {
   all: ['通知', '公告', '新闻', '教学', '本科', '学生', '动态'],
@@ -119,6 +172,255 @@ function envelope(status, data, reason) {
     ...(reason ? { reason: cleanText(reason, 500) } : {}),
     simulated: false,
   };
+}
+
+function sanitizeScalar(value) {
+  if (typeof value === 'string') return value.slice(0, 2_000);
+  if (typeof value === 'number' || typeof value === 'boolean' || value === null) return value;
+  return undefined;
+}
+
+function sanitizeValue(value, depth = 0, record = false) {
+  if (depth > 8) return '[内容已截断]';
+  const scalar = sanitizeScalar(value);
+  if (scalar !== undefined) return scalar;
+  if (Array.isArray(value)) return value.slice(0, 50).map((item) => sanitizeValue(item, depth + 1, record));
+  if (!value || typeof value !== 'object') return undefined;
+  const output = {};
+  for (const [key, item] of Object.entries(value)) {
+    if (SENSITIVE_FIELD.test(key) || /身份证|学号|手机号|邮箱|密码|令牌|cookie/i.test(key)) continue;
+    if (record && !SAFE_FIELDS.has(key)) continue;
+    const cleaned = sanitizeValue(item, depth + 1, false);
+    if (cleaned !== undefined) output[key] = cleaned;
+  }
+  return output;
+}
+
+function sanitizeConnectorResult(result) {
+  const cleaned = sanitizeValue(result) || {};
+  if (Array.isArray(result?.records)) cleaned.records = result.records.map((item) => sanitizeValue(item, 0, true));
+  if (Array.isArray(result?.items)) cleaned.items = result.items.map((item) => sanitizeValue(item, 0, true));
+  return cleaned;
+}
+
+function runProcess(file, prefixArgs, args, signal, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(file, [...prefixArgs, ...args], {
+      cwd: path.dirname(path.dirname(CONNECTOR_SCRIPT)),
+      windowsHide: true,
+      env: { ...process.env, PYTHONIOENCODING: 'utf-8', PYTHONUNBUFFERED: '1' },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let stdout = '';
+    let stderr = '';
+    let settled = false;
+    let tooLarge = false;
+    const finish = (error, value) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      signal?.removeEventListener('abort', abort);
+      if (error) reject(error);
+      else resolve(value);
+    };
+    const abort = () => {
+      child.kill();
+      finish(new Error('校园资料读取已取消。'));
+    };
+    const timer = setTimeout(() => {
+      child.kill();
+      finish(new Error('校园资料读取超时。'));
+    }, timeoutMs);
+    child.on('error', (error) => finish(error));
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk.toString('utf8');
+      if (Buffer.byteLength(stdout, 'utf8') > MAX_CONNECTOR_OUTPUT_BYTES && !tooLarge) {
+        tooLarge = true;
+        child.kill();
+        finish(new Error('校园资料连接器返回内容过大。'));
+      }
+    });
+    child.stderr.on('data', (chunk) => {
+      if (stderr.length < 4_000) stderr += chunk.toString('utf8');
+    });
+    child.on('close', () => {
+      if (tooLarge || settled) return;
+      const line = stdout.trim().split(/\r?\n/).filter(Boolean).at(-1);
+      if (!line) {
+        finish(new Error(stderr.trim() || '校园资料连接器没有返回结果。'));
+        return;
+      }
+      try {
+        finish(undefined, JSON.parse(line));
+      } catch {
+        finish(new Error('校园资料连接器返回了无法识别的数据。'));
+      }
+    });
+    if (signal?.aborted) abort();
+    else signal?.addEventListener('abort', abort, { once: true });
+  });
+}
+
+async function runConnector(args, signal, timeoutMs = 85_000) {
+  if (!existsSync(CONNECTOR_SCRIPT)) throw new Error('插件内没有找到校园资料连接器。');
+  const candidates = process.platform === 'win32'
+    ? [['python', []], ['py', ['-3']]]
+    : [['python3', []], ['python', []]];
+  let lastError;
+  for (const [file, prefixArgs] of candidates) {
+    try {
+      return await runProcess(file, prefixArgs, [CONNECTOR_SCRIPT, ...args], signal, timeoutMs);
+    } catch (error) {
+      if (error?.code === 'ENOENT') {
+        lastError = error;
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw lastError || new Error('当前设备没有可用的 Python 运行时。');
+}
+
+function connectorStatus(result) {
+  if (result?.status === 'ok') return 'fresh';
+  if (result?.status === 'partial') return 'partial';
+  if (result?.status === 'error') return 'failed';
+  return 'unknown';
+}
+
+function connectorReason(result) {
+  return result?.error?.message || result?.error?.code || result?.reason || '校园资料读取未完成。';
+}
+
+function connectorEnvelope(result, data) {
+  const status = connectorStatus(result);
+  return envelope(status, data === undefined ? sanitizeConnectorResult(result) : sanitizeConnectorResult(data), status === 'failed' ? connectorReason(result) : undefined);
+}
+
+function academicYearForArgs(args) {
+  return validAcademicYear(args?.academicYear) || currentAcademicYear();
+}
+
+function termForArgs(args) {
+  if (args?.term === '1' || args?.term === '2') return args.term;
+  const month = new Date().getMonth();
+  return month >= 7 || month === 0 ? '1' : '2';
+}
+
+async function connectorStatusRead(context) {
+  try {
+    const result = await runConnector(['status'], context?.signal, 15_000);
+    return connectorEnvelope(result, {
+      available: true,
+      credentialsConfigured: Boolean(result.credentialsConfigured),
+      authStatus: result.credentialsConfigured ? 'credentials_saved' : 'needs_login',
+      supportedDomains: result.supportedDomains,
+      cache: Array.isArray(result.cache) ? result.cache : [],
+      note: result.credentialsConfigured
+        ? '本机已保存校园连接器凭据；账号本身不会返回给插件结果。'
+        : '本机尚未保存校园账号，公开校历和通知仍可读取。',
+    });
+  } catch (error) {
+    return envelope('failed', undefined, error instanceof Error ? error.message : '校园连接器状态读取失败。');
+  }
+}
+
+async function resolveAcademicBundle(args, context) {
+  const academicYear = academicYearForArgs(args);
+  const term = termForArgs(args);
+  if (!args?.refresh) {
+    const history = await runConnector(['history', '--limit', '100'], context?.signal, 15_000);
+    const expected = `${academicYear}-${term}`;
+    const item = Array.isArray(history?.items)
+      ? history.items.find((entry) => entry?.kind === 'academic' && String(entry.semester_id || '') === expected)
+      : undefined;
+    if (item?.bundle_id) return { bundleId: String(item.bundle_id), academicYear, term, cached: true };
+  }
+  const synced = await runConnector([
+    'academic', '--year', academicYear, '--term', term,
+  ], context?.signal, 85_000);
+  if (!['ok', 'partial'].includes(String(synced?.status)) || !synced?.bundle_id) {
+    return { error: synced, academicYear, term, cached: false };
+  }
+  return { bundleId: String(synced.bundle_id), academicYear, term, cached: false, sync: synced };
+}
+
+function addOption(args, output, name, value) {
+  if (value === undefined || value === null || value === '') return;
+  output.push(name, String(value));
+}
+
+async function readConnectorDomain(args, context) {
+  const domain = String(args?.domain || '');
+  if (!SUPPORTED_PERSONAL_DOMAINS.has(domain)) return envelope('unsupported', undefined, `校园资料类别 ${domain} 尚未接入。`);
+  if (domain === 'source_status') return connectorStatusRead(context);
+  if (domain === 'holidays') {
+    try {
+      const year = academicYearForArgs(args);
+      const calendar = await runConnector(['calendar', '--year', year, ...(args.refresh ? ['--refresh'] : [])], context?.signal, 45_000);
+      if (!calendar?.bundle_id) return connectorEnvelope(calendar);
+      const quick = await runConnector(['quick', 'holidays', '--bundle', String(calendar.bundle_id), '--limit', String(Math.min(50, args.limit || 20)), '--offset', String(args.offset || 0)], context?.signal, 20_000);
+      return connectorEnvelope(quick, { ...quick, calendar_status: calendar.status, academic_year: year });
+    } catch (error) {
+      return envelope('failed', undefined, error instanceof Error ? error.message : '校历读取失败。');
+    }
+  }
+  if (domain === 'notices') {
+    try {
+      const noticeArgs = ['notices', '--page', String(Math.max(1, Math.min(50, args.page || 1))), ...(args.detail ? ['--detail'] : [])];
+      addOption(args, noticeArgs, '--query', args.query);
+      addOption(args, noticeArgs, '--college', args.college);
+      addOption(args, noticeArgs, '--category', args.college ? (args.category || 'all') : 'all');
+      if (args.refresh) noticeArgs.push('--refresh');
+      const notices = await runConnector(noticeArgs, context?.signal, 85_000);
+      if (!notices?.bundle_id) return connectorEnvelope(notices);
+      const quickArgs = ['quick', 'notices', '--bundle', String(notices.bundle_id), '--limit', String(Math.min(50, args.limit || 20)), '--offset', String(args.offset || 0)];
+      addOption(args, quickArgs, '--query', args.query);
+      const quick = await runConnector(quickArgs, context?.signal, 25_000);
+      return connectorEnvelope(quick, { ...quick, notices_status: notices.status, notices_source: notices.source });
+    } catch (error) {
+      return envelope('failed', undefined, error instanceof Error ? error.message : '校园通知读取失败。');
+    }
+  }
+  try {
+    const bundle = await resolveAcademicBundle(args, context);
+    if (bundle.error) return connectorEnvelope(bundle.error, { domain, academic_year: bundle.academicYear, term: bundle.term });
+    const resource = RESOURCE_NAMES[domain];
+    const quickArgs = ['quick', resource, '--bundle', bundle.bundleId, '--limit', String(Math.min(50, args.limit || 8)), '--offset', String(Math.max(0, args.offset || 0))];
+    addOption(args, quickArgs, '--query', args.query);
+    if (Array.isArray(args.fields) && args.fields.length) addOption({ }, quickArgs, '--fields', args.fields.join(','));
+    const quick = await runConnector(quickArgs, context?.signal, args.refresh ? 45_000 : 20_000);
+    return connectorEnvelope(quick, { ...quick, domain, academic_year: bundle.academicYear, term: bundle.term, cached: bundle.cached });
+  } catch (error) {
+    return envelope('failed', undefined, error instanceof Error ? error.message : '个人校园资料读取失败。');
+  }
+}
+
+async function readOverview(args, context) {
+  const sections = {};
+  const issues = [];
+  const academicDomains = ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'practice', 'sports', 'projects'];
+  for (const domain of academicDomains) {
+    const result = await readConnectorDomain({ ...args, domain, limit: 6 }, context);
+    sections[domain] = result.data || { status: result.status, reason: result.reason };
+    if (result.status !== 'fresh') issues.push({ domain, status: result.status, reason: result.reason });
+  }
+  for (const domain of ['holidays', 'notices']) {
+    const result = await readConnectorDomain({ ...args, domain, limit: 6 }, context);
+    sections[domain] = result.data || { status: result.status, reason: result.reason };
+    if (result.status !== 'fresh') issues.push({ domain, status: result.status, reason: result.reason });
+  }
+  const account = await connectorStatusRead(context);
+  sections.source_status = account.data || { status: account.status, reason: account.reason };
+  if (account.status !== 'fresh') issues.push({ domain: 'source_status', status: account.status, reason: account.reason });
+  const status = issues.length === 0 ? 'fresh' : Object.values(sections).some((section) => section?.records?.length || section?.notices?.length || section?.events?.length) ? 'partial' : 'failed';
+  return envelope(status, {
+    academicYear: academicYearForArgs(args),
+    term: termForArgs(args),
+    sections,
+    issues,
+    note: '总览只返回有界摘要；需要某一类别的更多记录时，请调用 school.read 并指定 limit/offset。',
+  }, status === 'failed' ? '校园总览没有读到可用资料。' : undefined);
 }
 
 function currentAcademicYear(now = new Date()) {
@@ -402,6 +704,9 @@ const plugin = {
     if (name === 'school.calendar.read') return readCalendar(args, context);
     if (name === 'school.notices.search') return readNotices(args, context);
     if (name === 'school.college.directory') return readCollegeDirectory(args, context);
+    if (name === 'school.account.status') return connectorStatusRead(context);
+    if (name === 'school.read') return readConnectorDomain(args, context);
+    if (name === 'school.overview') return readOverview(args, context);
     return envelope('unsupported', undefined, `插件不支持能力 ${name}。`);
   },
 };
