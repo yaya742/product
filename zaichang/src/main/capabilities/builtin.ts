@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { CampusMapAdapter } from '../mapService';
-import { CAMPUS_ACCOUNT_SOURCE_ID, type ZjuAdapter, type CampusDomain } from '../zjuAdapter';
+import { CAMPUS_ACCOUNT_SOURCE_ID, type ZjuAdapter, type CampusDomain, type CollegeSubscriptionCategory } from '../zjuAdapter';
 import type { DomainService } from '../storage/domains';
 import type { KernelRepository } from '../storage/repository';
 import type { PolicyKernel } from '../runtime/policy';
@@ -80,6 +80,15 @@ const campusOverviewInput = z
     includeSensitiveDomains: z.boolean().default(false),
     academicYear: z.string().regex(/^20\d{2}-20\d{2}$/).optional(),
     term: z.enum(['1', '2']).optional(),
+  })
+  .strict();
+const collegeSubscriptionChangeInput = z
+  .object({
+    operation: z.enum(['subscribe', 'unsubscribe']),
+    college: z.string().max(80).optional(),
+    category: z.enum(['all', 'profile', 'faculty', 'program', 'contact', 'labs']).optional(),
+    query: z.string().max(100).optional(),
+    id: z.string().max(100).optional(),
   })
   .strict();
 const campusAccountOutput = z
@@ -289,6 +298,19 @@ export function registerBuiltins(
         timeoutMs: 90000,
         maxBytes: 140000,
       }),
+      base('campus.subscriptions', z.object({}).strict(), jsonObject, ['campus:read'], {
+        displayName: '查看学院资料订阅',
+        timeoutMs: 5000,
+      }),
+      base('campus.subscription.change', collegeSubscriptionChangeInput, jsonObject, ['campus:read', 'local:write'], {
+        displayName: '管理学院资料订阅',
+        effect: 'local_write',
+        worlds: ['real'],
+        supportsIdempotency: true,
+        supportsInspect: false,
+        supportsCancel: true,
+        timeoutMs: 5000,
+      }),
     ], [], { displayName: '校园账号（本机兼容连接）', description: '按需读取已连接的浙大校园资料；不是浙大官方授权接口。' }),
     connectionStatus: () => {
       const status = connections.campus?.describe();
@@ -304,13 +326,43 @@ export function registerBuiltins(
           reason: connector?.reason || '还没有连接浙大校园账号。',
           simulated: false,
         };
-      if (connector.credentialsConfigured === false && !(name === 'campus.lookup' && ['holidays', 'notices'].includes(args.domain)))
+      if (connector.credentialsConfigured === false && !(name === 'campus.lookup' && ['holidays', 'notices'].includes(args.domain)) && name !== 'campus.subscriptions' && name !== 'campus.subscription.change')
         return {
           status: 'forbidden',
           sourceId,
           reason: '请先在校园资料中登录浙大账号。',
           simulated: false,
         };
+      if (name === 'campus.subscriptions') {
+        return {
+          status: 'fresh',
+          sourceId,
+          data: connections.campus.listCollegeSubscriptions(),
+          fetchedAt: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + 30000).toISOString(),
+          coverage: { complete: true, scope: 'local college subscriptions' },
+          simulated: false,
+        };
+      }
+      if (name === 'campus.subscription.change') {
+        const changed = connections.campus.changeCollegeSubscription({
+          operation: args.operation,
+          college: args.college,
+          category: args.category as CollegeSubscriptionCategory | undefined,
+          query: args.query,
+          id: args.id,
+        });
+        const safeChanged = JSON.parse(JSON.stringify(changed));
+        return {
+          status: changed.status === 'not_found' ? 'not_found' : 'fresh',
+          sourceId,
+          data: { receiptStatus: changed.status === 'not_found' ? 'confirmed_failure' : 'confirmed_success', externalRecordId: changed.subscription?.id, ...safeChanged },
+          fetchedAt: new Date().toISOString(),
+          coverage: { complete: true, scope: 'local college subscriptions' },
+          reason: changed.status === 'not_found' ? changed.reason : undefined,
+          simulated: false,
+        };
+      }
       if (name === 'campus.overview') {
         if (args.includeSensitiveDomains) {
           for (const grant of [
@@ -449,6 +501,24 @@ export function registerBuiltins(
         status: 'unsupported',
         sourceId,
         reason: '这个类别还不能从浙大账号读取；没有改用本地导入资料冒充。',
+        simulated: false,
+      };
+    },
+    cancel: async (_name, key, ctx) => {
+      const row = repo.db
+        .prepare("SELECT payload FROM h_actions WHERE json_extract(payload,'$.idempotencyKey')=? AND json_extract(payload,'$.capability')='campus.subscription.change' LIMIT 1")
+        .get(key) as { payload?: string } | undefined;
+      if (!row?.payload || !connections.campus) return { status: 'failed', sourceId: CAMPUS_ACCOUNT_SOURCE_ID, reason: '找不到要撤销的学院订阅动作。', simulated: false };
+      const action = JSON.parse(row.payload) as { arguments?: { operation?: string; college?: string; category?: CollegeSubscriptionCategory; query?: string } };
+      const args = action.arguments || {};
+      if (args.operation !== 'subscribe' || !args.college) return { status: 'failed', sourceId: CAMPUS_ACCOUNT_SOURCE_ID, reason: '取消订阅动作无法恢复原订阅。', simulated: false };
+      const reverted = connections.campus.changeCollegeSubscription({ operation: 'unsubscribe', college: args.college, category: args.category, query: args.query });
+      policy.validate(ctx.scope);
+      return {
+        status: reverted.status === 'unsubscribed' ? 'fresh' : 'failed',
+        sourceId: CAMPUS_ACCOUNT_SOURCE_ID,
+        data: { receiptStatus: reverted.status === 'unsubscribed' ? 'confirmed_success' : 'confirmed_failure', externalRecordId: reverted.subscription?.id },
+        reason: reverted.status === 'unsubscribed' ? undefined : reverted.reason,
         simulated: false,
       };
     },

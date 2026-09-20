@@ -180,6 +180,20 @@ const lookUpSchema = z
     refresh: z.boolean().optional(),
   })
   .strict();
+const collegeSubscriptionSchema = z
+  .object({
+    operation: z.enum(['subscribe', 'unsubscribe']),
+    college: z.string().max(80).optional(),
+    category: z.enum(['all', 'profile', 'faculty', 'program', 'contact', 'labs']).optional(),
+    query: z.string().max(100).optional(),
+    id: z.string().max(100).optional(),
+    sourceQuote: z.string().min(1).max(2000),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (value.operation === 'subscribe' && !value.college?.trim()) ctx.addIssue({ code: 'custom', path: ['college'], message: '订阅需要学院名称。' });
+    if (value.operation === 'unsubscribe' && !value.id && !value.college?.trim()) ctx.addIssue({ code: 'custom', path: ['id'], message: '取消订阅需要订阅ID或学院名称。' });
+  });
 const workChangeSchema = z.discriminatedUnion('operation', [
   z.object({ operation: z.literal('reference_option'), episodeId: z.string().max(160), id: z.string().max(160), expectedRevision: z.number().int().positive(), sourceQuote: z.string().min(1).max(1000) }).strict(),
   z
@@ -328,6 +342,13 @@ const specs: SpecDefinition[] = [
     description:
       '在本轮范围内查资料。source=capability且不填capability时搜索/分页能力目录，支持query、offset、limit；填写capability+describeOnly=true读取schema，填写arguments执行只读能力。campus具体查询须选domain，overview为明确的总览；未连接、无权限、部分覆盖均有实际状态。local读本地安排，history回查原文。不能指定他人身份或任意文件路径。',
     schema: lookUpSchema,
+  },
+  {
+    name: 'manage_college_subscription',
+    description: '按用户当前明确原话订阅或取消订阅某个浙大学院的公开资料。订阅只保存在本机，每两天后台检查一次；首次只建立基线，之后只有新增或内容变化才提醒。订阅学院资料不等于登录或修改学校系统。必须保留sourceQuote原话。',
+    schema: collegeSubscriptionSchema,
+    grant: 'local:write',
+    mutates: true,
   },
   {
     name: 'read_understanding', description: '按稳定ID读取一条理解的完整条件、例外和来源指针。只是一份可核查理解，不自动代表当前事实；必要时继续分页读原文。',
@@ -1045,6 +1066,56 @@ export class RuntimeCoordinator {
       const exceptions = assertion.exceptionIds.map(id => this.repo.assertion(handle, id)).filter(Boolean);
       this.context.recordObjects(session.pack, [assertion, ...exceptions.filter((value): value is NonNullable<typeof value> => !!value)], 'assertion');
       return { status: assertion.status, assertion, exceptions, sourceIds: assertion.evidenceIds, meaning: '须结合本轮原话、生效时间和条件判断，不能把停用或待核验内容当当前事实。' };
+    }
+    if (name === 'manage_college_subscription') {
+      if (!session.ingress.authoredText.includes(args.sourceQuote)) throw new HarnessError('unsupported_evidence', '学院资料订阅需要本轮用户原话依据。');
+      if (contract.worldId !== 'real' || contract.actionMode === 'respond')
+        return { applied: false, status: 'draft_only', reason: '当前只允许比较订阅方案，没有保存订阅。' };
+      if (!this.connections.campus?.describe().available)
+        return { applied: false, status: 'not_connected', reason: '浙大学院资料连接器当前不可用。' };
+      const verdict = await callbacks.verifyLocalDelegation?.({
+        operation: args.operation,
+        college: args.college,
+        category: args.category || 'all',
+        query: args.query,
+        id: args.id,
+        sourceQuote: args.sourceQuote,
+        scope: 'college_subscription',
+      });
+      if (verdict?.decision !== 'execute_local')
+        return { applied: false, status: verdict?.decision || 'needs_confirmation', reason: verdict?.reason || '需要确认具体学院订阅。', missing: verdict?.missing || [] };
+      const pack = session.pack || (await this.compile(session));
+      const capabilityArguments = {
+        operation: args.operation,
+        ...(args.college ? { college: args.college } : {}),
+        ...(args.category ? { category: args.category } : {}),
+        ...(args.query ? { query: args.query } : {}),
+        ...(args.id ? { id: args.id } : {}),
+      };
+      const actionId = 'zju-subscription:' + createHash('sha256').update(canonical({ eventId: session.events[0]?.id || contract.id, arguments: capabilityArguments })).digest('hex');
+      const existing = this.actions.get(handle, actionId);
+      if (existing) return { applied: existing.status === 'succeeded', status: existing.status, actionId: existing.id, subscription: capabilityArguments };
+      const dependencies = [
+        ...session.events.map((event) => ({ consumerId: 'pending', producerId: event.id, producerRevision: event.contentVersion, sensitivity: 'privacy' as const, invalidation: 'block' as const })),
+        ...[...new Set(pack.receipt.providedSourceIds || [])].map((id) => ({ consumerId: 'pending', producerId: id, producerRevision: 0, sensitivity: 'privacy' as const, invalidation: 'block' as const })),
+      ];
+      const executed = await this.actions.directLocal(handle, {
+        id: actionId,
+        capability: 'campus.subscription.change',
+        arguments: capabilityArguments,
+        sourceId: 'campus:zju-account',
+        dependencies,
+        authorized: true,
+      }, session.signal);
+      callbacks.changed();
+      return {
+        applied: executed.receipt.status === 'confirmed_success',
+        status: executed.receipt.status,
+        actionId: executed.action.id,
+        receipt: executed.receipt,
+        subscription: capabilityArguments,
+        meaning: args.operation === 'subscribe' ? '已登记本机学院资料订阅；每两天检查一次，首次检查只建立基线。' : '已取消本机学院资料订阅；不会再进行后台检查。',
+      };
     }
     if (name === 'update_collaboration') {
       const record = this.collaboration.update(handle, session.sessionId, args);

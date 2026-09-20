@@ -435,7 +435,7 @@ export class ActionRuntime {
       to: 'dispatching',
       revision: action.revision,
     });
-    if (action.effect === 'local_write') {
+    if (action.effect === 'local_write' && action.capability.startsWith('local.agenda.')) {
       try {
         return this.repo.write(() => {
           this.preflight(handle, action!, approval);
@@ -603,7 +603,7 @@ export class ActionRuntime {
       this.repo.write(() => { this.repo.db.prepare("UPDATE h_jobs SET status='cancelled',fence=fence+1 WHERE object_id=?").run(id); this.put(action); });
       return action;
     }
-    if (action.effect === 'local_write') {
+    if (action.effect === 'local_write' && action.capability.startsWith('local.agenda.')) {
       this.policy.require(handle, 'local:write');
       this.repo.write(() => {
         if (this.localUndo && action.compensation) this.localUndo(action);

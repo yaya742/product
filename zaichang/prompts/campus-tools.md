@@ -41,6 +41,7 @@
 - `look_up(source=campus, mode=overview)`：用户明确要求“把我的校园信息都整理出来”且本轮允许时调用。
 - `look_up(source=campus, mode=detail)`：回答当前具体问题的一个领域，优先窄时间窗、少字段。
 - `look_up(source=campus, mode=detail, domain=notices)`：查询浙大公开通知或指定学院资料；校级主题附带 `query`，指定学院时附带 `college` 和 `category`（`profile`/`faculty`/`program`/`contact`/`labs`/`all`），较早内容用 `page`。先用列表摘要快速回答；需要网页正文、具体电话、培养条款或实验室介绍时才用 `detail=true`。结果必须区分本科生院与学院官网，不要把公开学院网页当作本人课表、已办理事项或学校对个人的确认。
+- `look_up(source=capability, capability=campus.subscriptions, arguments={})`：查看当前本机已启用的学院资料订阅。用户明确说“订阅/关注/有更新提醒”时，使用 `manage_college_subscription`，保留用户原话作为 `sourceQuote`；订阅可指定学院、资料类别和关键词，首次检查只建立基线，之后每48小时后台复查，只有新增或内容变化才提醒。取消订阅要先读取订阅列表取得稳定ID或明确的学院+类别组合。
 - `look_up(source=campus, mode=refresh)`：明确最新/同步时调用；这是只读网络刷新与本机缓存更新，不是预约或资料修改。
 - `look_up(source=history|weather)`：只有当前问题需要旧对话或用户已开启天气时使用。
 

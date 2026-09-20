@@ -20,7 +20,7 @@ import { z } from 'zod';
 import { Store } from './store';
 import { DraftStore } from './storage/drafts';
 import { Harness } from './harness';
-import { ZjuAdapter } from './zjuAdapter';
+import { ZjuAdapter, type CollegeSubscriptionChange } from './zjuAdapter';
 import { CampusMapAdapter } from './mapService';
 import { MapLocationProvider } from './mapLocation';
 const mapLocation = new MapLocationProvider();
@@ -30,7 +30,7 @@ const weatherLocation = new MapLocationProvider();
 import { friendlyError } from './provider';
 import { createModelClient, usingLunaTestTransport } from './model-selection';
 import { actionSchema, campusSchema, settingsSchema } from '../shared/schemas';
-import { DEEPSEEK_MODEL, type Draft, type ImageAttachment, type Settings } from '../shared/types';
+import { DEEPSEEK_MODEL, type Action, type Draft, type ImageAttachment, type Settings } from '../shared/types';
 import campusExample from '../../examples/campus.example.json';
 import { LIMITS } from '../shared/limits';
 import { assertTestDataDirectory } from './testBoundary';
@@ -802,6 +802,24 @@ app.whenReady().then(async () => {
       return { status: 'submitted_to_os' };
     },
   };
+  zju.setCollegeSubscriptionNotifier((change: CollegeSubscriptionChange) => {
+    const title = `学院资料有更新：${change.subscription.college}`;
+    const detail = change.addedTitles.length
+      ? `新增${change.addedTitles.length}条：${change.addedTitles.slice(0, 3).join('、')}`
+      : '订阅页面内容发生变化，打开校园资料查看官方页面。';
+    const action: Action = {
+      id: `zju-college-change:${change.subscription.id}:${change.fingerprint}`,
+      title,
+      detail,
+      kind: 'reminder',
+      startsAt: change.checkedAt,
+      remindAt: change.checkedAt,
+      timeZone: store.settings().timeZone || 'Asia/Shanghai',
+      saved: true,
+    };
+    store.runtime.reminders.schedule(action);
+    void store.runtime.reminders.runDue();
+  });
   store.runtime.reminders.configure({ enabled: store.settings().remindersEnabled });
   const reminderTimer = setInterval(() => {
     void store.runtime.reminders.runDue();

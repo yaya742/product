@@ -318,6 +318,49 @@ print(json.dumps(out))
   assert.equal(result.data.status, 'ok'); assert.deepEqual(result.data.records, [{ summary: '合成课程' }]);
   store.close();
 });
+test('学院资料订阅首次建立基线，48小时后只对变化发出一次提醒', async () => {
+  const store = new Store(':memory:');
+  const adapter = new ZjuAdapter(store);
+  const changes: any[] = [];
+  adapter.setCollegeSubscriptionNotifier((change) => changes.push(change));
+  const subscribed = adapter.changeCollegeSubscription({ operation: 'subscribe', college: '数学学院', category: 'program' });
+  assert.equal(subscribed.status, 'subscribed');
+  const records = [{ id: 'notice-1', title: '培养方案', category: 'program', url: 'https://www.zju.edu.cn/program' }];
+  adapter.read = async () => ({ data: { status: 'ok', records } }) as any;
+  const baseline = await adapter.refreshCollegeSubscriptionsIfDue();
+  assert.equal(baseline.status, 'ok');
+  assert.equal(changes.length, 0);
+  const stored = store.meta<any[]>('zju_college_subscriptions', []);
+  stored[0].lastCheckedAt = new Date(Date.now() - 49 * 60 * 60 * 1000).toISOString();
+  store.putMeta('zju_college_subscriptions', stored);
+  adapter.read = async () => ({ data: { status: 'ok', records: [...records, { id: 'notice-2', title: '转专业通知', category: 'program', url: 'https://www.zju.edu.cn/transfer' }] } }) as any;
+  const refreshed = await adapter.refreshCollegeSubscriptionsIfDue();
+  assert.equal(refreshed.status, 'ok');
+  assert.equal(changes.length, 1);
+  assert.deepEqual(changes[0].addedTitles, ['转专业通知']);
+  assert.equal(adapter.listCollegeSubscriptions().subscriptions[0].baselineReady, true);
+  const removed = adapter.changeCollegeSubscription({ operation: 'unsubscribe', id: (subscribed as any).subscription.id });
+  assert.equal(removed.status, 'unsubscribed');
+  assert.equal(adapter.listCollegeSubscriptions().subscriptions.length, 0);
+  store.close();
+});
+test('学院资料订阅通过本地动作回执保存，不误写入日程表', async () => {
+  const store = new Store(':memory:');
+  const adapter = new ZjuAdapter(store);
+  adapter.describe = () => ({ configured: true, available: true, credentialsConfigured: false, authStatus: 'needs_login', label: 'test' });
+  const registry = new ToolRegistry(ctx(store, {
+    campus: adapter,
+    userText: '订阅数学学院的培养方案通知',
+    verifyLocalDelegation: async () => ({ decision: 'execute_local', basis: [{ id: 'current', quote: '订阅数学学院的培养方案通知' }], missing: [], reason: '用户明确委托。' }),
+  }));
+  const result = JSON.parse(await registry.execute('manage_college_subscription', JSON.stringify({
+    operation: 'subscribe', college: '数学学院', category: 'program', sourceQuote: '订阅数学学院的培养方案通知',
+  })));
+  assert.equal(result.applied, true);
+  assert.equal(adapter.listCollegeSubscriptions().subscriptions[0].college, '数学学院');
+  assert.equal(store.agenda().length, 0);
+  store.close();
+});
 test('ZJU adapter 先校验统一认证，再读取账号数据，并在模型边界隐藏身份字段', async () => {
   const fs = await import('node:fs'); const os = await import('node:os'); const path = await import('node:path');
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'zaichang-zju-auth-'));

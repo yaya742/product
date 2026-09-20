@@ -1,4 +1,5 @@
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
@@ -58,6 +59,30 @@ export interface CampusReadArgs {
   limit?: number;
   offset?: number;
   refresh?: boolean;
+}
+
+export type CollegeSubscriptionCategory = NonNullable<CampusReadArgs['category']>;
+export interface CollegeSubscription {
+  id: string;
+  college: string;
+  category: CollegeSubscriptionCategory;
+  query?: string;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lastCheckedAt?: string;
+  lastFingerprint?: string;
+  lastKeys?: string[];
+  lastTitles?: string[];
+  lastError?: string;
+}
+export interface CollegeSubscriptionChange {
+  subscription: Pick<CollegeSubscription, 'id' | 'college' | 'category' | 'query'>;
+  checkedAt: string;
+  fingerprint: string;
+  addedTitles: string[];
+  changed: boolean;
+  recordCount: number;
 }
 export interface CampusRefreshArgs {
   scope: CampusRefreshScope;
@@ -159,7 +184,7 @@ const DOMAIN_LABEL: Record<CampusDomain, string> = {
   gpa_semesters: '分学期绩点',
   gpa_cumulative: '累计绩点',
   retakes: '重修记录',
-  practice: '实践与体育相关记录',
+  practice: '素质拓展与体育记点',
   sports: '体育记录',
   projects: '实践项目',
   activities: '课程活动',
@@ -276,7 +301,7 @@ function readManifest(root: string): ConnectorManifest | null {
       !Array.isArray(manifest.allowedHosts) ||
       !manifest.allowedHosts.includes('zjuam.zju.edu.cn') ||
       !Array.isArray(manifest.supportedDomains) ||
-      !manifest.supportedDomains.every((domain) => ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'holidays', 'notices', 'source_status'].includes(domain))
+      !manifest.supportedDomains.every((domain) => ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'practice', 'sports', 'projects', 'holidays', 'notices', 'source_status'].includes(domain))
     ) return null;
     return manifest;
   } catch {
@@ -480,11 +505,188 @@ export class ZjuAdapter {
   private noticesBundles = new Map<string, string>();
   private learningBundles = new Map<string, string>();
   private resolvedPython?: string;
+  private collegeSubscriptionNotifier?: (change: CollegeSubscriptionChange) => void;
 
   constructor(
     private store: Store,
     private testPorts: { credentialsConfigured?: () => boolean; python?: string } = {},
   ) {}
+
+  setCollegeSubscriptionNotifier(notifier?: (change: CollegeSubscriptionChange) => void) {
+    this.collegeSubscriptionNotifier = notifier;
+  }
+
+  private readCollegeSubscriptions(): CollegeSubscription[] {
+    const raw = this.store.meta<unknown>('zju_college_subscriptions', []);
+    if (!Array.isArray(raw)) return [];
+    return raw.filter((item): item is CollegeSubscription => {
+      if (!item || typeof item !== 'object') return false;
+      const value = item as Record<string, unknown>;
+      return typeof value.id === 'string' && typeof value.college === 'string' &&
+        ['all', 'profile', 'faculty', 'program', 'contact', 'labs'].includes(String(value.category)) &&
+        typeof value.enabled === 'boolean' && typeof value.createdAt === 'string' && typeof value.updatedAt === 'string';
+    }).map((item) => ({
+      ...item,
+      query: item.query?.trim() || undefined,
+      lastKeys: Array.isArray(item.lastKeys) ? item.lastKeys.filter((value): value is string => typeof value === 'string').slice(0, 200) : undefined,
+      lastTitles: Array.isArray(item.lastTitles) ? item.lastTitles.filter((value): value is string => typeof value === 'string').slice(0, 200) : undefined,
+    }));
+  }
+
+  private writeCollegeSubscriptions(subscriptions: CollegeSubscription[]) {
+    this.store.putMeta('zju_college_subscriptions', subscriptions.slice(0, 50));
+  }
+
+  listCollegeSubscriptions() {
+    return {
+      status: 'ok',
+      subscriptions: this.readCollegeSubscriptions()
+        .filter((item) => item.enabled)
+        .map(({ lastFingerprint, lastKeys, query, ...item }) => ({
+          ...item,
+          ...(query ? { query } : {}),
+          lastTitles: item.lastTitles || [],
+          baselineReady: Boolean(lastFingerprint),
+        })),
+      intervalHours: 48,
+      policy: '每两天检查一次；首次订阅只建立基线，后续只有新增或内容变化才提醒。',
+      source: '浙江大学官方学院网站',
+    };
+  }
+
+  changeCollegeSubscription(input: {
+    operation: 'subscribe' | 'unsubscribe';
+    college?: string;
+    category?: CollegeSubscriptionCategory;
+    query?: string;
+    id?: string;
+  }) {
+    const operation = input.operation;
+    const subscriptions = this.readCollegeSubscriptions();
+    const college = input.college?.trim().slice(0, 80) || '';
+    const category = input.category || 'all';
+    const query = input.query?.trim().slice(0, 100) || undefined;
+    const now = new Date().toISOString();
+    if (operation === 'subscribe') {
+      if (!college) throw new Error('订阅学院资料需要提供学院名称。');
+      const existing = subscriptions.find((item) => item.college === college && item.category === category && item.query === query);
+      if (existing) {
+        existing.enabled = true;
+        existing.updatedAt = now;
+        existing.lastError = undefined;
+        this.writeCollegeSubscriptions(subscriptions);
+        return { status: 'subscribed', created: false, subscription: existing, intervalHours: 48 };
+      }
+      const id = 'zju-college-' + createHash('sha256').update(`${college}\u0000${category}\u0000${query || ''}`).digest('hex').slice(0, 24);
+      const subscription: CollegeSubscription = {
+        id,
+        college,
+        category,
+        query,
+        enabled: true,
+        createdAt: now,
+        updatedAt: now,
+      };
+      this.writeCollegeSubscriptions([...subscriptions, subscription]);
+      return { status: 'subscribed', created: true, subscription, intervalHours: 48 };
+    }
+    const target = subscriptions.find((item) =>
+      item.enabled && (input.id ? item.id === input.id : item.college === college && item.category === category && item.query === query),
+    );
+    if (!target) return { status: 'not_found', reason: '没有找到对应的学院资料订阅。' };
+    target.enabled = false;
+    target.updatedAt = now;
+    this.writeCollegeSubscriptions(subscriptions);
+    return { status: 'unsubscribed', subscription: target };
+  }
+
+  private subscriptionRecordKey(record: any) {
+    return String(record?.id || record?.url || `${record?.title || ''}|${record?.publishedAt || ''}|${record?.category || ''}`).trim();
+  }
+
+  private subscriptionRecords(records: unknown) {
+    return (Array.isArray(records) ? records : [])
+      .filter((record): record is Record<string, any> => !!record && typeof record === 'object' && !Array.isArray(record))
+      .map((record) => ({
+        key: this.subscriptionRecordKey(record),
+        title: String(record.title || record.name || '未命名资料').slice(0, 160),
+        publishedAt: String(record.publishedAt || record.published_at || '').slice(0, 80),
+        url: String(record.url || '').slice(0, 500),
+        category: String(record.category || '').slice(0, 40),
+        summary: String(record.summary || '').slice(0, 600),
+      }))
+      .filter((record) => record.key.length > 0)
+      .sort((a, b) => a.key.localeCompare(b.key));
+  }
+
+  async refreshCollegeSubscriptionsIfDue(signal: AbortSignal = new AbortController().signal) {
+    const subscriptions = this.readCollegeSubscriptions().filter((item) => item.enabled);
+    const now = Date.now();
+    const due = subscriptions.filter((item) => {
+      const checkedAt = item.lastCheckedAt ? Date.parse(item.lastCheckedAt) : NaN;
+      return !Number.isFinite(checkedAt) || now - checkedAt >= CAMPUS_CACHE_MAX_AGE_MS;
+    });
+    const changes: CollegeSubscriptionChange[] = [];
+    const failures: { id: string; reason: string }[] = [];
+    for (const subscription of due.slice(0, 12)) {
+      signal.throwIfAborted();
+      try {
+        const result = await this.read({
+          domain: 'notices',
+          refresh: true,
+          college: subscription.college,
+          category: subscription.category,
+          query: subscription.query,
+          limit: 50,
+        }, signal);
+        const data = result?.data && typeof result.data === 'object' ? result.data as Record<string, any> : {};
+        if (['error', 'unavailable', 'auth_required'].includes(String(data.status))) throw new Error(String(data.reason || '学院官网暂时不可用。'));
+        const records = this.subscriptionRecords(data.records);
+        const fingerprint = createHash('sha256').update(JSON.stringify(records)).digest('hex');
+        const checkedAt = new Date().toISOString();
+        const previousKeys = new Set(subscription.lastKeys || []);
+        const baseline = !subscription.lastFingerprint;
+        const changed = !baseline && subscription.lastFingerprint !== fingerprint;
+        const change: CollegeSubscriptionChange = {
+          subscription: { id: subscription.id, college: subscription.college, category: subscription.category, query: subscription.query },
+          checkedAt,
+          fingerprint,
+          addedTitles: changed ? records.filter((record) => !previousKeys.has(record.key)).map((record) => record.title).slice(0, 8) : [],
+          changed,
+          recordCount: records.length,
+        };
+        subscription.lastCheckedAt = checkedAt;
+        subscription.updatedAt = checkedAt;
+        subscription.lastFingerprint = fingerprint;
+        subscription.lastKeys = records.map((record) => record.key).slice(0, 200);
+        subscription.lastTitles = records.map((record) => record.title).slice(0, 200);
+        subscription.lastError = undefined;
+        this.writeCollegeSubscriptions(this.readCollegeSubscriptions().map((item) => item.id === subscription.id ? subscription : item));
+        if (changed) {
+          changes.push(change);
+          this.collegeSubscriptionNotifier?.(change);
+        }
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : '学院资料检查未完成。';
+        failures.push({ id: subscription.id, reason: reason.slice(0, 240) });
+        const current = this.readCollegeSubscriptions();
+        const stored = current.find((item) => item.id === subscription.id);
+        if (stored) {
+          stored.lastError = reason.slice(0, 240);
+          stored.updatedAt = new Date().toISOString();
+          this.writeCollegeSubscriptions(current);
+        }
+      }
+    }
+    return {
+      status: failures.length ? (changes.length ? 'partial' : 'failed') : due.length ? 'ok' : 'cached',
+      checked: Math.min(due.length, 12) - failures.length,
+      due: due.length,
+      changes,
+      failures,
+      intervalHours: 48,
+    };
+  }
 
   private discoveredRoot(): string | null {
     const stored = safeRoot(this.store.meta<string | null>('zju_source_root', null));
@@ -536,7 +738,7 @@ export class ZjuAdapter {
         label: '浙大校园账号',
         sourceKind: 'zju_account',
         accessMode: 'compatibility_local',
-        supportedDomains: ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'holidays', 'notices', 'source_status'],
+        supportedDomains: ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'practice', 'sports', 'projects', 'holidays', 'notices', 'source_status'],
         authStatus: 'needs_login',
         credentialsConfigured: false,
         reason: '还没有找到浙大个人信息技能。可以安装技能，或在连接设置中选择它。',
@@ -599,7 +801,7 @@ export class ZjuAdapter {
         label: '浙大校园账号',
         sourceKind: 'zju_account',
         accessMode: 'compatibility_local',
-        supportedDomains: ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'holidays', 'notices', 'source_status'],
+        supportedDomains: ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'practice', 'sports', 'projects', 'holidays', 'notices', 'source_status'],
         authStatus: this.credentialsConfigured() ? 'credentials_saved' : 'needs_login',
         credentialsConfigured: this.credentialsConfigured(),
         reason: '技能目录可用，但连接状态摘要暂时不可读。',
@@ -1124,23 +1326,30 @@ export class ZjuAdapter {
     } catch (error) {
       publicNotices = { status: 'partial', reason: error instanceof Error ? error.message : '官方通知后台刷新未完成。' };
     }
+    let collegeSubscriptions: any = { status: 'cached', checked: 0, due: 0, changes: [], failures: [], intervalHours: 48 };
+    try {
+      collegeSubscriptions = await this.refreshCollegeSubscriptionsIfDue(signal);
+    } catch (error) {
+      if (signal.aborted) throw error;
+      collegeSubscriptions = { status: 'failed', checked: 0, due: 0, changes: [], failures: [{ id: 'all', reason: error instanceof Error ? error.message : '学院资料后台刷新未完成。' }], intervalHours: 48 };
+    }
     if (!connector.credentialsConfigured)
-      return { status: publicCalendar.status === 'error' || publicNotices.status === 'error' ? 'partial' : 'ok', publicCalendar, publicNotices, reason: '未配置账号，仅刷新公开校历和官方通知。' };
+      return { status: publicCalendar.status === 'error' || publicNotices.status === 'error' || collegeSubscriptions.status === 'failed' ? 'partial' : 'ok', publicCalendar, publicNotices, collegeSubscriptions, reason: '未配置账号，仅刷新公开校历、官方通知和已订阅的学院公开资料。' };
     const history = await this.run(['history', '--limit', '100'], signal, 20_000);
     const wanted = `${academicYear}-${term}`;
     const item = (Array.isArray(history?.items) ? history.items : []).find(
       (entry: any) => entry?.kind === 'academic' && String(entry.semester_id || '') === wanted,
     );
     if (!item?.bundle_id)
-      return { status: 'skipped', publicCalendar, publicNotices, reason: '当前学期还没有校园资料快照。' };
+      return { status: 'skipped', publicCalendar, publicNotices, collegeSubscriptions, reason: '当前学期还没有校园资料快照。' };
     const freshness = this.cacheFreshness(item.fetched_at);
-    if (!freshness.stale) return { status: 'cached', bundle_id: String(item.bundle_id), freshness, publicCalendar, publicNotices };
+    if (!freshness.stale) return { status: 'cached', bundle_id: String(item.bundle_id), freshness, publicCalendar, publicNotices, collegeSubscriptions };
     try {
       const authenticated = await this.ensureAuthenticated(signal);
       if (authenticated?.status !== 'ok')
-        return { status: 'partial', reason: '后台刷新前的浙大统一身份认证没有完成。', freshness, publicCalendar, publicNotices };
+        return { status: 'partial', reason: '后台刷新前的浙大统一身份认证没有完成。', freshness, publicCalendar, publicNotices, collegeSubscriptions };
       const result = await this.bootstrapAcademic(signal, academicYear, term);
-      return { ...result, freshness: this.cacheFreshness(result?.fetched_at), publicCalendar, publicNotices };
+      return { ...result, freshness: this.cacheFreshness(result?.fetched_at), publicCalendar, publicNotices, collegeSubscriptions };
     } catch (error) {
       return {
         status: 'partial',
@@ -1148,6 +1357,7 @@ export class ZjuAdapter {
         freshness,
         publicCalendar,
         publicNotices,
+        collegeSubscriptions,
       };
     }
   }
