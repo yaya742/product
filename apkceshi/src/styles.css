@@ -1,4 +1,5 @@
 :root {
+  --keyboard-height: 0px;
   color: #1f3025;
   background: #f5f7f3;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", sans-serif;
@@ -42,6 +43,9 @@ button:disabled { cursor: not-allowed; opacity: .45; }
   padding-top: env(safe-area-inset-top);
   transition: background .2s ease, color .2s ease;
   touch-action: pan-y;
+}
+@supports (height: 100dvh) {
+  .app-shell { height: 100dvh; min-height: 100dvh; }
 }
 
 .app-shell.theme-dark {
@@ -128,10 +132,10 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .typing { display: inline-flex; color: var(--text-soft); }
 .typing::after { content: ""; width: 5px; height: 5px; margin: auto 0 auto 7px; border-radius: 50%; background: var(--accent); animation: blink 1s infinite; }
 
-.composer-area { position: sticky; bottom: 0; z-index: 4; padding: 8px 16px calc(14px + env(safe-area-inset-bottom)); background: linear-gradient(180deg, color-mix(in srgb, var(--bg) 0%, transparent), color-mix(in srgb, var(--bg) 94%, transparent) 22%, var(--bg) 46%); }
+.composer-area { position: relative; flex: 0 0 auto; z-index: 4; padding: 8px 16px calc(14px + env(safe-area-inset-bottom) + var(--keyboard-height)); background: linear-gradient(180deg, color-mix(in srgb, var(--bg) 0%, transparent), color-mix(in srgb, var(--bg) 94%, transparent) 22%, var(--bg) 46%); }
 .connection-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-faint); }
 .connection-dot.active { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
-.scroll-jump { position: absolute; right: 16px; bottom: 87px; z-index: 8; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--line-strong); border-radius: 14px; background: color-mix(in srgb, var(--surface) 92%, transparent); box-shadow: var(--shadow); backdrop-filter: blur(12px); }
+.scroll-jump { position: absolute; right: 16px; bottom: calc(87px + var(--keyboard-height)); z-index: 8; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--line-strong); border-radius: 14px; background: color-mix(in srgb, var(--surface) 92%, transparent); box-shadow: var(--shadow); backdrop-filter: blur(12px); }
 .scroll-jump button { width: 38px; height: 34px; display: grid; place-items: center; color: var(--accent-strong); border: 0; background: transparent; }
 .scroll-jump button + button { border-top: 1px solid var(--line); }
 .scroll-jump button:hover { background: var(--surface-strong); }

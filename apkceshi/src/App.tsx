@@ -223,6 +223,7 @@ export function App() {
   const abortRef = useRef<AbortController | undefined>(undefined);
   const translationAbortRef = useRef<AbortController | undefined>(undefined);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLElement>(null);
   const online = typeof navigator === 'undefined' ? true : navigator.onLine;
   const copy = getUiCopy(state.profile.language);
   const activeConversation = state.conversations.find((item) => item.id === state.activeConversationId) || state.conversations[0];
@@ -253,6 +254,23 @@ export function App() {
     node.addEventListener('scroll', updateScrollState, { passive: true });
     return () => node.removeEventListener('scroll', updateScrollState);
   }, [messages]);
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const updateKeyboardHeight = () => {
+      const keyboardHeight = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+      document.documentElement.style.setProperty('--keyboard-height', `${Math.round(keyboardHeight)}px`);
+    };
+    updateKeyboardHeight();
+    viewport.addEventListener('resize', updateKeyboardHeight);
+    viewport.addEventListener('scroll', updateKeyboardHeight);
+    return () => {
+      viewport.removeEventListener('resize', updateKeyboardHeight);
+      viewport.removeEventListener('scroll', updateKeyboardHeight);
+      document.documentElement.style.removeProperty('--keyboard-height');
+    };
+  }, []);
 
   function updateState(partial: Partial<MobileState>) {
     setState((current) => ({ ...current, ...partial }));
@@ -488,6 +506,13 @@ export function App() {
     node.scrollTo({ top: edge === 'top' ? 0 : node.scrollHeight, behavior: 'smooth' });
   }
 
+  function keepComposerVisible() {
+    window.setTimeout(() => {
+      composerRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+    }, 180);
+  }
+
   async function testConnection() {
     if (!state.apiKey.trim()) {
       setConnectionMessage('请先填写 API Key。');
@@ -652,13 +677,14 @@ export function App() {
         </div>
       )}
 
-      <footer className="composer-area">
+      <footer className="composer-area" ref={composerRef}>
         <div className="composer">
           <textarea
             value={draft}
             disabled={busy}
             placeholder={copy.draftPlaceholder}
             rows={1}
+            onFocus={keepComposerVisible}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === 'Enter' && !event.shiftKey) {
