@@ -825,6 +825,9 @@ export function App() {
 
   const themeClass = state.profile.theme === 'dark' ? 'theme-dark' : 'theme-light';
   const campus = state.campus;
+  const upcomingExams = campus?.exams.filter((exam) => exam.status === 'upcoming') || [];
+  const finishedExams = campus?.exams.filter((exam) => exam.status === 'finished') || [];
+  const unknownExams = campus?.exams.filter((exam) => exam.status === 'unknown') || [];
 
   return (
     <main className={`app-shell ${themeClass}`}>
@@ -1139,11 +1142,18 @@ export function App() {
                 </div>
 
                 {campusTab === 'overview' && (
-                  <section className="campus-stat-grid">
-                    <button onClick={() => setCampusTab('schedule')}><strong>{campus.courses.length}</strong><span>{copy.campusCoursesCount}</span></button>
-                    <button onClick={() => setCampusTab('exams')}><strong>{campus.exams.length}</strong><span>{copy.campusExamsCount}</span></button>
-                    <button onClick={() => setCampusTab('grades')}><strong>{campus.grades.length}</strong><span>{copy.campusGradesCount}</span></button>
-                    <button onClick={() => setCampusTab('todos')}><strong>{campus.todos.length}</strong><span>{copy.campusTodosCount}</span></button>
+                  <section className="campus-overview">
+                    <div className="campus-overview-metrics">
+                      <div><strong>{campus.gpa === null ? '—' : campus.gpa.toFixed(2)}</strong><span>{copy.campusGpa}</span></div>
+                      <div><strong>{campus.totalCredit.toFixed(1)}</strong><span>{copy.campusTotalCredit}</span></div>
+                      <div><strong>{campus.courses.length}</strong><span>{copy.campusCoursesCount}</span></div>
+                      <div><strong>{campus.todos.length}</strong><span>{copy.campusTodosCount}</span></div>
+                    </div>
+                    <div className="campus-overview-links">
+                      <button onClick={() => setCampusTab('schedule')}><span>{copy.campusSchedule}</span><strong>{campus.courses.length}</strong><ArrowIcon /></button>
+                      <button onClick={() => setCampusTab('exams')}><span>{copy.campusExams}</span><strong>{campus.exams.length}</strong><ArrowIcon /></button>
+                      <button onClick={() => setCampusTab('grades')}><span>{copy.campusGrades}</span><strong>{campus.grades.length}</strong><ArrowIcon /></button>
+                    </div>
                   </section>
                 )}
 
@@ -1161,17 +1171,22 @@ export function App() {
                 {campusTab === 'exams' && (
                   <section className="profile-section campus-data-card">
                     <div className="setting-label"><strong>{copy.campusExams}</strong><span>{campus.exams.length ? `${campus.exams.length}` : copy.campusEmpty}</span></div>
-                    {campus.exams.length ? campus.exams.map((exam) => (
-                      <div className="campus-record" key={exam.id}>
-                        <strong>{exam.name}</strong><span>{exam.time}</span><small>{exam.location || copy.campusNoLocation}{exam.seat ? ` · ${exam.seat}` : ''}</small>
-                      </div>
-                    )) : <p className="empty-history">{copy.campusEmpty}</p>}
+                    <div className="campus-exam-group"><div className="campus-group-label"><strong>{copy.campusUpcoming}</strong><span>{upcomingExams.length}</span></div>{upcomingExams.length ? upcomingExams.map((exam) => (
+                      <div className="campus-record" key={exam.id}><strong>{exam.name}</strong><span>{exam.time}</span><small>{exam.location || copy.campusNoLocation}{exam.seat ? ` · ${exam.seat}` : ''}</small></div>
+                    )) : <p className="empty-history">{copy.campusEmpty}</p>}</div>
+                    <div className="campus-exam-group"><div className="campus-group-label"><strong>{copy.campusFinished}</strong><span>{finishedExams.length}</span></div>{finishedExams.length ? finishedExams.map((exam) => (
+                      <div className="campus-record" key={exam.id}><strong>{exam.name}</strong><span>{exam.time}</span><small>{exam.location || copy.campusNoLocation}{exam.seat ? ` · ${exam.seat}` : ''}</small></div>
+                    )) : <p className="empty-history">{copy.campusEmpty}</p>}</div>
+                    {unknownExams.length > 0 && <div className="campus-exam-group"><div className="campus-group-label"><strong>{copy.campusUnknown}</strong><span>{unknownExams.length}</span></div>{unknownExams.map((exam) => (
+                      <div className="campus-record" key={exam.id}><strong>{exam.name}</strong><span>{exam.time}</span><small>{exam.location || copy.campusNoLocation}{exam.seat ? ` · ${exam.seat}` : ''}</small></div>
+                    ))}</div>}
                   </section>
                 )}
 
                 {campusTab === 'grades' && (
                   <section className="profile-section campus-data-card">
                     <div className="setting-label"><strong>{copy.campusGrades}</strong><span>{campus.grades.length ? `${campus.grades.length}` : copy.campusEmpty}</span></div>
+                    <div className="campus-grade-summary"><div><span>{copy.campusGpa}</span><strong>{campus.gpa === null ? '—' : campus.gpa.toFixed(2)}</strong></div><div><span>{copy.campusTotalCredit}</span><strong>{campus.totalCredit.toFixed(1)}</strong></div></div>
                     {campus.grades.length ? campus.grades.map((grade) => (
                       <div className="campus-record campus-grade-record" key={grade.id}>
                         <strong>{grade.name}</strong><span>{grade.score}</span><small>{grade.credit} · {grade.point}</small>

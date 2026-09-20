@@ -161,6 +161,8 @@ async function runLocalTool(call: DeepSeekToolCall, signal: AbortSignal, context
       fetched_at: context.campus.fetchedAt,
       academic_year: context.campus.academicYear,
       term: context.campus.term,
+      gpa: context.campus.gpa,
+      total_credit: context.campus.totalCredit,
       schedule: context.campus.courses,
       exams: context.campus.exams,
       grades: context.campus.grades,

@@ -42,6 +42,8 @@ export interface CampusExam {
   time: string;
   location: string;
   seat: string;
+  type: string;
+  status: 'upcoming' | 'finished' | 'unknown';
 }
 
 export interface CampusGrade {
@@ -68,6 +70,8 @@ export interface MobileCampusData {
   exams: CampusExam[];
   grades: CampusGrade[];
   todos: CampusTodo[];
+  gpa: number | null;
+  totalCredit: number;
 }
 
 export interface MobileMessage {

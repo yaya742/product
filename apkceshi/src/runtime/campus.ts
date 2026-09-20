@@ -186,27 +186,63 @@ function academicTerm(): { year: string; term: string } {
   return { year: String(month >= 8 ? now.getFullYear() : now.getFullYear() - 1), term: month >= 2 && month < 8 ? '2' : '1' };
 }
 
+function numberValue(value: string): number | undefined {
+  const numeric = Number(value.replace(/,/g, '').trim());
+  return Number.isFinite(numeric) ? numeric : undefined;
+}
+
+function scheduleParts(value: string): string[] {
+  return value
+    .replace(/<br\s*\/?>(\s*)/gi, '\n')
+    .replace(/zwf.*$/i, '')
+    .split(/\r?\n/)
+    .map((part) => part.replace(/<[^>]+>/g, '').trim())
+    .filter(Boolean);
+}
+
 function normalizeCourse(item: Record<string, unknown>, index: number): CampusCourse {
+  const parts = scheduleParts(field(item, ['kcb']));
   const day = field(item, ['xqj', 'week_day']);
-  const periods = field(item, ['jcs', 'period']);
+  const firstPeriod = numberValue(field(item, ['djj', 'start_period']));
+  const duration = numberValue(field(item, ['skcd', 'period_count']));
+  const lastPeriod = firstPeriod && duration ? firstPeriod + duration - 1 : undefined;
+  const periodLabel = firstPeriod && lastPeriod
+    ? `第${firstPeriod}-${lastPeriod}节`
+    : field(item, ['jcs', 'period']);
+  const weeks = field(item, ['zcd', 'weeks']) || [field(item, ['xxq']), field(item, ['dsz']) === '0' ? '单周' : field(item, ['dsz']) === '1' ? '双周' : ''].filter(Boolean).join(' · ');
   return {
     id: field(item, ['jxb_id', 'kch_id', 'kch'], `course-${index}`),
-    name: field(item, ['kcmc', 'course_name'], '未命名课程'),
-    teacher: field(item, ['jsxx', 'jsxm', 'teacher'], '教师未提供'),
-    location: field(item, ['cdmc', 'jxcdmc', 'classroom'], '地点未提供'),
-    time: [day ? `周${day}` : '', periods].filter(Boolean).join(' · ') || '时间未提供',
-    weeks: field(item, ['zcd', 'weeks'], '周次未提供'),
+    name: field(item, ['kcmc', 'course_name'], parts[0] || '未命名课程'),
+    teacher: field(item, ['jsxx', 'jsxm', 'teacher'], parts[2] || '教师未提供'),
+    location: field(item, ['cdmc', 'jxcdmc', 'classroom'], parts[3] || '地点未提供'),
+    time: [day ? `周${day}` : '', periodLabel].filter(Boolean).join(' · ') || '时间未提供',
+    weeks: weeks || '周次未提供',
   };
 }
 
-function normalizeExam(item: Record<string, unknown>, index: number): CampusExam {
-  return {
-    id: field(item, ['kch', 'kcmc', 'exam_id'], `exam-${index}`),
-    name: field(item, ['kcmc', 'course_name'], '未命名考试'),
-    time: field(item, ['kssj', 'exam_time'], '时间未提供'),
-    location: field(item, ['ksdd', 'cdmc', 'exam_room'], '地点未提供'),
-    seat: field(item, ['zwh', 'seat'], ''),
-  };
+function examStatus(value: string): CampusExam['status'] {
+  const match = value.match(/(20\d{2})[-/年](\d{1,2})[-/月](\d{1,2})/);
+  if (!match) return 'unknown';
+  const timestamp = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 23, 59, 59).getTime();
+  return timestamp < Date.now() ? 'finished' : 'upcoming';
+}
+
+function normalizeExams(item: Record<string, unknown>, index: number): CampusExam[] {
+  const name = field(item, ['kcmc', 'course_name'], '未命名考试');
+  const courseId = field(item, ['xkkh', 'kch', 'exam_id'], `exam-${index}`);
+  const candidates = [
+    { type: '期中', time: field(item, ['qzkssj']), location: field(item, ['qzjsmc']), seat: field(item, ['qzzwxh']) },
+    { type: '期末', time: field(item, ['kssj', 'exam_time']), location: field(item, ['jsmc', 'ksdd', 'cdmc', 'exam_room']), seat: field(item, ['zwxh', 'zwh', 'seat']) },
+  ];
+  return candidates.flatMap((candidate) => candidate.time ? [{
+    id: `${courseId}-${candidate.type}`,
+    name,
+    time: candidate.time,
+    location: candidate.location || '地点未提供',
+    seat: candidate.seat,
+    type: candidate.type,
+    status: examStatus(candidate.time),
+  }] : []);
 }
 
 function normalizeGrade(item: Record<string, unknown>, index: number): CampusGrade {
@@ -235,7 +271,7 @@ async function readSchedule(year: string, term: string): Promise<CampusCourse[]>
     if (body.includes('统一身份认证') || response.status === 401 || response.status === 403) throw new CampusError('教务网登录态已失效，请重新读取。', 'authentication');
     if (body.includes('captcha_error')) throw new CampusError('教务网要求验证码，手机端暂不绕过安全校验。', 'captcha');
     if (body.trim() === 'null' || response.data === null) continue;
-    const items = listFromPayload(response.data, 'kbList');
+    const items = listFromPayload(response.data, 'kbList').filter((item) => field(item, ['sfyjskc']) !== '1');
     if (!items.length && response.data && typeof response.data === 'object' && !('kbList' in (response.data as Record<string, unknown>))) throw new CampusError('教务网课表返回了无法识别的数据。', 'response');
     result.push(...items.map(normalizeCourse));
   }
@@ -247,7 +283,7 @@ async function readExams(): Promise<CampusExam[]> {
   const response = await request({ url: EXAMS_URL, method: 'POST', data: {}, headers: ajaxHeaders(), responseType: 'json' });
   const body = responseText(response);
   if (body.includes('统一身份认证') || response.status === 401 || response.status === 403) throw new CampusError('教务网登录态已失效，请重新读取。', 'authentication');
-  return listFromPayload(response.data, 'items').map(normalizeExam);
+  return listFromPayload(response.data, 'items').flatMap(normalizeExams);
 }
 
 async function readGrades(): Promise<CampusGrade[]> {
@@ -299,5 +335,14 @@ export async function readCampusInfo(studentId: string, password: string): Promi
   const exams = await readExams();
   const grades = await readGrades();
   const todos = await readTodos();
-  return { fetchedAt: new Date().toISOString(), academicYear: year, term, courses, exams, grades, todos };
+  const countedGrades = grades.flatMap((grade) => {
+    const credit = numberValue(grade.credit);
+    const point = numberValue(grade.point);
+    return credit !== undefined && credit > 0 ? [{ credit, point }] : [];
+  });
+  const totalCredit = countedGrades.reduce((sum, grade) => sum + grade.credit, 0);
+  const gpaGrades = countedGrades.filter((grade): grade is { credit: number; point: number } => grade.point !== undefined && Number.isFinite(grade.point));
+  const gpaDenominator = gpaGrades.reduce((sum, grade) => sum + grade.credit, 0);
+  const gpa = gpaDenominator ? gpaGrades.reduce((sum, grade) => sum + grade.credit * grade.point, 0) / gpaDenominator : null;
+  return { fetchedAt: new Date().toISOString(), academicYear: year, term, courses, exams, grades, todos, gpa, totalCredit };
 }

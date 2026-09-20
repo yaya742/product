@@ -114,14 +114,38 @@ function parseCampusData(value: unknown): MobileCampusData | null {
       return valid ? [entry as T] : [];
     }).slice(0, 200);
   };
+  const courses = parseList<CampusCourse>(value.courses, ['id', 'name', 'teacher', 'location', 'time', 'weeks']);
+  const exams = parseList<Record<string, unknown>>(value.exams, ['id', 'name', 'time', 'location', 'seat']).map((exam, index) => ({
+    id: String(exam.id || `exam-${index}`),
+    name: String(exam.name || '未命名考试'),
+    time: String(exam.time || '时间未提供'),
+    location: String(exam.location || ''),
+    seat: String(exam.seat || ''),
+    type: typeof exam.type === 'string' ? exam.type : 'final',
+    status: exam.status === 'finished' || exam.status === 'upcoming' ? exam.status : 'unknown',
+  } satisfies CampusExam));
+  const grades = parseList<CampusGrade>(value.grades, ['id', 'name', 'score', 'credit', 'point']);
+  const totalCredit = typeof value.totalCredit === 'number' && Number.isFinite(value.totalCredit)
+    ? value.totalCredit
+    : grades.reduce((sum, grade) => sum + (Number.isFinite(Number(grade.credit)) ? Number(grade.credit) : 0), 0);
+  const counted = grades.flatMap((grade) => {
+    const credit = Number(grade.credit);
+    const point = Number(grade.point);
+    return credit > 0 && Number.isFinite(credit) && Number.isFinite(point) ? [{ credit, point }] : [];
+  });
+  const gpa = typeof value.gpa === 'number' && Number.isFinite(value.gpa)
+    ? value.gpa
+    : counted.length ? counted.reduce((sum, item) => sum + item.credit * item.point, 0) / counted.reduce((sum, item) => sum + item.credit, 0) : null;
   return {
     fetchedAt: value.fetchedAt,
     academicYear: typeof value.academicYear === 'string' ? value.academicYear : '',
     term: typeof value.term === 'string' ? value.term : '',
-    courses: parseList<CampusCourse>(value.courses, ['id', 'name', 'teacher', 'location', 'time', 'weeks']),
-    exams: parseList<CampusExam>(value.exams, ['id', 'name', 'time', 'location', 'seat']),
-    grades: parseList<CampusGrade>(value.grades, ['id', 'name', 'score', 'credit', 'point']),
+    courses,
+    exams,
+    grades,
     todos: parseList<CampusTodo>(value.todos, ['id', 'name', 'course', 'deadline', 'status']),
+    gpa,
+    totalCredit,
   };
 }
 
