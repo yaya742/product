@@ -1165,7 +1165,6 @@ export function App() {
           <aside className="history-drawer" aria-label={copy.historyTitle}>
             <div className="drawer-topbar">
               <div>
-                <p className="eyebrow">{copy.history}</p>
                 <h2>{copy.historyTitle}</h2>
               </div>
               <button className="icon-button" aria-label={copy.close} onClick={closeOverlays}><CloseIcon /></button>
