@@ -14,3 +14,4 @@ zaichang/.dev-data/
 zaichang/.runtime/
 zaichang/.test-data/
 zaichang/build/runtime-staging-*/
+zaichang/build/hermes-builder.json
