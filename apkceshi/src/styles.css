@@ -265,6 +265,9 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .field-label { display: block; margin: 17px 0 8px; color: var(--text); font-size: 12px; font-weight: 600; }
 .campus-account-actions { display: flex; gap: 8px; margin-top: 19px; }
 .campus-account-actions button { flex: 1; }
+.campus-read-options { display: grid; grid-template-columns: 1fr 1fr; gap: 0 9px; }
+.campus-read-options .field-label { margin-top: 14px; }
+.campus-read-options select { min-width: 0; width: 100%; padding: 10px 9px; font-size: 12px; }
 .campus-privacy-note { margin: 10px 0 0; color: var(--text-faint); font-size: 10px; line-height: 1.5; }
 .save-wide-button { width: 100%; min-height: 46px; margin-top: 26px; color: #fff; border: 0; border-radius: 13px; background: var(--accent); font-weight: 600; }
 .save-wide-button:hover { background: var(--accent-strong); }
@@ -319,6 +322,13 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .campus-notice-heading span { flex: 0 0 auto; padding: 3px 6px; color: var(--text-soft); border: 1px solid var(--line); border-radius: 5px; font-size: 9px; }
 .campus-notice p { margin: 0; color: var(--text-soft); font-size: 11px; line-height: 1.55; }
 .campus-notice small { color: var(--text-faint); font-size: 10px; line-height: 1.4; }
+.public-category-row { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; scrollbar-width: none; }
+.public-category-row::-webkit-scrollbar { display: none; }
+.public-category-row button { flex: 0 0 auto; padding: 6px 10px; color: var(--text-soft); border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: 10px; }
+.public-category-row button.selected { color: var(--text); border-color: var(--accent); background: var(--accent-soft); }
+.campus-public-record { display: grid; gap: 5px; padding: 13px 0; border-top: 1px solid var(--line); }
+.campus-public-record strong { color: var(--text); font-size: 13px; }
+.campus-public-record span, .campus-public-record small { color: var(--text-soft); font-size: 11px; line-height: 1.45; }
 .notice-open-button { width: fit-content; padding: 0; color: var(--text); border: 0; background: transparent; font-size: 11px; text-decoration: underline; text-underline-offset: 3px; }
 .notice-pagination { display: flex; align-items: center; justify-content: center; gap: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
 .notice-pagination button { min-height: 31px; padding: 0 10px; color: var(--text); border: 1px solid var(--line); border-radius: 8px; background: var(--surface-muted); font-size: 10px; }

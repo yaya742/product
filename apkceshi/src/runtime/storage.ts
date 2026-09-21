@@ -25,7 +25,8 @@ import { Preferences } from '@capacitor/preferences';
 const STORAGE_KEY = 'zaichang.mobile.local.v2';
 const SECURE_API_KEY = 'zaichang.mobile.deepseek.api-key';
 const SECURE_STUDENT_PASSWORD = 'zaichang.mobile.campus.password';
-const LEGACY_DUPLICATE_HISTORY_TITLES = new Set(['查看课表请求', '查询课表', '查看课表', '数学学院转专业名额咨询']);
+// Remove the duplicate seeded history item shown at the top of the mobile history panel.
+const LEGACY_DUPLICATE_HISTORY_TITLES = new Set(['简短问候', '查看课表请求', '查询课表', '查看课表', '数学学院转专业名额咨询']);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
@@ -146,7 +147,17 @@ function parseCampusData(value: unknown): MobileCampusData | null {
       return valid ? [entry as T] : [];
     }).slice(0, 200);
   };
-  const courses = parseList<CampusCourse>(value.courses, ['id', 'name', 'teacher', 'location', 'time', 'weeks']);
+  const courses = parseList<Record<string, unknown>>(value.courses, ['id', 'name', 'teacher', 'location', 'time', 'weeks']).map((course) => ({
+    id: String(course.id),
+    name: String(course.name),
+    teacher: String(course.teacher),
+    location: String(course.location),
+    time: String(course.time),
+    weeks: String(course.weeks),
+    credit: typeof course.credit === 'string' ? course.credit : '—',
+    score: typeof course.score === 'string' ? course.score : '—',
+    completed: course.completed === true,
+  } satisfies CampusCourse));
   const exams = parseList<Record<string, unknown>>(value.exams, ['id', 'name', 'time', 'location', 'seat']).map((exam, index) => ({
     id: String(exam.id || `exam-${index}`),
     name: String(exam.name || '未命名考试'),
@@ -210,6 +221,9 @@ function parseCampusData(value: unknown): MobileCampusData | null {
     practiceProjects,
     gpa,
     totalCredit,
+    completedCredit: typeof value.completedCredit === 'number' && Number.isFinite(value.completedCredit) ? value.completedCredit : totalCredit,
+    earnedCredit: typeof value.earnedCredit === 'number' && Number.isFinite(value.earnedCredit) ? value.earnedCredit : totalCredit,
+    yearLevel: typeof value.yearLevel === 'string' ? value.yearLevel.slice(0, 16) : '',
     warnings: Array.isArray(value.warnings)
       ? value.warnings.filter((item): item is string => typeof item === 'string').map((item) => item.trim()).filter(Boolean).slice(0, 12)
       : [],

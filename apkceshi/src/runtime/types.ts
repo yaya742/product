@@ -56,6 +56,9 @@ export interface CampusCourse {
   location: string;
   time: string;
   weeks: string;
+  credit: string;
+  score: string;
+  completed: boolean;
 }
 
 export interface CampusExam {
@@ -117,6 +120,20 @@ export interface CampusNotice {
   pinned: boolean;
 }
 
+export type CampusPublicCategory = 'all' | 'profile' | 'faculty' | 'program' | 'contact' | 'labs';
+
+export interface CampusPublicInfo {
+  id: string;
+  name: string;
+  college: string;
+  title: string;
+  phone: string;
+  email: string;
+  profileUrl: string;
+  sourceUrl: string;
+  source: string;
+}
+
 export interface MobileCampusData {
   fetchedAt: string;
   academicYear: string;
@@ -129,6 +146,9 @@ export interface MobileCampusData {
   practiceProjects: CampusPracticeProject[];
   gpa: number | null;
   totalCredit: number;
+  completedCredit: number;
+  earnedCredit: number;
+  yearLevel: string;
   warnings: string[];
 }
 

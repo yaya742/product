@@ -7,6 +7,8 @@ import type {
   CampusPracticeProject,
   CampusPracticeSummary,
   CampusTodo,
+  CampusPublicCategory,
+  CampusPublicInfo,
   MobileCampusData,
 } from './types';
 
@@ -25,6 +27,11 @@ const SZTZ_PROJECTS = 'https://sztz.zju.edu.cn/dekt/student/home/getSqjl';
 const SZTZ_SUMMARY = 'https://sztz.zju.edu.cn/dekt/student/home/getMyInfo';
 const NOTICES_LIST_URL = 'https://zdbk.zju.edu.cn/jwglxt/xtgl/xwck_cxMoreLoginNews.html';
 const NOTICE_DETAIL_PATH = '/jwglxt/xtgl/xwck_ckLoginNews.html';
+const PERSON_SERVER_URL = 'https://person.zju.edu.cn/server';
+const PERSON_PORTAL_URL = 'https://person.zju.edu.cn/';
+const ZJU_INSTITUTION_DIRECTORY_URL = 'https://www.zju.edu.cn/599/listm.htm';
+const PERSON_APP_KEY = '50634610756a4c0e82d5a13bb692e257';
+const PERSON_SIGN_SECRET = '1f11192bd9d14a09b29fc59d556e24e3';
 
 const TRUSTED_HOSTS = new Set([
   'zjuam.zju.edu.cn',
@@ -32,6 +39,8 @@ const TRUSTED_HOSTS = new Set([
   'zdbk.zju.edu.cn',
   'courses.zju.edu.cn',
   'sztz.zju.edu.cn',
+  'person.zju.edu.cn',
+  'www.zju.edu.cn',
 ]);
 
 export type CampusErrorCode = 'native_required' | 'credentials' | 'network' | 'authentication' | 'captcha' | 'response';
@@ -514,6 +523,28 @@ function academicTerm(): { year: string; term: string } {
   return { year: String(month >= 8 ? now.getFullYear() : now.getFullYear() - 1), term: month >= 2 && month < 8 ? '2' : '1' };
 }
 
+export function currentAcademicTerm(): { year: string; term: string } {
+  return academicTerm();
+}
+
+function academicYearValue(value: string | undefined): string {
+  const candidate = String(value || '').trim();
+  return /^20\d{2}$/.test(candidate) ? candidate : academicTerm().year;
+}
+
+function termValue(value: string | undefined): string {
+  return value === '2' ? '2' : '1';
+}
+
+function inferYearLevel(studentId: string, academicYear: string): string {
+  const match = studentId.trim().match(/^(20\d{2})/);
+  if (!match) return '';
+  const entryYear = Number(match[1]);
+  const startYear = Number(academicYear);
+  if (!Number.isFinite(startYear) || startYear < entryYear - 1 || startYear > entryYear + 7) return '';
+  return `大${Math.max(1, Math.min(8, startYear - entryYear + 1))}`;
+}
+
 function numberValue(value: string): number | undefined {
   const numeric = Number(value.replace(/,/g, '').trim());
   return Number.isFinite(numeric) ? numeric : undefined;
@@ -625,6 +656,9 @@ function normalizeCourse(item: Record<string, unknown>, index: number): CampusCo
     location: rawLocation || parts[3] || '地点未提供',
     time: [day, periodLabel].filter(Boolean).join(' · ') || '时间未提供',
     weeks: weeks || '周次未提供',
+    credit: field(item, ['xf', 'credit', 'course_credit', 'kcxzxf'], '—'),
+    score: field(item, ['cj', 'score', 'original_score'], '—'),
+    completed: false,
   };
 }
 
@@ -693,6 +727,204 @@ async function readGrades(): Promise<CampusGrade[]> {
   const body = responseText(response);
   if (response.status === 401 || response.status === 403 || isAuthenticationPage(body)) throw new CampusError('教务网登录态已失效，请重新读取。', 'authentication');
   return listFromPayload(parseJson(response, '教务网成绩'), ['items', 'cjList', 'rows']).map(normalizeGrade);
+}
+
+function normalizedCourseName(value: string): string {
+  return value.replace(/[\s()（）【】[\]·:：,，.。]/g, '').toLowerCase();
+}
+
+function gradeRecorded(score: string): boolean {
+  const value = score.trim();
+  return !!value && value !== '—' && value !== '-' && value !== '未录入' && value !== '暂无';
+}
+
+function gradePassed(score: string): boolean {
+  const value = score.trim();
+  const numeric = numberValue(value);
+  if (numeric !== undefined) return numeric >= 60;
+  if (/优秀|良好|中等|通过|合格|免修|免考|优|良/.test(value)) return true;
+  return !/不及格|不通过|未通过|缺考|取消|缓考|违纪/.test(value) && value === '通过';
+}
+
+function enrichCoursesWithGrades(courses: CampusCourse[], grades: CampusGrade[]): CampusCourse[] {
+  const byId = new Map(grades.map((grade) => [grade.id.trim(), grade]));
+  const byName = new Map<string, CampusGrade>();
+  for (const grade of grades) {
+    const key = normalizedCourseName(grade.name);
+    if (key && !byName.has(key)) byName.set(key, grade);
+  }
+  return courses.map((course) => {
+    const grade = byId.get(course.id.trim()) || byName.get(normalizedCourseName(course.name));
+    if (!grade) return course;
+    return {
+      ...course,
+      credit: course.credit !== '—' ? course.credit : grade.credit,
+      score: course.score !== '—' ? course.score : grade.score,
+      completed: gradeRecorded(grade.score),
+    };
+  });
+}
+
+function md5Hex(value: string): string {
+  const bytes = new TextEncoder().encode(value);
+  const bitLength = bytes.length * 8;
+  const paddedLength = ((bytes.length + 8) >> 6 << 6) + 64;
+  const buffer = new Uint8Array(paddedLength);
+  buffer.set(bytes);
+  buffer[bytes.length] = 0x80;
+  const view = new DataView(buffer.buffer);
+  view.setUint32(buffer.length - 8, bitLength >>> 0, true);
+  view.setUint32(buffer.length - 4, Math.floor(bitLength / 0x100000000), true);
+  const rotate = (value: number, amount: number) => (value << amount) | (value >>> (32 - amount));
+  const add = (a: number, b: number) => (a + b) | 0;
+  const sine = Array.from({ length: 64 }, (_, index) => Math.floor(Math.abs(Math.sin(index + 1)) * 0x100000000) | 0);
+  const shifts = [
+    7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
+    5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20,
+    4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
+    6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21,
+  ];
+  let a0 = 0x67452301 | 0;
+  let b0 = 0xefcdab89 | 0;
+  let c0 = 0x98badcfe | 0;
+  let d0 = 0x10325476 | 0;
+  for (let offset = 0; offset < buffer.length; offset += 64) {
+    const words = Array.from({ length: 16 }, (_, index) => view.getInt32(offset + index * 4, true));
+    let a = a0; let b = b0; let c = c0; let d = d0;
+    for (let index = 0; index < 64; index += 1) {
+      let functionValue: number; let wordIndex: number;
+      if (index < 16) { functionValue = (b & c) | (~b & d); wordIndex = index; }
+      else if (index < 32) { functionValue = (d & b) | (~d & c); wordIndex = (5 * index + 1) % 16; }
+      else if (index < 48) { functionValue = b ^ c ^ d; wordIndex = (3 * index + 5) % 16; }
+      else { functionValue = c ^ (b | ~d); wordIndex = (7 * index) % 16; }
+      const next = add(add(add(a, functionValue), words[wordIndex]), sine[index]);
+      const rotated = rotate(next, shifts[index]);
+      const nextB = add(b, rotated);
+      a = d; d = c; c = b; b = nextB;
+    }
+    a0 = add(a0, a); b0 = add(b0, b); c0 = add(c0, c); d0 = add(d0, d);
+  }
+  const output = new Uint8Array(16);
+  const result = new DataView(output.buffer);
+  result.setInt32(0, a0, true); result.setInt32(4, b0, true); result.setInt32(8, c0, true); result.setInt32(12, d0, true);
+  return [...output].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function requestPersonApi(path: string, data: Record<string, string>): Promise<unknown> {
+  const payload: Record<string, string> = { ...data, lang: 'cn' };
+  const timestamp = String(Date.now());
+  const signatureInput = `${PERSON_SIGN_SECRET}${path}${Object.keys(payload).sort().map((key) => `${key}${payload[key]}`).join('')}${timestamp} ${PERSON_SIGN_SECRET}`;
+  const params = new URLSearchParams(payload);
+  const response = await request({
+    url: `${PERSON_SERVER_URL}${path}?${params.toString()}`,
+    headers: {
+      appKey: PERSON_APP_KEY,
+      sign: md5Hex(signatureInput),
+      timestamp,
+      Referer: PERSON_PORTAL_URL,
+      'X-Requested-With': 'XMLHttpRequest',
+      Accept: 'application/json, text/plain, */*',
+    },
+    responseType: 'text',
+    disableRedirects: true,
+  });
+  if (response.status < 200 || response.status >= 300) throw new CampusError(`浙大教师门户暂时无法访问（HTTP ${response.status}）。`, 'network');
+  const parsed = parseJson(response, '浙大教师门户');
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || Number((parsed as Record<string, unknown>).code) !== 200) {
+    throw new CampusError('浙大教师门户返回了无法识别的数据。', 'response');
+  }
+  return (parsed as Record<string, unknown>).data;
+}
+
+function extractPublicContact(body: string, label: string): string {
+  const match = body.match(new RegExp(`<label[^>]*>\\s*${label}\\s*</label>([\\s\\S]{0,360})`, 'i'));
+  if (!match?.[1]) return '';
+  const segment = match[1].split(/<li\\b/i)[0];
+  const mailto = segment.match(/mailto:([^"' >]+)/i)?.[1];
+  if (mailto) return decodeHtml(mailto);
+  return cleanDisplayText(segment).slice(0, 180);
+}
+
+function officialProfileUrl(mappingName: string): string {
+  return `${PERSON_PORTAL_URL}${encodeURIComponent(mappingName)}/0.html`;
+}
+
+async function readInstitutionLinks(query: string): Promise<{ title: string; url: string; source: string }[]> {
+  try {
+    const response = await request({ url: ZJU_INSTITUTION_DIRECTORY_URL, responseType: 'text', disableRedirects: true });
+    if (response.status < 200 || response.status >= 300) return [];
+    const needle = query.replace(/[\s（）()]/g, '').toLowerCase();
+    const links: { title: string; url: string; source: string }[] = [];
+    const anchorPattern = /<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+    for (const match of responseText(response).matchAll(anchorPattern)) {
+      const title = cleanDisplayText(match[2] || '');
+      const normalizedTitle = title.replace(/[\s（）()]/g, '').toLowerCase();
+      if (!title || !normalizedTitle.includes(needle)) continue;
+      try {
+        const parsed = new URL(decodeHtml(match[1]), ZJU_INSTITUTION_DIRECTORY_URL);
+        if (parsed.protocol !== 'https:' || !(parsed.hostname === 'www.zju.edu.cn' || parsed.hostname.endsWith('.zju.edu.cn'))) continue;
+        links.push({ title: `打开${title}官网`, url: parsed.toString(), source: '浙江大学官网院系目录' });
+      } catch {
+        // Ignore malformed links in the public directory.
+      }
+      if (links.length >= 4) break;
+    }
+    return links;
+  } catch {
+    return [];
+  }
+}
+
+export interface CampusPublicInfoResult {
+  status: 'ok' | 'not_found';
+  query: string;
+  category: CampusPublicCategory;
+  results: CampusPublicInfo[];
+  links: { title: string; url: string; source: string }[];
+  reason?: string;
+}
+
+export async function readPublicCollegeInfo(query: string, category: CampusPublicCategory = 'all'): Promise<CampusPublicInfoResult> {
+  assertNative();
+  const cleanQuery = query.trim().slice(0, 80);
+  if (!cleanQuery) throw new CampusError('请提供要查询的教师或院系名称。', 'response');
+  const links = [
+    { title: '浙江大学学院（系）目录', url: ZJU_INSTITUTION_DIRECTORY_URL, source: '浙江大学官网' },
+    { title: '浙江大学教师个人主页门户', url: PERSON_PORTAL_URL, source: '浙江大学教师个人主页门户' },
+  ];
+  if (category === 'program' || category === 'labs') links.push(...await readInstitutionLinks(cleanQuery));
+  const data = await requestPersonApi('/api/front/psons/search', { q: cleanQuery, page: '0', size: '8' });
+  const items = listFromPayload(data, ['content']).slice(0, 8);
+  const results: CampusPublicInfo[] = [];
+  for (const item of items) {
+    const name = field(item, ['cn_name', 'name']);
+    const mappingName = field(item, ['mapping_name', 'mappingName']);
+    if (!name || !mappingName) continue;
+    const title = field(item, ['work_title_name', 'work_title'], '教师');
+    const college = field(item, ['college_name', 'collegeName'], '浙江大学');
+    if (category === 'program' || category === 'labs') continue;
+    const profileUrl = officialProfileUrl(mappingName);
+    let phone = ''; let email = '';
+    try {
+      const profile = await request({ url: profileUrl, responseType: 'text', disableRedirects: true });
+      if (profile.status >= 200 && profile.status < 300) {
+        const body = responseText(profile);
+        phone = extractPublicContact(body, '电话');
+        email = extractPublicContact(body, '邮箱');
+      }
+    } catch {
+      // Keep the official profile URL even if the optional detail page is unavailable.
+    }
+    results.push({ id: String(item.id || mappingName), name, college, title, phone, email, profileUrl, sourceUrl: profileUrl, source: '浙江大学教师个人主页门户' });
+  }
+  return {
+    status: results.length || links.length > 2 ? 'ok' : 'not_found',
+    query: cleanQuery,
+    category,
+    results,
+    links,
+    reason: results.length ? undefined : '官方教师门户没有找到匹配结果；可以打开学院目录继续查找公开页面。',
+  };
 }
 
 function metaRefresh(body: string, source: string): string | undefined {
@@ -793,7 +1025,7 @@ function isFatalModuleError(error: unknown): boolean {
   return error instanceof CampusError && (error.code === 'authentication' || error.code === 'captcha');
 }
 
-export async function readCampusInfo(studentId: string, password: string): Promise<MobileCampusData> {
+export async function readCampusInfo(studentId: string, password: string, options: { academicYear?: string; term?: string } = {}): Promise<MobileCampusData> {
   assertNative();
   const cleanId = studentId.trim();
   if (!cleanId || !password) throw new CampusError('请先填写学号和校园密码。', 'credentials');
@@ -801,7 +1033,8 @@ export async function readCampusInfo(studentId: string, password: string): Promi
   try {
     await clearCampusCookies();
     await authenticate(cleanId, password);
-    const { year, term } = academicTerm();
+    const year = academicYearValue(options.academicYear);
+    const term = termValue(options.term || academicTerm().term);
     const warnings: string[] = [];
     let courses: CampusCourse[] = [];
     let exams: CampusExam[] = [];
@@ -826,16 +1059,37 @@ export async function readCampusInfo(studentId: string, password: string): Promi
     }
     if (!successfulModules && warnings.length) throw new CampusError(warnings.join('；'), 'response');
 
+    courses = enrichCoursesWithGrades(courses, grades);
     const countedGrades = grades.flatMap((grade) => {
       const credit = numberValue(grade.credit);
       const point = numberValue(grade.point);
       return credit !== undefined && credit > 0 ? [{ credit, point }] : [];
     });
     const totalCredit = countedGrades.reduce((sum, grade) => sum + grade.credit, 0);
+    const earnedCredit = grades.reduce((sum, grade) => {
+      const credit = numberValue(grade.credit);
+      return credit !== undefined && credit > 0 && gradePassed(grade.score) ? sum + credit : sum;
+    }, 0);
     const gpaGrades = countedGrades.filter((grade): grade is { credit: number; point: number } => grade.point !== undefined && Number.isFinite(grade.point));
     const gpaDenominator = gpaGrades.reduce((sum, grade) => sum + grade.credit, 0);
     const gpa = gpaDenominator ? gpaGrades.reduce((sum, grade) => sum + grade.credit * grade.point, 0) / gpaDenominator : null;
-    return { fetchedAt: new Date().toISOString(), academicYear: year, term, courses, exams, grades, todos, practiceSummary, practiceProjects, gpa, totalCredit, warnings };
+    return {
+      fetchedAt: new Date().toISOString(),
+      academicYear: year,
+      term,
+      courses,
+      exams,
+      grades,
+      todos,
+      practiceSummary,
+      practiceProjects,
+      gpa,
+      totalCredit,
+      completedCredit: totalCredit,
+      earnedCredit,
+      yearLevel: inferYearLevel(cleanId, year),
+      warnings,
+    };
   } finally {
     activeCookieJar = null;
     zdbkSessionReady = false;

@@ -7,11 +7,11 @@ import {
   DeepSeekError,
 } from './deepseek';
 import { findWalkingRoute, loadMapData } from './map';
-import { readPublicNotices } from './campus';
+import { readPublicCollegeInfo, readPublicNotices } from './campus';
 import { CAMPUS_COORDINATE, fetchWeather, readDeviceLocation } from './weather';
 import type { MobileAgendaItem, MobileAttachment, MobileCampusData, MobileConversation, MobileLanguage, MobileMessage, MobileReminder, MobileTurnControls } from './types';
 
-export type AgentStatus = '联系 DeepSeek' | '读取手机时间' | '请求手机定位' | '查询天气' | '查询校园地图' | '规划路线' | '读取校园信息' | '搜索校园公告' | '保存本地提醒' | '读取本地提醒' | '保存本地安排' | '读取本地安排' | '完成本地安排' | '撤销本地安排' | '搜索历史记录' | '保存长期记忆' | '整理回复';
+export type AgentStatus = '联系 DeepSeek' | '读取手机时间' | '请求手机定位' | '查询天气' | '查询校园地图' | '规划路线' | '读取校园信息' | '搜索校园公告' | '搜索院系公开资料' | '保存本地提醒' | '读取本地提醒' | '保存本地安排' | '读取本地安排' | '完成本地安排' | '撤销本地安排' | '搜索历史记录' | '保存长期记忆' | '整理回复';
 
 export interface MobileAgentContext {
   conversations: MobileConversation[];
@@ -168,8 +168,11 @@ async function runLocalTool(call: DeepSeekToolCall, signal: AbortSignal, context
       fetched_at: context.campus.fetchedAt,
       academic_year: context.campus.academicYear,
       term: context.campus.term,
+      year_level: context.campus.yearLevel,
       gpa: context.campus.gpa,
       total_credit: context.campus.totalCredit,
+      completed_credit: context.campus.completedCredit,
+      earned_credit: context.campus.earnedCredit,
       schedule: context.campus.courses,
       exams: context.campus.exams,
       grades: context.campus.grades,
@@ -213,6 +216,16 @@ async function runLocalTool(call: DeepSeekToolCall, signal: AbortSignal, context
         .slice(0, 30)
       .map(({ id, title, notes, dueAt }) => ({ id, title, notes, due_at: dueAt })),
     };
+  }
+  if (call.function.name === 'search_college_public_info') {
+    const args = toolArguments(call);
+    const query = typeof args.query === 'string' ? args.query.trim().slice(0, 80) : '';
+    const allowedCategories = ['all', 'profile', 'faculty', 'program', 'contact', 'labs'] as const;
+    const category = allowedCategories.includes(args.category as typeof allowedCategories[number])
+      ? args.category as typeof allowedCategories[number]
+      : 'all';
+    if (!query) return { status: 'unavailable', reason: '没有提供要查询的教师或院系名称。' };
+    return { ...(await readPublicCollegeInfo(query, category)) };
   }
   if (call.function.name === 'prepare_action') {
     if (!context) return { status: 'unavailable', reason: '手机端本地安排存储暂不可用。' };
@@ -337,6 +350,8 @@ export async function runMobileAgent(
                   ? '读取校园信息'
                 : call.function.name === 'search_campus_notices'
                   ? '搜索校园公告'
+                : call.function.name === 'search_college_public_info'
+                  ? '搜索院系公开资料'
                 : call.function.name === 'create_local_reminder'
                   ? '保存本地提醒'
                   : call.function.name === 'list_local_reminders'

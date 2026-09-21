@@ -171,6 +171,22 @@ export const LOCAL_TOOL_SPECS: DeepSeekToolSpec[] = [
   {
     type: 'function',
     function: {
+      name: 'search_college_public_info',
+      description: '查询浙江大学官网和教师个人主页门户中的院系、教师与公开联系方式。用户询问教师联系方式、师资、院系简介或公开培养/实验室入口时使用；只返回官方公开页面，不读取手机通讯录、私人账号或推测私人联系方式。',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string', description: '教师姓名或院系关键词，例如“莫群”或“数学科学学院”' },
+          category: { type: 'string', enum: ['all', 'profile', 'faculty', 'program', 'contact', 'labs'], description: '资料类型；不确定时使用 all' },
+        },
+        required: ['query'],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'list_local_actions',
       description: '读取手机端已经登记的本地安排。用户询问安排、计划或本机待办时使用。',
       parameters: { type: 'object', properties: { include_done: { type: 'boolean' } }, additionalProperties: false },
