@@ -37,7 +37,7 @@ class ConnectorTests(unittest.TestCase):
                 self.urls.append(url)
                 if url.endswith("/api/my-courses"):
                     return {"data": {"courses": [{"id": 12, "title": "数据结构", "code": "CS101", "teacher": "张老师"}]}}, {}
-                return {"items": [{"id": "a1", "name": "第一次作业", "due_time": "2026-10-01T12:00:00Z", "secret": "drop"}]}, {}
+                return {"items": [{"id": "a1", "name": "第一次作业", "due_time": "2026-10-01T12:00:00Z", "link": "https://evil.example/activity", "secret": "drop"}]}, {}
 
         from zju_connector.auth import AuthenticatedSession
 
@@ -49,6 +49,7 @@ class ConnectorTests(unittest.TestCase):
         self.assertEqual(activities[0]["courseId"], "12")
         self.assertEqual(activities[0]["deadline"], "2026-10-01T12:00:00Z")
         self.assertNotIn("secret", activities[0])
+        self.assertNotIn("url", activities[0])
 
     def test_learning_platform_rejects_unsafe_course_id(self):
         class FakeClient:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import html
 import re
-from urllib.parse import quote, urlencode, urljoin
+from urllib.parse import quote, urlencode, urljoin, urlparse
 
 from .auth import AuthenticatedSession
 
@@ -212,6 +212,12 @@ def _learning_activity(item: dict, course_id: str) -> dict | None:
     }.items():
         value = _first(item, *names)
         if value not in (None, ""):
+            if target == "url":
+                parsed = urlparse(str(value))
+                host = (parsed.hostname or "").lower().rstrip(".")
+                if parsed.scheme != "https" or not (host == "zju.edu.cn" or host.endswith(".zju.edu.cn")):
+                    continue
+                value = parsed.geturl()
             result[target] = value
     return result
 
