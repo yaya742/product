@@ -1,8 +1,0 @@
-{
-  "repository": "https://github.com/NousResearch/hermes-agent.git",
-  "commit": "d595e636c83aa0b9606d4e914e1140ae9c796897",
-  "version": "0.21.2",
-  "python": "3.13.15",
-  "adapterVersion": 1,
-  "dependencyLock": "upstream uv.lock, uv sync --frozen --no-dev"
-}
