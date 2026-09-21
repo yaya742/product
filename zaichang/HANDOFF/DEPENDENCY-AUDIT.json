@@ -1,0 +1,6325 @@
+{
+  "checkedAt": "2026-09-15T03:06:08.709Z",
+  "parser": "esbuild parser/resolver from fresh npm ci; type-only imports additionally resolved lexically and by project type checks",
+  "parsedInputs": 188,
+  "localStaticImports": 555,
+  "packageCommands": 47,
+  "status": "passed",
+  "missing": [],
+  "imports": [
+    {
+      "from": "vite.config.ts",
+      "specifier": "vite",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "vite.config.ts",
+      "specifier": "@vitejs/plugin-react",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "scripts/assemble-visual-audit.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/assemble-visual-audit.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/audit-map-coverage.mjs",
+      "specifier": "node:fs/promises",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/audit-map-coverage.mjs",
+      "specifier": "node:zlib",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/audit-map-coverage.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/audit-understanding-run.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/audit-understanding-run.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/audit-understanding-run.mjs",
+      "specifier": "./score-harness-evaluation.mjs",
+      "target": "scripts/score-harness-evaluation.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/build-electron.mjs",
+      "specifier": "esbuild",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "scripts/build-official-coverage-reference.mjs",
+      "specifier": "node:fs/promises",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/build-official-coverage-reference.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/check-deepseek-balance.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/check-deepseek-balance.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/check-project-docs.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/check-project-docs.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/check-project-docs.mjs",
+      "specifier": "node:url",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/check-project-docs.mjs",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/check-theme.mjs",
+      "specifier": "@playwright/test",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "scripts/check-theme.mjs",
+      "specifier": "node:fs/promises",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/check-theme.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/check-theme.mjs",
+      "specifier": "./test-environment.mjs",
+      "target": "scripts/test-environment.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/dev.mjs",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/dev.mjs",
+      "specifier": "vite",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "scripts/dev.mjs",
+      "specifier": "electron",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "scripts/dev.mjs",
+      "specifier": "./build-electron.mjs",
+      "target": "scripts/build-electron.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/evaluate-harness.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/evaluate-harness.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/evaluate-harness.mjs",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/evaluate-harness.mjs",
+      "specifier": "esbuild",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "scripts/evaluate-harness.mjs",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/evaluate-harness.mjs",
+      "specifier": "./test-environment.mjs",
+      "target": "scripts/test-environment.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/fetch-map-v2.mjs",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/fetch-map-v2.mjs",
+      "specifier": "node:util",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/fetch-map-v2.mjs",
+      "specifier": "node:fs/promises",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/fetch-map-v2.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/harness-evidence.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/harness-evidence.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/harness-evidence.mjs",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/harness-recover.mjs",
+      "specifier": "esbuild",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "scripts/harness-recover.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/harness-recover.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/harness-recover.mjs",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/harness-recover.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/harness-recover.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/harness-recover.ts",
+      "specifier": "../src/main/store",
+      "target": "src/main/store.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/harness-regression.mjs",
+      "specifier": "./evaluate-harness.mjs",
+      "target": "scripts/evaluate-harness.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/import-map-v2.mjs",
+      "specifier": "node:fs/promises",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/import-map-v2.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/import-map-v2.mjs",
+      "specifier": "node:zlib",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/import-map-v2.mjs",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/import-map-v2.mjs",
+      "specifier": "osmtogeojson",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "scripts/import-map-v2.mjs",
+      "specifier": "./map-geometry.mjs",
+      "target": "scripts/map-geometry.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/inspect.mjs",
+      "specifier": "@playwright/test",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "scripts/inspect.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/inspect.mjs",
+      "specifier": "./test-environment.mjs",
+      "target": "scripts/test-environment.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/judge-live-acceptance.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/judge-live-acceptance.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/judge-live-acceptance.ts",
+      "specifier": "../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/live-acceptance-eval.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/live-acceptance-eval.ts",
+      "specifier": "node:os",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/live-acceptance-eval.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/live-acceptance-eval.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/live-acceptance-eval.ts",
+      "specifier": "../tests/harness/scenario-fixture",
+      "target": "tests/harness/scenario-fixture.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/live-acceptance-eval.ts",
+      "specifier": "../src/main/harness",
+      "target": "src/main/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/live-acceptance-eval.ts",
+      "specifier": "../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/live-zju-deepseek-eval.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/live-zju-deepseek-eval.ts",
+      "specifier": "node:os",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/live-zju-deepseek-eval.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/live-zju-deepseek-eval.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/live-zju-deepseek-eval.ts",
+      "specifier": "../src/main/store",
+      "target": "src/main/store.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/live-zju-deepseek-eval.ts",
+      "specifier": "../src/main/harness",
+      "target": "src/main/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/live-zju-deepseek-eval.ts",
+      "specifier": "../src/main/zjuAdapter",
+      "target": "src/main/zjuAdapter.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/live-zju-deepseek-eval.ts",
+      "specifier": "../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/live-zju-deepseek-smoke.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/live-zju-deepseek-smoke.ts",
+      "specifier": "node:os",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/live-zju-deepseek-smoke.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/live-zju-deepseek-smoke.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/live-zju-deepseek-smoke.ts",
+      "specifier": "../src/main/store",
+      "target": "src/main/store.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/live-zju-deepseek-smoke.ts",
+      "specifier": "../src/main/harness",
+      "target": "src/main/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/live-zju-deepseek-smoke.ts",
+      "specifier": "../src/main/zjuAdapter",
+      "target": "src/main/zjuAdapter.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/live-zju-deepseek-smoke.ts",
+      "specifier": "../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/probe-deepseek-vision.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/probe-deepseek-vision.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/probe-luna-transport.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/probe-luna-transport.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/probe-luna-transport.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/probe-luna-transport.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/probe-luna-transport.ts",
+      "specifier": "../src/main/luna-provider",
+      "target": "src/main/luna-provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/probe-luna-transport.ts",
+      "specifier": "../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/record-map-v2.mjs",
+      "specifier": "@playwright/test",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "scripts/record-map-v2.mjs",
+      "specifier": "node:fs/promises",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/record-map-v2.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/record-map-v2.mjs",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/record-map-v2.mjs",
+      "specifier": "node:util",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/record-map-v2.mjs",
+      "specifier": "./test-environment.mjs",
+      "target": "scripts/test-environment.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/run-judge-live-acceptance.mjs",
+      "specifier": "esbuild",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "scripts/run-judge-live-acceptance.mjs",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-judge-live-acceptance.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-judge-live-acceptance.mjs",
+      "specifier": "node:os",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-judge-live-acceptance.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-live-acceptance-eval.mjs",
+      "specifier": "esbuild",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "scripts/run-live-acceptance-eval.mjs",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-live-acceptance-eval.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-live-acceptance-eval.mjs",
+      "specifier": "node:os",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-live-acceptance-eval.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-live-zju-deepseek-eval.mjs",
+      "specifier": "esbuild",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "scripts/run-live-zju-deepseek-eval.mjs",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-live-zju-deepseek-eval.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-live-zju-deepseek-eval.mjs",
+      "specifier": "node:os",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-live-zju-deepseek-eval.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-live-zju-smoke.mjs",
+      "specifier": "esbuild",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "scripts/run-live-zju-smoke.mjs",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-live-zju-smoke.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-live-zju-smoke.mjs",
+      "specifier": "node:os",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-live-zju-smoke.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-luna-test.mjs",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-understanding-ablations.mjs",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-understanding-ablations.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-understanding-ablations.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-understanding-comparison.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-understanding-comparison.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-understanding-comparison.mjs",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-understanding-comparison.mjs",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/run-understanding-comparison.mjs",
+      "specifier": "esbuild",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "scripts/run-understanding-comparison.mjs",
+      "specifier": "./test-environment.mjs",
+      "target": "scripts/test-environment.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/score-conversation-quality.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/score-conversation-quality.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/score-harness-evaluation.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/score-harness-evaluation.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/setup-hermes.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/setup-hermes.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/setup-hermes.mjs",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/setup-hermes.mjs",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/stage-hermes-runtime.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/stage-hermes-runtime.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/stage-hermes-runtime.mjs",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/stage-hermes-runtime.mjs",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/summarize-understanding-evaluation.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/summarize-understanding-evaluation.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/summarize-understanding-evaluation.mjs",
+      "specifier": "./score-harness-evaluation.mjs",
+      "target": "scripts/score-harness-evaluation.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/summarize-understanding-evaluation.mjs",
+      "specifier": "./audit-understanding-run.mjs",
+      "target": "scripts/audit-understanding-run.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/summarize-understanding-usage.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/summarize-understanding-usage.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/summarize-understanding-usage.mjs",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/summarize-understanding-usage.mjs",
+      "specifier": "../src/main/runtime/model-usage.ts",
+      "target": "src/main/runtime/model-usage.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/test-environment.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/test-environment.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/test-environment.mjs",
+      "specifier": "node:url",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/test-harness.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/test-harness.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/test-harness.mjs",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/test-harness.mjs",
+      "specifier": "esbuild",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "scripts/test-harness.mjs",
+      "specifier": "./test-environment.mjs",
+      "target": "scripts/test-environment.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/test-harness.mjs",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/test.mjs",
+      "specifier": "esbuild",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "scripts/test.mjs",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/test.mjs",
+      "specifier": "./test-environment.mjs",
+      "target": "scripts/test-environment.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/test.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/test.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/test.mjs",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/understanding-baseline.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/understanding-baseline.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/understanding-baseline.mjs",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/understanding-baseline.mjs",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/validate-trajectories.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/validate-trajectories.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/validate-trajectories.mjs",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/validate-trajectories.mjs",
+      "specifier": "node:url",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/verify-harness.mjs",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/verify-harness.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/verify-zju-account.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/verify-zju-account.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "scripts/verify-zju-account.ts",
+      "specifier": "../src/main/store",
+      "target": "src/main/store.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/verify-zju-account.ts",
+      "specifier": "../src/main/tools",
+      "target": "src/main/tools.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "scripts/verify-zju-account.ts",
+      "specifier": "../src/main/zjuAdapter",
+      "target": "src/main/zjuAdapter.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/demo.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/demo.ts",
+      "specifier": "../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/demo.ts",
+      "specifier": "../shared/map-v2",
+      "target": "src/shared/map-v2.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/demo.ts",
+      "specifier": "./mapService",
+      "target": "src/main/mapService.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./model-selection",
+      "target": "src/main/model-selection.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./runtime/hermes",
+      "target": "src/main/runtime/hermes.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./runtime/turn-controls",
+      "target": "src/main/runtime/turn-controls.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./runtime/action-delegation",
+      "target": "src/main/runtime/action-delegation.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./runtime/completion-review",
+      "target": "src/main/runtime/completion-review.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./runtime/read-purpose",
+      "target": "src/main/runtime/read-purpose.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./runtime/privacy-control",
+      "target": "src/main/runtime/privacy-control.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./runtime/release-projection",
+      "target": "src/main/runtime/release-projection.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./runtime/release-composer",
+      "target": "src/main/runtime/release-composer.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./runtime/release-store",
+      "target": "src/main/runtime/release-store.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./runtime/redaction",
+      "target": "src/main/runtime/redaction.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "../../prompts/system.md",
+      "target": "prompts/system.md",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./store",
+      "target": "src/main/store.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./tools",
+      "target": "src/main/tools.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./zjuAdapter",
+      "target": "src/main/zjuAdapter.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./mapService",
+      "target": "src/main/mapService.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./demo",
+      "target": "src/main/demo.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./runtime/coordinator",
+      "target": "src/main/runtime/coordinator.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./runtime/policy",
+      "target": "src/main/runtime/policy.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./memory/model",
+      "target": "src/main/memory/model.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./memory/service",
+      "target": "src/main/memory/service.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "./provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": "../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/harness.ts",
+      "specifier": ", ",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/luna-provider.ts",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/luna-provider.ts",
+      "specifier": "node:http",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/luna-provider.ts",
+      "specifier": "node:readline",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/luna-provider.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/luna-provider.ts",
+      "specifier": "node:fs/promises",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/luna-provider.ts",
+      "specifier": "node:os",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/luna-provider.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/luna-provider.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/luna-provider.ts",
+      "specifier": "./provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "electron",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "node:url",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "./store",
+      "target": "src/main/store.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "./storage/drafts",
+      "target": "src/main/storage/drafts.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "./harness",
+      "target": "src/main/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "./zjuAdapter",
+      "target": "src/main/zjuAdapter.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "./mapService",
+      "target": "src/main/mapService.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "./mapLocation",
+      "target": "src/main/mapLocation.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "./provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "./model-selection",
+      "target": "src/main/model-selection.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "../shared/schemas",
+      "target": "src/shared/schemas.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "../../examples/campus.example.json",
+      "target": "examples/campus.example.json",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "../shared/limits",
+      "target": "src/shared/limits.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "./testBoundary",
+      "target": "src/main/testBoundary.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "./runtime/policy",
+      "target": "src/main/runtime/policy.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "./runtime/redaction",
+      "target": "src/main/runtime/redaction.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/main.ts",
+      "specifier": "./runtime/controls",
+      "target": "src/main/runtime/controls.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/mapLocation.ts",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/mapLocation.ts",
+      "specifier": "../shared/map-v2",
+      "target": "src/shared/map-v2.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/mapLocation.ts",
+      "specifier": "../shared/map-routing",
+      "target": "src/shared/map-routing.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/mapService.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/mapService.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/mapService.ts",
+      "specifier": "../shared/map-v2",
+      "target": "src/shared/map-v2.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/mapService.ts",
+      "specifier": "../shared/map-routing",
+      "target": "src/shared/map-routing.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/model-selection.ts",
+      "specifier": "./provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/model-selection.ts",
+      "specifier": "./luna-provider",
+      "target": "src/main/luna-provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/preload.ts",
+      "specifier": "electron",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/preload.ts",
+      "specifier": "../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/provider.ts",
+      "specifier": "../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/store.ts",
+      "specifier": "node:sqlite",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/store.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/store.ts",
+      "specifier": "../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/store.ts",
+      "specifier": "../shared/schemas",
+      "target": "src/shared/schemas.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/store.ts",
+      "specifier": "./storage/repository",
+      "target": "src/main/storage/repository.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/store.ts",
+      "specifier": "./runtime/coordinator",
+      "target": "src/main/runtime/coordinator.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/store.ts",
+      "specifier": "../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/store.ts",
+      "specifier": "./runtime/redaction",
+      "target": "src/main/runtime/redaction.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/store.ts",
+      "specifier": "./testBoundary",
+      "target": "src/main/testBoundary.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/testBoundary.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/testBoundary.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/tools.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/tools.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/tools.ts",
+      "specifier": "../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/tools.ts",
+      "specifier": "../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/tools.ts",
+      "specifier": "./store",
+      "target": "src/main/store.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/tools.ts",
+      "specifier": "./runtime/coordinator",
+      "target": "src/main/runtime/coordinator.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/tools.ts",
+      "specifier": "./provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/tools.ts",
+      "specifier": "./runtime/redaction",
+      "target": "src/main/runtime/redaction.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/tools.ts",
+      "specifier": "./runtime/coordinator",
+      "target": "src/main/runtime/coordinator.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/tools.ts",
+      "specifier": "./runtime/action-delegation",
+      "target": "src/main/runtime/action-delegation.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/tools.ts",
+      "specifier": "./zjuAdapter",
+      "target": "src/main/zjuAdapter.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/tools.ts",
+      "specifier": "./mapService",
+      "target": "src/main/mapService.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/tools.ts",
+      "specifier": "../shared/map-v2",
+      "target": "src/shared/map-v2.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/zjuAdapter.ts",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/zjuAdapter.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/zjuAdapter.ts",
+      "specifier": "node:os",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/zjuAdapter.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/zjuAdapter.ts",
+      "specifier": "./store",
+      "target": "src/main/store.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/zjuAdapter.ts",
+      "specifier": ", args.from);\n    if (args.to) cli.push(",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/actions/availability.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/calendar.ts",
+      "specifier": "../../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/calendar.ts",
+      "specifier": "../../shared/calendar",
+      "target": "src/shared/calendar.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/calendar.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/calendar.ts",
+      "specifier": "../runtime/semantics",
+      "target": "src/main/runtime/semantics.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/calendar.ts",
+      "specifier": "../../shared/calendar",
+      "target": "src/shared/calendar.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/local-calendar.ts",
+      "specifier": "../../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/local-calendar.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/local-calendar.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/local-calendar.ts",
+      "specifier": "../../shared/calendar",
+      "target": "src/shared/calendar.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/local-calendar.ts",
+      "specifier": "../store",
+      "target": "src/main/store.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/local-calendar.ts",
+      "specifier": "./reminders",
+      "target": "src/main/actions/reminders.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/local-calendar.ts",
+      "specifier": "./calendar",
+      "target": "src/main/actions/calendar.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/local-calendar.ts",
+      "specifier": "../runtime/semantics",
+      "target": "src/main/runtime/semantics.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/reminders.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/actions/reminders.ts",
+      "specifier": "../../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/reminders.ts",
+      "specifier": "../storage/repository",
+      "target": "src/main/storage/repository.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/reminders.ts",
+      "specifier": "../runtime/policy",
+      "target": "src/main/runtime/policy.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/reminders.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/reminders.ts",
+      "specifier": "./calendar",
+      "target": "src/main/actions/calendar.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/reminders.ts",
+      "specifier": "../runtime/semantics",
+      "target": "src/main/runtime/semantics.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/runtime.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/actions/runtime.ts",
+      "specifier": "../../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/runtime.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/runtime.ts",
+      "specifier": "../storage/repository",
+      "target": "src/main/storage/repository.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/runtime.ts",
+      "specifier": "../runtime/policy",
+      "target": "src/main/runtime/policy.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/runtime.ts",
+      "specifier": "../capabilities/broker",
+      "target": "src/main/capabilities/broker.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/runtime.ts",
+      "specifier": "../runtime/semantics",
+      "target": "src/main/runtime/semantics.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/actions/runtime.ts",
+      "specifier": "./local-calendar",
+      "target": "src/main/actions/local-calendar.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/broker.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/capabilities/broker.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/capabilities/broker.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/broker.ts",
+      "specifier": "../runtime/policy",
+      "target": "src/main/runtime/policy.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/broker.ts",
+      "specifier": "../runtime/work",
+      "target": "src/main/runtime/work.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/broker.ts",
+      "specifier": "../runtime/semantics",
+      "target": "src/main/runtime/semantics.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/broker.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/builtin.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/capabilities/builtin.ts",
+      "specifier": "../mapService",
+      "target": "src/main/mapService.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/builtin.ts",
+      "specifier": "../zjuAdapter",
+      "target": "src/main/zjuAdapter.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/builtin.ts",
+      "specifier": "../storage/domains",
+      "target": "src/main/storage/domains.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/builtin.ts",
+      "specifier": "../storage/repository",
+      "target": "src/main/storage/repository.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/builtin.ts",
+      "specifier": "../runtime/policy",
+      "target": "src/main/runtime/policy.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/builtin.ts",
+      "specifier": "./broker",
+      "target": "src/main/capabilities/broker.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/builtin.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/builtin.ts",
+      "specifier": "../../shared/calendar",
+      "target": "src/shared/calendar.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/builtin.ts",
+      "specifier": "../actions/calendar",
+      "target": "src/main/actions/calendar.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/ports.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/capabilities/ports.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/capabilities/ports.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/ports.ts",
+      "specifier": "../storage/repository",
+      "target": "src/main/storage/repository.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/ports.ts",
+      "specifier": "../runtime/policy",
+      "target": "src/main/runtime/policy.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/ports.ts",
+      "specifier": "../runtime/work",
+      "target": "src/main/runtime/work.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/ports.ts",
+      "specifier": "../storage/domains",
+      "target": "src/main/storage/domains.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/ports.ts",
+      "specifier": "../actions/reminders",
+      "target": "src/main/actions/reminders.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/capabilities/ports.ts",
+      "specifier": "../runtime/semantics",
+      "target": "src/main/runtime/semantics.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/memory/model.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/memory/model.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/memory/model.ts",
+      "specifier": "../provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/memory/model.ts",
+      "specifier": "./service",
+      "target": "src/main/memory/service.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/memory/model.ts",
+      "specifier": "../runtime/policy",
+      "target": "src/main/runtime/policy.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/memory/model.ts",
+      "specifier": "../runtime/semantics",
+      "target": "src/main/runtime/semantics.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/memory/service.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/memory/service.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/memory/service.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/memory/service.ts",
+      "specifier": "../storage/repository",
+      "target": "src/main/storage/repository.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/memory/service.ts",
+      "specifier": "../runtime/policy",
+      "target": "src/main/runtime/policy.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/memory/service.ts",
+      "specifier": "../runtime/semantics",
+      "target": "src/main/runtime/semantics.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/memory/service.ts",
+      "specifier": "../runtime/redaction",
+      "target": "src/main/runtime/redaction.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/action-delegation.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/runtime/action-delegation.ts",
+      "specifier": "./structured-result",
+      "target": "src/main/runtime/structured-result.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/action-delegation.ts",
+      "specifier": "../provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/collaboration.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/runtime/collaboration.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/runtime/collaboration.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/collaboration.ts",
+      "specifier": "../storage/repository",
+      "target": "src/main/storage/repository.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/collaboration.ts",
+      "specifier": "./work",
+      "target": "src/main/runtime/work.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/collaboration.ts",
+      "specifier": "../actions/runtime",
+      "target": "src/main/actions/runtime.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/collaboration.ts",
+      "specifier": "../../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/completion-review.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/runtime/completion-review.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/completion-review.ts",
+      "specifier": "../provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/completion-review.ts",
+      "specifier": "./structured-result",
+      "target": "src/main/runtime/structured-result.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/context.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/runtime/context.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/context.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/context.ts",
+      "specifier": "../storage/repository",
+      "target": "src/main/storage/repository.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/context.ts",
+      "specifier": "./policy",
+      "target": "src/main/runtime/policy.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/context.ts",
+      "specifier": "../capabilities/broker",
+      "target": "src/main/capabilities/broker.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/context.ts",
+      "specifier": "../storage/domains",
+      "target": "src/main/storage/domains.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/context.ts",
+      "specifier": "./work",
+      "target": "src/main/runtime/work.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/context.ts",
+      "specifier": "./semantics",
+      "target": "src/main/runtime/semantics.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/context.ts",
+      "specifier": "./redaction",
+      "target": "src/main/runtime/redaction.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/context.ts",
+      "specifier": "../provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/context.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/context.ts",
+      "specifier": "./model-usage",
+      "target": "src/main/runtime/model-usage.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/context.ts",
+      "specifier": "../provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/controls.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/runtime/controls.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/runtime/controls.ts",
+      "specifier": "../store",
+      "target": "src/main/store.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/controls.ts",
+      "specifier": "../harness",
+      "target": "src/main/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/controls.ts",
+      "specifier": "../../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/controls.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/controls.ts",
+      "specifier": "./redaction",
+      "target": "src/main/runtime/redaction.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../store",
+      "target": "src/main/store.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../storage/repository",
+      "target": "src/main/storage/repository.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "./policy",
+      "target": "src/main/runtime/policy.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "./context",
+      "target": "src/main/runtime/context.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "./collaboration",
+      "target": "src/main/runtime/collaboration.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "./work",
+      "target": "src/main/runtime/work.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../memory/service",
+      "target": "src/main/memory/service.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../storage/domains",
+      "target": "src/main/storage/domains.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../capabilities/broker",
+      "target": "src/main/capabilities/broker.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../capabilities/builtin",
+      "target": "src/main/capabilities/builtin.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../actions/runtime",
+      "target": "src/main/actions/runtime.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../actions/calendar",
+      "target": "src/main/actions/calendar.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../actions/local-calendar",
+      "target": "src/main/actions/local-calendar.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../../shared/calendar",
+      "target": "src/shared/calendar.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../../../prompts/campus-tools.md",
+      "target": "prompts/campus-tools.md",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../../../prompts/map-tools.md",
+      "target": "prompts/map-tools.md",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../actions/availability",
+      "target": "src/main/actions/availability.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../actions/reminders",
+      "target": "src/main/actions/reminders.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "./release-composer",
+      "target": "src/main/runtime/release-composer.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "./semantics",
+      "target": "src/main/runtime/semantics.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../capabilities/ports",
+      "target": "src/main/capabilities/ports.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "./action-delegation",
+      "target": "src/main/runtime/action-delegation.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../../shared/map-v2",
+      "target": "src/shared/map-v2.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/coordinator.ts",
+      "specifier": "../../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/hermes.ts",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/runtime/hermes.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/runtime/hermes.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/runtime/hermes.ts",
+      "specifier": "../provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/hermes.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/model-usage.ts",
+      "specifier": "../provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/policy.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/runtime/policy.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/policy.ts",
+      "specifier": "../storage/repository",
+      "target": "src/main/storage/repository.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/policy.ts",
+      "specifier": "./semantics",
+      "target": "src/main/runtime/semantics.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/policy.ts",
+      "specifier": "./discourse",
+      "target": "src/main/runtime/discourse.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/policy.ts",
+      "specifier": "./redaction",
+      "target": "src/main/runtime/redaction.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/policy.ts",
+      "specifier": "./turn-controls",
+      "target": "src/main/runtime/turn-controls.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/policy.ts",
+      "specifier": "../../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/policy.ts",
+      "specifier": "../../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/privacy-control.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/runtime/privacy-control.ts",
+      "specifier": "../provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/privacy-control.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/read-purpose.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/runtime/read-purpose.ts",
+      "specifier": "../provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/read-purpose.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/release-composer.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/runtime/release-composer.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/runtime/release-composer.ts",
+      "specifier": "../provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/release-composer.ts",
+      "specifier": "../../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/release-composer.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/release-composer.ts",
+      "specifier": "./turn-controls",
+      "target": "src/main/runtime/turn-controls.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/release-composer.ts",
+      "specifier": "./completion-review",
+      "target": "src/main/runtime/completion-review.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/release-projection.ts",
+      "specifier": "../provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/release-projection.ts",
+      "specifier": "../../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/release-projection.ts",
+      "specifier": "./turn-controls",
+      "target": "src/main/runtime/turn-controls.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/release-projection.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/runtime/release-projection.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/release-projection.ts",
+      "specifier": "./structured-result",
+      "target": "src/main/runtime/structured-result.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/release-store.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/release-store.ts",
+      "specifier": "../../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/release-store.ts",
+      "specifier": "../storage/repository",
+      "target": "src/main/storage/repository.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/release-store.ts",
+      "specifier": "./policy",
+      "target": "src/main/runtime/policy.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/semantics.ts",
+      "specifier": "node:perf_hooks",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/runtime/semantics.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/semantics.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/structured-result.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/runtime/structured-result.ts",
+      "specifier": "../provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/structured-result.ts",
+      "specifier": "../provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/structured-result.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/turn-controls.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/main/runtime/turn-controls.ts",
+      "specifier": "../provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/turn-controls.ts",
+      "specifier": "../provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/turn-controls.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/turn-controls.ts",
+      "specifier": "./discourse",
+      "target": "src/main/runtime/discourse.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/turn-controls.ts",
+      "specifier": "./redaction",
+      "target": "src/main/runtime/redaction.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/work.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/runtime/work.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/work.ts",
+      "specifier": "../storage/repository",
+      "target": "src/main/storage/repository.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/work.ts",
+      "specifier": "./policy",
+      "target": "src/main/runtime/policy.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/runtime/work.ts",
+      "specifier": "./semantics",
+      "target": "src/main/runtime/semantics.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/storage/domains.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/storage/domains.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/storage/domains.ts",
+      "specifier": "../../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/storage/domains.ts",
+      "specifier": "./repository",
+      "target": "src/main/storage/repository.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/storage/domains.ts",
+      "specifier": "../runtime/policy",
+      "target": "src/main/runtime/policy.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/storage/domains.ts",
+      "specifier": "../runtime/semantics",
+      "target": "src/main/runtime/semantics.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/storage/domains.ts",
+      "specifier": "../runtime/redaction",
+      "target": "src/main/runtime/redaction.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/storage/domains.ts",
+      "specifier": "../actions/calendar",
+      "target": "src/main/actions/calendar.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/storage/domains.ts",
+      "specifier": "../../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/storage/drafts.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/storage/drafts.ts",
+      "specifier": "../../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/storage/drafts.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/storage/drafts.ts",
+      "specifier": "../store",
+      "target": "src/main/store.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/storage/drafts.ts",
+      "specifier": "../runtime/policy",
+      "target": "src/main/runtime/policy.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/storage/drafts.ts",
+      "specifier": "../runtime/redaction",
+      "target": "src/main/runtime/redaction.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/storage/drafts.ts",
+      "specifier": "../runtime/semantics",
+      "target": "src/main/runtime/semantics.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/storage/repository.ts",
+      "specifier": "node:sqlite",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/storage/repository.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/storage/repository.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/storage/repository.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "src/main/storage/repository.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/storage/repository.ts",
+      "specifier": "../../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/main/storage/repository.ts",
+      "specifier": "../runtime/semantics",
+      "target": "src/main/runtime/semantics.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/App.tsx",
+      "specifier": "./ui",
+      "target": "src/renderer/ui.tsx",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/App.tsx",
+      "specifier": "./SettingsPanel",
+      "target": "src/renderer/SettingsPanel.tsx",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/App.tsx",
+      "specifier": "react",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/App.tsx",
+      "specifier": "lucide-react",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/App.tsx",
+      "specifier": "react-markdown",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/App.tsx",
+      "specifier": "remark-gfm",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/App.tsx",
+      "specifier": "../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/App.tsx",
+      "specifier": "../shared/limits",
+      "target": "src/shared/limits.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/App.tsx",
+      "specifier": "../shared/map-v2",
+      "target": "src/shared/map-v2.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/App.tsx",
+      "specifier": "./map/CampusMap",
+      "target": "src/renderer/map/CampusMap.tsx",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/App.tsx",
+      "specifier": "./HarnessViews",
+      "target": "src/renderer/HarnessViews.tsx",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/global.d.ts",
+      "specifier": "../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/HarnessViews.tsx",
+      "specifier": "react",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/HarnessViews.tsx",
+      "specifier": "lucide-react",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/HarnessViews.tsx",
+      "specifier": "../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/HarnessViews.tsx",
+      "specifier": "../shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/HarnessViews.tsx",
+      "specifier": "./ui",
+      "target": "src/renderer/ui.tsx",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/main.tsx",
+      "specifier": "react",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/main.tsx",
+      "specifier": "react-dom/client",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/main.tsx",
+      "specifier": "./App",
+      "target": "src/renderer/App.tsx",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/main.tsx",
+      "specifier": "@fontsource-variable/noto-sans-sc",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/main.tsx",
+      "specifier": "./style.css",
+      "target": "src/renderer/style.css",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/main.tsx",
+      "specifier": "./refinements.css",
+      "target": "src/renderer/refinements.css",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/main.tsx",
+      "specifier": "./harness.css",
+      "target": "src/renderer/harness.css",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/SettingsPanel.tsx",
+      "specifier": "react",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/SettingsPanel.tsx",
+      "specifier": "lucide-react",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/SettingsPanel.tsx",
+      "specifier": "./ui",
+      "target": "src/renderer/ui.tsx",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/SettingsPanel.tsx",
+      "specifier": "./HarnessViews",
+      "target": "src/renderer/HarnessViews.tsx",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/SettingsPanel.tsx",
+      "specifier": "../shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/ui.tsx",
+      "specifier": "react",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/ui.tsx",
+      "specifier": "lucide-react",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/CampusMap.tsx",
+      "specifier": "react",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/CampusMap.tsx",
+      "specifier": "lucide-react",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/CampusMap.tsx",
+      "specifier": "../../shared/map-v2",
+      "target": "src/shared/map-v2.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/map/CampusMap.tsx",
+      "specifier": "../../shared/map-routing",
+      "target": "src/shared/map-routing.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/map/CampusMap.tsx",
+      "specifier": "./map-state",
+      "target": "src/renderer/map/map-state.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/map/CampusMap.tsx",
+      "specifier": "./map-engine",
+      "target": "src/renderer/map/map-engine.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/map/CampusMap.tsx",
+      "specifier": "./map.css",
+      "target": "src/renderer/map/map.css",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/map/CampusMap.tsx",
+      "specifier": "./map-engine",
+      "target": "src/renderer/map/map-engine.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/map/geometry-layer.ts",
+      "specifier": "ol/layer/Layer",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/geometry-layer.ts",
+      "specifier": "ol/source/Vector",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/geometry-layer.ts",
+      "specifier": "ol/Feature",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/geometry-layer.ts",
+      "specifier": "ol/style/Style",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/geometry-layer.ts",
+      "specifier": "ol/geom/Geometry",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/geometry-layer.ts",
+      "specifier": "ol/Map",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/gpu-style.ts",
+      "specifier": "ol/style/flat",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/gpu-style.ts",
+      "specifier": "./map-theme",
+      "target": "src/renderer/map/map-theme.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "ol/Map",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "ol/View",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "ol/Feature",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "ol/format/GeoJSON",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "ol/source/Vector",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "ol/layer/Vector",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "ol/layer/Layer",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "ol/layer/WebGLVector",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "ol/style",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "ol/geom",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "ol/geom/Geometry",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "ol/proj",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "ol/interaction/defaults",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "ol/interaction/DragRotate",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "ol/interaction/PinchRotate",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "ol/events/condition",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "ol/easing",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "ol/Observable",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "ol/extent",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "../../shared/map-v2",
+      "target": "src/shared/map-v2.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "./map-state",
+      "target": "src/renderer/map/map-state.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "./map-theme",
+      "target": "src/renderer/map/map-theme.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "./geometry-layer",
+      "target": "src/renderer/map/geometry-layer.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/map/map-engine.ts",
+      "specifier": "./gpu-style",
+      "target": "src/renderer/map/gpu-style.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/renderer/map/map-state.ts",
+      "specifier": "../../shared/map-v2",
+      "target": "src/shared/map-v2.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/calendar.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/shared/harness.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/shared/map-routing.ts",
+      "specifier": "./map-v2",
+      "target": "src/shared/map-v2.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/schemas.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "src/shared/schemas.ts",
+      "specifier": "./types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/schemas.ts",
+      "specifier": "./calendar",
+      "target": "src/shared/calendar.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./calendar",
+      "target": "src/shared/calendar.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./map-v2",
+      "target": "src/shared/map-v2.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./map-v2",
+      "target": "src/shared/map-v2.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./map-v2",
+      "target": "src/shared/map-v2.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./map-v2",
+      "target": "src/shared/map-v2.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./map-v2",
+      "target": "src/shared/map-v2.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./map-v2",
+      "target": "src/shared/map-v2.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "src/shared/types.ts",
+      "specifier": "./map-v2",
+      "target": "src/shared/map-v2.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/connection.mjs",
+      "specifier": "../scripts/test-environment.mjs",
+      "target": "scripts/test-environment.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/connection.mjs",
+      "specifier": "@playwright/test",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/connection.mjs",
+      "specifier": "node:fs/promises",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/connection.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/connection.mjs",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/core.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/core.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/core.test.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/core.test.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/core.test.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/core.test.ts",
+      "specifier": "../src/main/store",
+      "target": "src/main/store.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/core.test.ts",
+      "specifier": "../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/core.test.ts",
+      "specifier": "../src/main/harness",
+      "target": "src/main/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/core.test.ts",
+      "specifier": "../src/main/zjuAdapter",
+      "target": "src/main/zjuAdapter.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/core.test.ts",
+      "specifier": "../src/main/tools",
+      "target": "src/main/tools.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/core.test.ts",
+      "specifier": "../src/shared/schemas",
+      "target": "src/shared/schemas.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/core.test.ts",
+      "specifier": "../src/shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/core.test.ts",
+      "specifier": "./harness/support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/core.test.ts",
+      "specifier": "../src/main/runtime/turn-controls",
+      "target": "src/main/runtime/turn-controls.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/core.test.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/core.test.ts",
+      "specifier": "node:os",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/core.test.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/core.test.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/core.test.ts",
+      "specifier": "node:os",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/core.test.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/desktop.mjs",
+      "specifier": "../scripts/test-environment.mjs",
+      "target": "scripts/test-environment.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/desktop.mjs",
+      "specifier": "@playwright/test",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/desktop.mjs",
+      "specifier": "node:fs/promises",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/desktop.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/desktop.mjs",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/evaluation-time.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/evaluation-time.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/evaluation-time.test.ts",
+      "specifier": "./harness/evaluation-time",
+      "target": "tests/harness/evaluation-time.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness-ui.mjs",
+      "specifier": "@playwright/test",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/harness-ui.mjs",
+      "specifier": "esbuild",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/harness-ui.mjs",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness-ui.mjs",
+      "specifier": "node:fs/promises",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness-ui.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness-ui.mjs",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness-ui.mjs",
+      "specifier": "../scripts/test-environment.mjs",
+      "target": "scripts/test-environment.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/inspect-geometry.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/inspect-geometry.mjs",
+      "specifier": "../scripts/test-environment.mjs",
+      "target": "scripts/test-environment.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/inspect-geometry.mjs",
+      "specifier": "@playwright/test",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/luna-provider.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/luna-provider.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/luna-provider.test.ts",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/luna-provider.test.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/luna-provider.test.ts",
+      "specifier": "../src/main/luna-provider",
+      "target": "src/main/luna-provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/luna-provider.test.ts",
+      "specifier": "../src/main/runtime/model-usage",
+      "target": "src/main/runtime/model-usage.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/luna-provider.test.ts",
+      "specifier": "../src/main/model-selection",
+      "target": "src/main/model-selection.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/luna-provider.test.ts",
+      "specifier": "../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/map-browser-server.ts",
+      "specifier": "vite",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/map-browser-server.ts",
+      "specifier": "../src/main/mapService",
+      "target": "src/main/mapService.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/map-browser-server.ts",
+      "specifier": "../src/shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/map-browser-server.ts",
+      "specifier": "../src/main/mapLocation",
+      "target": "src/main/mapLocation.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/map-v2-faults.mjs",
+      "specifier": "../scripts/test-environment.mjs",
+      "target": "scripts/test-environment.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/map-v2-faults.mjs",
+      "specifier": "@playwright/test",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/map-v2-faults.mjs",
+      "specifier": "node:fs/promises",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/map-v2-faults.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/map-v2-faults.mjs",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/map-v2-performance.mjs",
+      "specifier": "../scripts/test-environment.mjs",
+      "target": "scripts/test-environment.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/map-v2-performance.mjs",
+      "specifier": "@playwright/test",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/map-v2-performance.mjs",
+      "specifier": "node:fs/promises",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/map-v2-performance.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/map-v2-performance.mjs",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/map-v2.mjs",
+      "specifier": "../scripts/test-environment.mjs",
+      "target": "scripts/test-environment.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/map-v2.mjs",
+      "specifier": "@playwright/test",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/map-v2.mjs",
+      "specifier": "esbuild",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/map-v2.mjs",
+      "specifier": "node:fs/promises",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/map-v2.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/map-v2.mjs",
+      "specifier": "node:os",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/map-v2.mjs",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/map-v2.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/map-v2.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/map-v2.test.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/map-v2.test.ts",
+      "specifier": "node:zlib",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/map-v2.test.ts",
+      "specifier": "ol/format/GeoJSON.js",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/map-v2.test.ts",
+      "specifier": "ol/geom/Polygon.js",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/map-v2.test.ts",
+      "specifier": "ol/geom/MultiPolygon.js",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/map-v2.test.ts",
+      "specifier": "ol/proj.js",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/map-v2.test.ts",
+      "specifier": "../src/shared/map-routing",
+      "target": "src/shared/map-routing.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/map-v2.test.ts",
+      "specifier": "../src/shared/map-v2",
+      "target": "src/shared/map-v2.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/map-v2.test.ts",
+      "specifier": "../src/renderer/map/map-state",
+      "target": "src/renderer/map/map-state.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/map-v2.test.ts",
+      "specifier": "../src/renderer/map/map-theme",
+      "target": "src/renderer/map/map-theme.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/map-v2.test.ts",
+      "specifier": "../src/main/mapService",
+      "target": "src/main/mapService.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/map-v2.test.ts",
+      "specifier": "../scripts/map-geometry.mjs",
+      "target": "scripts/map-geometry.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/map-v2.test.ts",
+      "specifier": "../src/renderer/map/gpu-style",
+      "target": "src/renderer/map/gpu-style.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/multimodal-ui.mjs",
+      "specifier": "../scripts/test-environment.mjs",
+      "target": "scripts/test-environment.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/multimodal-ui.mjs",
+      "specifier": "@playwright/test",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/multimodal-ui.mjs",
+      "specifier": "node:fs/promises",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/multimodal-ui.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/multimodal-ui.mjs",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/package.mjs",
+      "specifier": "@playwright/test",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/package.mjs",
+      "specifier": "node:fs/promises",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/package.mjs",
+      "specifier": "../scripts/test-environment.mjs",
+      "target": "scripts/test-environment.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/package.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/package.mjs",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/trajectory-validation.test.mjs",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/trajectory-validation.test.mjs",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/trajectory-validation.test.mjs",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/trajectory-validation.test.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/trajectory-validation.test.mjs",
+      "specifier": "../scripts/validate-trajectories.mjs",
+      "target": "scripts/validate-trajectories.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/understanding-audit.test.mjs",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/understanding-audit.test.mjs",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/understanding-audit.test.mjs",
+      "specifier": "../scripts/audit-understanding-run.mjs",
+      "target": "scripts/audit-understanding-run.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/understanding-report.test.mjs",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/understanding-report.test.mjs",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/understanding-report.test.mjs",
+      "specifier": "../scripts/summarize-understanding-evaluation.mjs",
+      "target": "scripts/summarize-understanding-evaluation.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/understanding-usage.test.mjs",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/understanding-usage.test.mjs",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/understanding-usage.test.mjs",
+      "specifier": "../scripts/summarize-understanding-usage.mjs",
+      "target": "scripts/summarize-understanding-usage.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/fixtures/luna-app-server.mjs",
+      "specifier": "node:readline",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/calendar.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/calendar.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/calendar.test.ts",
+      "specifier": "../../src/main/actions/calendar",
+      "target": "src/main/actions/calendar.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/calendar.test.ts",
+      "specifier": "../../src/shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/calendar.test.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/calendar.test.ts",
+      "specifier": "../../src/main/actions/availability",
+      "target": "src/main/actions/availability.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/collaboration-paging.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/collaboration-paging.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/collaboration-paging.test.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/controls.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/controls.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/controls.test.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/controls.test.ts",
+      "specifier": "../../src/main/runtime/controls",
+      "target": "src/main/runtime/controls.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/controls.test.ts",
+      "specifier": "../../src/main/harness",
+      "target": "src/main/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/controls.test.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/crash-process.ts",
+      "specifier": "../../src/main/store",
+      "target": "src/main/store.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/desktop-entry.mjs",
+      "specifier": "@playwright/test",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/harness/desktop-entry.mjs",
+      "specifier": "node:fs/promises",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/desktop-entry.mjs",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/desktop-entry.mjs",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/desktop-entry.mjs",
+      "specifier": "../../scripts/test-environment.mjs",
+      "target": "scripts/test-environment.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/drafts.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/drafts.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/drafts.test.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/drafts.test.ts",
+      "specifier": "../../src/main/storage/drafts",
+      "target": "src/main/storage/drafts.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/evaluation.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/evaluation.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/evaluation.test.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/evaluation.test.ts",
+      "specifier": "../../scripts/score-harness-evaluation.mjs",
+      "target": "scripts/score-harness-evaluation.mjs",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/extensions.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/extensions.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/extensions.test.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/harness/extensions.test.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/extensions.test.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/extensions.test.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/extensions.test.ts",
+      "specifier": "../../src/main/harness",
+      "target": "src/main/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/extensions.test.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/extensions.test.ts",
+      "specifier": "../../src/shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/extensions.test.ts",
+      "specifier": "../../src/main/capabilities/broker",
+      "target": "src/main/capabilities/broker.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/extensions.test.ts",
+      "specifier": "./sink",
+      "target": "tests/harness/sink.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/faults.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/faults.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/faults.test.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/faults.test.ts",
+      "specifier": "../../src/main/capabilities/broker",
+      "target": "src/main/capabilities/broker.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/faults.test.ts",
+      "specifier": "../../src/main/actions/runtime",
+      "target": "src/main/actions/runtime.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/faults.test.ts",
+      "specifier": "./sink",
+      "target": "tests/harness/sink.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/faults.test.ts",
+      "specifier": "../../src/main/harness",
+      "target": "src/main/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/faults.test.ts",
+      "specifier": "./scripted",
+      "target": "tests/harness/scripted.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/faults.test.ts",
+      "specifier": "esbuild",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/harness/faults.test.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/faults.test.ts",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/faults.test.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/hermes.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/hermes.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/hermes.test.ts",
+      "specifier": "../../src/main/runtime/hermes",
+      "target": "src/main/runtime/hermes.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/live-eval.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/live-eval.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/live-eval.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/live-eval.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/live-eval.ts",
+      "specifier": "../../src/main/harness",
+      "target": "src/main/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/live-eval.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/live-eval.ts",
+      "specifier": "../../src/shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/live-model.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/live-model.ts",
+      "specifier": "../../src/main/luna-provider",
+      "target": "src/main/luna-provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/live-model.ts",
+      "specifier": "../../src/main/model-selection",
+      "target": "src/main/model-selection.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/long-input-review.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/long-input-review.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/long-input-review.test.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/long-input-review.test.ts",
+      "specifier": "../../src/main/harness",
+      "target": "src/main/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/long-input-review.test.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/long-input-review.test.ts",
+      "specifier": "../../src/shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/migration.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/migration.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/migration.test.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/migration.test.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/migration.test.ts",
+      "specifier": "node:sqlite",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/migration.test.ts",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/migration.test.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/performance.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/performance.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/performance.test.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/performance.test.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/performance.test.ts",
+      "specifier": "node:http",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/performance.test.ts",
+      "specifier": "node:os",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/performance.test.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/ports.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/ports.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/ports.test.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/ports.test.ts",
+      "specifier": "../../src/shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/privacy.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/privacy.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/privacy.test.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/privacy.test.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/privacy.test.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/privacy.test.ts",
+      "specifier": "../../src/main/harness",
+      "target": "src/main/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/privacy.test.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/privacy.test.ts",
+      "specifier": ":",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/harness/protocol.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/protocol.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/protocol.test.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/protocol.test.ts",
+      "specifier": "../../src/main/memory/model",
+      "target": "src/main/memory/model.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/protocol.test.ts",
+      "specifier": "../../src/main/store",
+      "target": "src/main/store.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/release-composer.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/release-composer.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/release-composer.test.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/release-composer.test.ts",
+      "specifier": "../../src/main/harness",
+      "target": "src/main/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/release-composer.test.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/release-composer.test.ts",
+      "specifier": "../../src/main/runtime/release-composer",
+      "target": "src/main/runtime/release-composer.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/release-composer.test.ts",
+      "specifier": "../../src/main/runtime/release-store",
+      "target": "src/main/runtime/release-store.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/release-composer.test.ts",
+      "specifier": "../../src/shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/release.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/release.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/release.test.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/retention-effects.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/retention-effects.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/retention-effects.test.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/retention-effects.test.ts",
+      "specifier": "../../src/main/runtime/coordinator",
+      "target": "src/main/runtime/coordinator.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/scenario-fixture.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/scenario-fixture.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/scenario-fixture.ts",
+      "specifier": "node:sqlite",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/scenario-fixture.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/scenario-fixture.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/harness/scenario-fixture.ts",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/scenario-fixture.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/scenario-fixture.ts",
+      "specifier": "./scripted",
+      "target": "tests/harness/scripted.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/scenario-fixture.ts",
+      "specifier": "../../src/main/harness",
+      "target": "src/main/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/scenario-fixture.ts",
+      "specifier": "../../src/main/tools",
+      "target": "src/main/tools.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/scenario-fixture.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/scenario-fixture.ts",
+      "specifier": "../../src/shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/scenario-fixture.ts",
+      "specifier": "../../src/main/runtime/semantics",
+      "target": "src/main/runtime/semantics.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/scenario-fixture.ts",
+      "specifier": "../../src/main/runtime/policy",
+      "target": "src/main/runtime/policy.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/scenario-fixture.ts",
+      "specifier": "../../src/main/capabilities/broker",
+      "target": "src/main/capabilities/broker.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/scenario-fixture.ts",
+      "specifier": "./sink",
+      "target": "tests/harness/sink.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/scenario-fixture.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/scenarios.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/scenarios.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/scenarios.test.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/scenarios.test.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/scenarios.test.ts",
+      "specifier": "node:child_process",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/scenarios.test.ts",
+      "specifier": "./scenario-fixture",
+      "target": "tests/harness/scenario-fixture.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/scripted.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/scripted.ts",
+      "specifier": "../../src/shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/scripted.ts",
+      "specifier": "../../src/main/runtime/semantics",
+      "target": "src/main/runtime/semantics.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/scripted.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/seed-ui.ts",
+      "specifier": "../../src/main/store",
+      "target": "src/main/store.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/seed-ui.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/seed-ui.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/seed-ui.ts",
+      "specifier": "../../src/shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/sink.ts",
+      "specifier": "node:http",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/sink.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/harness/sink.ts",
+      "specifier": "../../src/main/capabilities/broker",
+      "target": "src/main/capabilities/broker.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/state.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/state.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/state.test.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/harness/state.test.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/state.test.ts",
+      "specifier": "../../src/main/storage/domains",
+      "target": "src/main/storage/domains.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/state.test.ts",
+      "specifier": "../../src/main/runtime/work",
+      "target": "src/main/runtime/work.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/state.test.ts",
+      "specifier": "../../src/main/capabilities/broker",
+      "target": "src/main/capabilities/broker.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/state.test.ts",
+      "specifier": "../../src/main/actions/runtime",
+      "target": "src/main/actions/runtime.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/state.test.ts",
+      "specifier": "../../src/main/actions/reminders",
+      "target": "src/main/actions/reminders.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/state.test.ts",
+      "specifier": "../../src/shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/structured-result.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/structured-result.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/structured-result.test.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/harness/structured-result.test.ts",
+      "specifier": "../../src/main/runtime/structured-result",
+      "target": "src/main/runtime/structured-result.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/structured-result.test.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/structured-result.test.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/support.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/support.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/support.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/support.ts",
+      "specifier": "../../src/main/store",
+      "target": "src/main/store.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/support.ts",
+      "specifier": "../../src/main/storage/repository",
+      "target": "src/main/storage/repository.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/support.ts",
+      "specifier": "../../src/main/runtime/policy",
+      "target": "src/main/runtime/policy.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/support.ts",
+      "specifier": "../../src/main/memory/service",
+      "target": "src/main/memory/service.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/support.ts",
+      "specifier": "../../src/shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/support.ts",
+      "specifier": "../../src/main/runtime/turn-controls",
+      "target": "src/main/runtime/turn-controls.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/support.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-ablation-cases.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-ablation-cases.ts",
+      "specifier": "./understanding-cases",
+      "target": "tests/harness/understanding-cases.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-ablation-cases.ts",
+      "specifier": "./understanding-fixtures",
+      "target": "tests/harness/understanding-fixtures.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-ablation-cases.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-ablation-cases.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-comparison-live.ts",
+      "specifier": "./live-model",
+      "target": "tests/harness/live-model.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-comparison-live.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-comparison-live.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-comparison-live.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-comparison-live.ts",
+      "specifier": "../../src/main/harness",
+      "target": "src/main/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-comparison-live.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-comparison-live.ts",
+      "specifier": "../../src/main/tools",
+      "target": "src/main/tools.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-comparison-live.ts",
+      "specifier": "../../src/main/runtime/hermes",
+      "target": "src/main/runtime/hermes.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-comparison-live.ts",
+      "specifier": "../../src/main/runtime/turn-controls",
+      "target": "src/main/runtime/turn-controls.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-comparison-live.ts",
+      "specifier": "../../src/main/runtime/action-delegation",
+      "target": "src/main/runtime/action-delegation.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-comparison-live.ts",
+      "specifier": "../../src/main/runtime/read-purpose",
+      "target": "src/main/runtime/read-purpose.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-comparison-live.ts",
+      "specifier": "./understanding-cases",
+      "target": "tests/harness/understanding-cases.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-comparison-live.ts",
+      "specifier": "./understanding-fixtures",
+      "target": "tests/harness/understanding-fixtures.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-comparison-live.ts",
+      "specifier": "../../src/main/runtime/model-usage",
+      "target": "src/main/runtime/model-usage.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-comparison-live.ts",
+      "specifier": "../../src/shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-controls-live.ts",
+      "specifier": "./live-model",
+      "target": "tests/harness/live-model.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-controls-live.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-controls-live.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-controls-live.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-controls-live.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-controls-live.ts",
+      "specifier": "../../src/main/runtime/turn-controls",
+      "target": "src/main/runtime/turn-controls.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-controls-live.ts",
+      "specifier": "../../src/main/runtime/model-usage",
+      "target": "src/main/runtime/model-usage.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-controls-live.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-delegation-live.ts",
+      "specifier": "./live-model",
+      "target": "tests/harness/live-model.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-delegation-live.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-delegation-live.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-delegation-live.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-delegation-live.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/harness/understanding-delegation-live.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-delegation-live.ts",
+      "specifier": "../../src/main/harness",
+      "target": "src/main/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-delegation-live.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-delegation-live.ts",
+      "specifier": "../../src/shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-delegation-live.ts",
+      "specifier": "../../src/main/runtime/model-usage",
+      "target": "src/main/runtime/model-usage.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-fixtures.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-fixtures.test.ts",
+      "specifier": "./understanding-cases",
+      "target": "tests/harness/understanding-cases.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-fixtures.test.ts",
+      "specifier": "./understanding-fixtures",
+      "target": "tests/harness/understanding-fixtures.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-fixtures.test.ts",
+      "specifier": "./understanding-new-stories",
+      "target": "tests/harness/understanding-new-stories.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-fixtures.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-fixtures.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/harness/understanding-fixtures.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-fixtures.ts",
+      "specifier": "./sink",
+      "target": "tests/harness/sink.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-fixtures.ts",
+      "specifier": "./understanding-cases",
+      "target": "tests/harness/understanding-cases.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-judge-replay.ts",
+      "specifier": "./evaluation-time",
+      "target": "tests/harness/evaluation-time.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-judge-replay.ts",
+      "specifier": "./understanding-scoring",
+      "target": "tests/harness/understanding-scoring.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-judge-replay.ts",
+      "specifier": "./live-model",
+      "target": "tests/harness/live-model.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-judge-replay.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-judge-replay.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-judge-replay.ts",
+      "specifier": "node:crypto",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-judge-replay.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/harness/understanding-judge-replay.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-judge-replay.ts",
+      "specifier": "../../src/main/runtime/structured-result",
+      "target": "src/main/runtime/structured-result.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-judge-replay.ts",
+      "specifier": "../../src/main/runtime/model-usage",
+      "target": "src/main/runtime/model-usage.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-live.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-live.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-live.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-live.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/harness/understanding-live.ts",
+      "specifier": "../../src/main/harness",
+      "target": "src/main/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-live.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-live.ts",
+      "specifier": "../../src/main/model-selection",
+      "target": "src/main/model-selection.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-live.ts",
+      "specifier": "../../src/main/luna-provider",
+      "target": "src/main/luna-provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-live.ts",
+      "specifier": "../../src/shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-live.ts",
+      "specifier": "../../src/main/actions/calendar",
+      "target": "src/main/actions/calendar.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-live.ts",
+      "specifier": "../../src/main/runtime/model-usage",
+      "target": "src/main/runtime/model-usage.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-live.ts",
+      "specifier": "./understanding-cases",
+      "target": "tests/harness/understanding-cases.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-live.ts",
+      "specifier": "./understanding-new-stories",
+      "target": "tests/harness/understanding-new-stories.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-live.ts",
+      "specifier": "./understanding-fixtures",
+      "target": "tests/harness/understanding-fixtures.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-live.ts",
+      "specifier": "./understanding-scoring",
+      "target": "tests/harness/understanding-scoring.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-live.ts",
+      "specifier": "../../src/main/runtime/structured-result",
+      "target": "src/main/runtime/structured-result.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-live.ts",
+      "specifier": "./understanding-ablation-cases",
+      "target": "tests/harness/understanding-ablation-cases.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-live.ts",
+      "specifier": "./understanding-repair-variants",
+      "target": "tests/harness/understanding-repair-variants.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-live.ts",
+      "specifier": "./evaluation-time",
+      "target": "tests/harness/evaluation-time.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-long-tail-live.ts",
+      "specifier": "./live-model",
+      "target": "tests/harness/live-model.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-long-tail-live.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-long-tail-live.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-long-tail-live.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-long-tail-live.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-long-tail-live.ts",
+      "specifier": "../../src/main/harness",
+      "target": "src/main/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-long-tail-live.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-long-tail-live.ts",
+      "specifier": "../../src/shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-long-tail-live.ts",
+      "specifier": "../../src/main/runtime/model-usage",
+      "target": "src/main/runtime/model-usage.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-new-stories.ts",
+      "specifier": "./understanding-cases",
+      "target": "tests/harness/understanding-cases.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-protocol-live.ts",
+      "specifier": "./live-model",
+      "target": "tests/harness/live-model.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-protocol-live.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-protocol-live.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-protocol-live.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-protocol-live.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-protocol-live.ts",
+      "specifier": "../../src/main/runtime/hermes",
+      "target": "src/main/runtime/hermes.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-repair-variants.ts",
+      "specifier": "./understanding-cases",
+      "target": "tests/harness/understanding-cases.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-repair-variants.ts",
+      "specifier": "./understanding-new-stories",
+      "target": "tests/harness/understanding-new-stories.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-repair-variants.ts",
+      "specifier": "./understanding-cases",
+      "target": "tests/harness/understanding-cases.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-scoring.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-scoring.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-scoring.test.ts",
+      "specifier": "./understanding-scoring",
+      "target": "tests/harness/understanding-scoring.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-slice-live.ts",
+      "specifier": "./live-model",
+      "target": "tests/harness/live-model.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-slice-live.ts",
+      "specifier": "node:fs",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-slice-live.ts",
+      "specifier": "node:path",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-slice-live.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding-slice-live.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-slice-live.ts",
+      "specifier": "../../src/main/harness",
+      "target": "src/main/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-slice-live.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-slice-live.ts",
+      "specifier": "../../src/shared/types",
+      "target": "src/shared/types.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding-slice-live.ts",
+      "specifier": "../../src/main/runtime/model-usage",
+      "target": "src/main/runtime/model-usage.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/understanding.test.ts",
+      "specifier": "zod",
+      "kind": "package_dependency"
+    },
+    {
+      "from": "tests/harness/understanding.test.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding.test.ts",
+      "specifier": "../../src/main/runtime/coordinator",
+      "target": "src/main/runtime/coordinator.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding.test.ts",
+      "specifier": "../../src/main/runtime/turn-controls",
+      "target": "src/main/runtime/turn-controls.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding.test.ts",
+      "specifier": "../../src/main/harness",
+      "target": "src/main/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding.test.ts",
+      "specifier": "../../src/main/provider",
+      "target": "src/main/provider.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding.test.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding.test.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding.test.ts",
+      "specifier": "../../src/main/runtime/action-delegation",
+      "target": "src/main/runtime/action-delegation.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding.test.ts",
+      "specifier": "../../src/main/memory/model",
+      "target": "src/main/memory/model.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/understanding.test.ts",
+      "specifier": "../../src/main/tools",
+      "target": "src/main/tools.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/unit.test.ts",
+      "specifier": "node:test",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/unit.test.ts",
+      "specifier": "node:assert/strict",
+      "kind": "node_builtin"
+    },
+    {
+      "from": "tests/harness/unit.test.ts",
+      "specifier": "../../src/shared/harness",
+      "target": "src/shared/harness.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/unit.test.ts",
+      "specifier": "../../src/main/runtime/semantics",
+      "target": "src/main/runtime/semantics.ts",
+      "kind": "local_static"
+    },
+    {
+      "from": "tests/harness/unit.test.ts",
+      "specifier": "./support",
+      "target": "tests/harness/support.ts",
+      "kind": "local_static"
+    }
+  ],
+  "assets": [
+    {
+      "from": "src/renderer/style.css",
+      "value": "./tokens.css",
+      "target": "src/renderer/tokens.css",
+      "exists": true
+    }
+  ],
+  "commands": [
+    {
+      "name": "dev:luna:test",
+      "command": "node scripts/run-luna-test.mjs scripts/dev.mjs",
+      "references": [
+        {
+          "path": "scripts/run-luna-test.mjs",
+          "exists": true
+        },
+        {
+          "path": "scripts/dev.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": true
+    },
+    {
+      "name": "start:luna:test",
+      "command": "node scripts/run-luna-test.mjs node_modules/electron/cli.js .",
+      "references": [
+        {
+          "path": "scripts/run-luna-test.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": true
+    },
+    {
+      "name": "test:luna:transport",
+      "command": "node --import tsx --test tests/luna-provider.test.ts",
+      "references": [
+        {
+          "path": "tests/luna-provider.test.ts",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "test:luna:live",
+      "command": "node --import tsx scripts/probe-luna-transport.ts",
+      "references": [
+        {
+          "path": "scripts/probe-luna-transport.ts",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": true
+    },
+    {
+      "name": "test:multimodal:luna",
+      "command": "node scripts/run-luna-test.mjs tests/multimodal-ui.mjs --live",
+      "references": [
+        {
+          "path": "scripts/run-luna-test.mjs",
+          "exists": true
+        },
+        {
+          "path": "tests/multimodal-ui.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "eval:harness:luna:test",
+      "command": "node scripts/run-luna-test.mjs scripts/evaluate-harness.mjs --live",
+      "references": [
+        {
+          "path": "scripts/run-luna-test.mjs",
+          "exists": true
+        },
+        {
+          "path": "scripts/evaluate-harness.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": true
+    },
+    {
+      "name": "dev",
+      "command": "node scripts/dev.mjs",
+      "references": [
+        {
+          "path": "scripts/dev.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "dev:deepseek",
+      "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run node scripts/dev.mjs",
+      "references": [
+        {
+          "path": "scripts/with-deepseek-key.ps1",
+          "exists": true
+        },
+        {
+          "path": "scripts/dev.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": true
+    },
+    {
+      "name": "build",
+      "command": "tsc --noEmit && vite build --logLevel warn && node scripts/build-electron.mjs",
+      "references": [
+        {
+          "path": "scripts/build-electron.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "start",
+      "command": "electron .",
+      "references": [],
+      "realAccountRequired": false
+    },
+    {
+      "name": "start:deepseek",
+      "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run node node_modules/electron/cli.js .",
+      "references": [
+        {
+          "path": "scripts/with-deepseek-key.ps1",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": true
+    },
+    {
+      "name": "deepseek:check",
+      "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 status",
+      "references": [
+        {
+          "path": "scripts/with-deepseek-key.ps1",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": true
+    },
+    {
+      "name": "deepseek:run",
+      "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run",
+      "references": [
+        {
+          "path": "scripts/with-deepseek-key.ps1",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": true
+    },
+    {
+      "name": "test:deepseek:vision",
+      "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run node scripts/probe-deepseek-vision.mjs",
+      "references": [
+        {
+          "path": "scripts/with-deepseek-key.ps1",
+          "exists": true
+        },
+        {
+          "path": "scripts/probe-deepseek-vision.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": true
+    },
+    {
+      "name": "test",
+      "command": "node scripts/test.mjs",
+      "references": [
+        {
+          "path": "scripts/test.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "test:desktop",
+      "command": "node tests/desktop.mjs",
+      "references": [
+        {
+          "path": "tests/desktop.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "test:connection",
+      "command": "node tests/connection.mjs",
+      "references": [
+        {
+          "path": "tests/connection.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "test:multimodal",
+      "command": "node tests/multimodal-ui.mjs",
+      "references": [
+        {
+          "path": "tests/multimodal-ui.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "test:multimodal:live",
+      "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run node tests/multimodal-ui.mjs --live",
+      "references": [
+        {
+          "path": "scripts/with-deepseek-key.ps1",
+          "exists": true
+        },
+        {
+          "path": "tests/multimodal-ui.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": true
+    },
+    {
+      "name": "test:map",
+      "command": "node tests/map-v2.mjs",
+      "references": [
+        {
+          "path": "tests/map-v2.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "package",
+      "command": "npm run build && node scripts/stage-hermes-runtime.mjs && electron-builder --config build/hermes-builder.json --win portable --x64",
+      "references": [
+        {
+          "path": "scripts/stage-hermes-runtime.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "setup:hermes",
+      "command": "node scripts/setup-hermes.mjs",
+      "references": [
+        {
+          "path": "scripts/setup-hermes.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "check:harness",
+      "command": "tsc --project tsconfig.harness-tests.json --noEmit",
+      "references": [],
+      "realAccountRequired": false
+    },
+    {
+      "name": "test:map:core",
+      "command": "node --import tsx --test tests/map-v2.test.ts",
+      "references": [
+        {
+          "path": "tests/map-v2.test.ts",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "map:import",
+      "command": "node scripts/import-map-v2.mjs",
+      "references": [
+        {
+          "path": "scripts/import-map-v2.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "audit:map:coverage",
+      "command": "node scripts/audit-map-coverage.mjs",
+      "references": [
+        {
+          "path": "scripts/audit-map-coverage.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "test:harness:unit",
+      "command": "node scripts/test-harness.mjs --suite unit",
+      "references": [
+        {
+          "path": "scripts/test-harness.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "test:harness:state",
+      "command": "node scripts/test-harness.mjs --suite state",
+      "references": [
+        {
+          "path": "scripts/test-harness.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "test:harness:faults",
+      "command": "node scripts/test-harness.mjs --suite faults",
+      "references": [
+        {
+          "path": "scripts/test-harness.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "test:harness:privacy",
+      "command": "node scripts/test-harness.mjs --suite privacy",
+      "references": [
+        {
+          "path": "scripts/test-harness.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "test:harness:migration",
+      "command": "node scripts/test-harness.mjs --suite migration",
+      "references": [
+        {
+          "path": "scripts/test-harness.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "test:harness:extensions",
+      "command": "node scripts/test-harness.mjs --suite extensions",
+      "references": [
+        {
+          "path": "scripts/test-harness.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "test:harness:controls",
+      "command": "node scripts/test-harness.mjs --suite controls",
+      "references": [
+        {
+          "path": "scripts/test-harness.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "test:harness:ports",
+      "command": "node scripts/test-harness.mjs --suite ports",
+      "references": [
+        {
+          "path": "scripts/test-harness.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "test:harness:protocol",
+      "command": "node scripts/test-harness.mjs --suite protocol",
+      "references": [
+        {
+          "path": "scripts/test-harness.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "test:harness:scenarios",
+      "command": "node scripts/test-harness.mjs --suite scenarios",
+      "references": [
+        {
+          "path": "scripts/test-harness.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "test:harness:trajectories",
+      "command": "node --test tests/trajectory-validation.test.mjs",
+      "references": [
+        {
+          "path": "tests/trajectory-validation.test.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "test:harness:desktop",
+      "command": "node tests/harness-ui.mjs",
+      "references": [
+        {
+          "path": "tests/harness-ui.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "eval:harness:offline",
+      "command": "node scripts/evaluate-harness.mjs",
+      "references": [
+        {
+          "path": "scripts/evaluate-harness.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "eval:harness:live",
+      "command": "node scripts/evaluate-harness.mjs --live",
+      "references": [
+        {
+          "path": "scripts/evaluate-harness.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": true
+    },
+    {
+      "name": "eval:harness:live:project",
+      "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run-live node scripts/evaluate-harness.mjs --live",
+      "references": [
+        {
+          "path": "scripts/with-deepseek-key.ps1",
+          "exists": true
+        },
+        {
+          "path": "scripts/evaluate-harness.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": true
+    },
+    {
+      "name": "smoke:zju:deepseek",
+      "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run-live node scripts/run-live-zju-smoke.mjs",
+      "references": [
+        {
+          "path": "scripts/with-deepseek-key.ps1",
+          "exists": true
+        },
+        {
+          "path": "scripts/run-live-zju-smoke.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": true
+    },
+    {
+      "name": "eval:acceptance:real",
+      "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run-live node scripts/run-live-acceptance-eval.mjs",
+      "references": [
+        {
+          "path": "scripts/with-deepseek-key.ps1",
+          "exists": true
+        },
+        {
+          "path": "scripts/run-live-acceptance-eval.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": true
+    },
+    {
+      "name": "eval:acceptance:judge",
+      "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run-live node scripts/run-judge-live-acceptance.mjs",
+      "references": [
+        {
+          "path": "scripts/with-deepseek-key.ps1",
+          "exists": true
+        },
+        {
+          "path": "scripts/run-judge-live-acceptance.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": true
+    },
+    {
+      "name": "eval:zju:real",
+      "command": "powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File scripts/with-deepseek-key.ps1 run-live node scripts/run-live-zju-deepseek-eval.mjs",
+      "references": [
+        {
+          "path": "scripts/with-deepseek-key.ps1",
+          "exists": true
+        },
+        {
+          "path": "scripts/run-live-zju-deepseek-eval.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": true
+    },
+    {
+      "name": "verify:harness",
+      "command": "node scripts/verify-harness.mjs",
+      "references": [
+        {
+          "path": "scripts/verify-harness.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    },
+    {
+      "name": "recover:harness",
+      "command": "node scripts/harness-recover.mjs",
+      "references": [
+        {
+          "path": "scripts/harness-recover.mjs",
+          "exists": true
+        }
+      ],
+      "realAccountRequired": false
+    }
+  ],
+  "manualDynamicDependencies": [
+    {
+      "kind": "runtime",
+      "from": "src/main/main.ts → mapService.ts",
+      "targets": [
+        "assets/map-v2/manifest.json",
+        "assets/map-v2/places.json",
+        "assets/map-v2/network.json"
+      ],
+      "reason": "app.getAppPath assets map-v2 + literal filenames"
+    },
+    {
+      "kind": "ui_assets",
+      "from": "src/renderer/map/",
+      "targets": [
+        "public/map-v2/geography.geojson"
+      ],
+      "reason": "Vite public path /map-v2/geography.geojson"
+    },
+    {
+      "kind": "map_rebuild",
+      "from": "scripts/import-map-v2.mjs / audit-map-coverage.mjs",
+      "targets": [
+        "assets/map-v2/source.osm.json.gz",
+        "assets/map-v2/official-coverage-reference.json"
+      ],
+      "reason": "Public raw map data, never a private location cache"
+    },
+    {
+      "kind": "engine",
+      "from": "scripts/setup-hermes.mjs / runtime/hermes.ts",
+      "targets": [
+        "runtime/hermes/lock.json",
+        "runtime/hermes/sidecar.py",
+        "licenses/Hermes-MIT.txt",
+        "licenses/Python-LICENSE.txt"
+      ],
+      "reason": "Pinned public dependency installation + own adapter; .runtime generated independently"
+    },
+    {
+      "kind": "deterministic_legacy_test",
+      "from": "tests/harness/scenarios.test.ts / evaluation.test.ts / harness-evidence.mjs",
+      "targets": [
+        "在场-Harness-设计与Codex实施包/zaichang-harness-design/acceptance/scenarios.json",
+        "在场-Harness-设计与Codex实施包/zaichang-harness-design/acceptance/traceability.json",
+        "在场-Harness-设计与Codex实施包/zaichang-harness-design/CHECKSUMS.sha256"
+      ],
+      "reason": "Dynamically built bundle paths retained"
+    },
+    {
+      "kind": "trajectory_validation",
+      "from": "scripts/validate-trajectories.mjs",
+      "targets": [
+        "在场-Harness-人本协作设计与Codex实施包/在场-Harness-人本协作重构/acceptance/trajectories.json",
+        "在场-Harness-人本协作设计与Codex实施包/在场-Harness-人本协作重构/02-人本协作架构.md",
+        "在场-Harness-人本协作设计与Codex实施包/在场-Harness-人本协作重构/04-行为验收规范.md",
+        "在场-Harness-人本协作设计与Codex实施包/在场-Harness-人本协作重构/交付一致性说明.json"
+      ],
+      "reason": "All four content/hash dependencies retained"
+    }
+  ],
+  "runtimeReachablePaths": [
+    "assets/map-v2/manifest.json",
+    "assets/map-v2/network.json",
+    "assets/map-v2/places.json",
+    "examples/campus.example.json",
+    "licenses/Hermes-MIT.txt",
+    "licenses/Python-LICENSE.txt",
+    "prompts/campus-tools.md",
+    "prompts/map-tools.md",
+    "prompts/system.md",
+    "public/map-v2/geography.geojson",
+    "runtime/hermes/lock.json",
+    "runtime/hermes/sidecar.py",
+    "src/main/actions/availability.ts",
+    "src/main/actions/calendar.ts",
+    "src/main/actions/local-calendar.ts",
+    "src/main/actions/reminders.ts",
+    "src/main/actions/runtime.ts",
+    "src/main/capabilities/broker.ts",
+    "src/main/capabilities/builtin.ts",
+    "src/main/capabilities/ports.ts",
+    "src/main/demo.ts",
+    "src/main/harness.ts",
+    "src/main/luna-provider.ts",
+    "src/main/main.ts",
+    "src/main/mapLocation.ts",
+    "src/main/mapService.ts",
+    "src/main/memory/model.ts",
+    "src/main/memory/service.ts",
+    "src/main/model-selection.ts",
+    "src/main/preload.ts",
+    "src/main/provider.ts",
+    "src/main/runtime/action-delegation.ts",
+    "src/main/runtime/collaboration.ts",
+    "src/main/runtime/completion-review.ts",
+    "src/main/runtime/context.ts",
+    "src/main/runtime/controls.ts",
+    "src/main/runtime/coordinator.ts",
+    "src/main/runtime/discourse.ts",
+    "src/main/runtime/hermes.ts",
+    "src/main/runtime/model-usage.ts",
+    "src/main/runtime/policy.ts",
+    "src/main/runtime/privacy-control.ts",
+    "src/main/runtime/read-purpose.ts",
+    "src/main/runtime/redaction.ts",
+    "src/main/runtime/release-composer.ts",
+    "src/main/runtime/release-projection.ts",
+    "src/main/runtime/release-store.ts",
+    "src/main/runtime/semantics.ts",
+    "src/main/runtime/structured-result.ts",
+    "src/main/runtime/turn-controls.ts",
+    "src/main/runtime/work.ts",
+    "src/main/storage/domains.ts",
+    "src/main/storage/drafts.ts",
+    "src/main/storage/repository.ts",
+    "src/main/store.ts",
+    "src/main/testBoundary.ts",
+    "src/main/tools.ts",
+    "src/main/zjuAdapter.ts",
+    "src/renderer/App.tsx",
+    "src/renderer/HarnessViews.tsx",
+    "src/renderer/SettingsPanel.tsx",
+    "src/renderer/harness.css",
+    "src/renderer/main.tsx",
+    "src/renderer/map/CampusMap.tsx",
+    "src/renderer/map/geometry-layer.ts",
+    "src/renderer/map/gpu-style.ts",
+    "src/renderer/map/map-engine.ts",
+    "src/renderer/map/map-state.ts",
+    "src/renderer/map/map-theme.ts",
+    "src/renderer/map/map.css",
+    "src/renderer/refinements.css",
+    "src/renderer/style.css",
+    "src/renderer/ui.tsx",
+    "src/shared/calendar.ts",
+    "src/shared/harness.ts",
+    "src/shared/limits.ts",
+    "src/shared/map-routing.ts",
+    "src/shared/map-v2.ts",
+    "src/shared/schemas.ts",
+    "src/shared/types.ts"
+  ],
+  "intentionalExternalOrGeneratedDependencies": [
+    "node_modules: npm ci, including local font package; build bundles its files.",
+    ".runtime and artifacts/understanding-action/runtime/install.json: generated by setup:hermes.",
+    "dist/dist-electron/build/hermes-builder.json/release: build/package outputs, not source inputs at installation.",
+    "External zju-student-info/scripts/zju.py, references/endpoints.json, SKILL.md, LICENSE: user-installed connector, not bundled.",
+    "App Server executable/account authentication: optional Luna test dependency, not bundled or consulted in this handoff.",
+    "Historical B1 snapshot and model/route evaluation reports under artifacts/.test-data: deliberately excluded; create new authorized evidence or obtain original evidence separately.",
+    "check-project-docs.mjs inventories the full original documentation tree; historical omissions and stale baseline can fail that audit in a source-only handoff. This is documented, not disguised with synthetic historical reports."
+  ],
+  "scope": "Owned local file closure, supported by parser/build/type checks. External runtime behavior and intentional historical evidence omissions are reported separately; this passed status is not product validation."
+}

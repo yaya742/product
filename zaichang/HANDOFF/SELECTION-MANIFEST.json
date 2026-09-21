@@ -1,0 +1,5008 @@
+{
+  "classificationOnly": true,
+  "noOriginalFilesRemoved": true,
+  "sourceFiles": 248,
+  "originalRepositoryFiles": 141723,
+  "originalRepositoryBytes": 16684345328,
+  "entries": [
+    {
+      "path": ".gitignore",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "3d8412100549c93e2e26d73fc57a787eec4cfe80a677f6faaea38a9b0d3fb38f",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 142,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": ".prettierignore",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "c6c3099f1a6d234849b3aa052a8eecdc21cd1a464257a9ad1bfff10b3904c114",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 79,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": ".prettierrc.json",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "10fe1a10c1f9288740c8175b512438b696c681e8381e7f833892672d80454cf8",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 67,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "AGENTS.md",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "0834a637d2e5fedbc7621de49e13d405fa21413bc7380e6596354c8f02da5c07",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 7081,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "DESIGN.md",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "38c7c107dae7bba7b0d46f84eb344dc0470f8ff5ae0ef18864a2de366c28c880",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 34840,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "HARNESS-IMPLEMENTATION.md",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "bc5fae4cf64e56052f70479f352c7966bc40627bf71f9dd0135a1b8de3736656",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 15155,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "index.html",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "cc06eb9f9694602c70c5e724d4895e48c38af78ea16634b9437d5611cad88a7d",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 647,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "LUNA-TEST-SUBSTITUTE.md",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "aa566c245e3d7dfd4e3fb9f7eedeffae48c3eadba93b01ddb54db25df72d74d0",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4723,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "MAP-V2.md",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "d478d1b096f671802245b7cab828da05cadc17152a77aa30bdb912bc4151120d",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 5119,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "package-lock.json",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "48626f29825d6f1c35e5caf6fb139b6a1e5a1bc93282f25390b80d850758941c",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 268361,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "package.json",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": true,
+      "sha256": "1b18cddcb25fbc1b0122530008eea10ae098bbe114d97f44176af15bb936c08b",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 5888,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "PROJECT-NAVIGATION.md",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "771b3c4c38c11bffc2d8f5052da47e61de3b57761da8d8f728cb7991fd88e441",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 55925,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "README.md",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "9877418f933273b2823ed64b9a5b5f4e1026bb028816f916426ebc0ff79ce8af",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 9509,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "b4a6f308978527805ac5bcc2c519481f912b94e6b6dad91dd616d051215277de",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 2133,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tsconfig.harness-tests.json",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "b0a89012b04f5970e6d008ac3d73d0922ed30af858f3d3159e0496a57635a428",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 330,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tsconfig.json",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "09eaae91a54e0b60fda4f7c01c91ede3bcfd824e697337533812ca46cf4e7e0a",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 438,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "UNDERSTANDING-ACTION-IMPLEMENTATION.md",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "8f8c0a7c099fbf3ad2c43a13fbcaa7fd6f36dafcaa6b6d3629c73e38e01e93d5",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 27275,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "vite.config.ts",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "3595f61ebd43b3c8dc4139588d065be2ae8052ea3d37d1dd4a0facf91f012e5c",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 212,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": ".agents/skills/product-design/SKILL.md",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "7cb7969f0260d3ce2dc931da666f7ac1a4f3a5c2c48dd944004835c7aac41de0",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 8985,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": ".agents/skills/project-foundations/SKILL.md",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "7434c8eafe825225c8050e61950aa233fca6627c9ffefb5b851323cfe077d278",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 6252,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": ".agents/skills/project-navigation/SKILL.md",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "cb52a745df2bd2d53e264c44392ddb980f9e8adf17de4df49714b5717fbf6394",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 3327,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "assets/map-v2/core-reference.json",
+      "category": "REQUIRED_ASSET",
+      "reason": "Required map/public/icon/license resource; not expendable build output.",
+      "runtimeConnected": false,
+      "sha256": "3271fbd59900464d5a8eb93773a937f4d6bde9b31b32f9c4295b867abf2ca701",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1823,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "assets/map-v2/manifest.json",
+      "category": "REQUIRED_ASSET",
+      "reason": "Required map/public/icon/license resource; not expendable build output.",
+      "runtimeConnected": true,
+      "sha256": "9518b8d97e4119eca1ace8439a92b6fe1cd01929200a5df2146ce4f30ae61235",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1598,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": [
+          "src/main/main.ts → mapService.ts"
+        ]
+      }
+    },
+    {
+      "path": "assets/map-v2/network.json",
+      "category": "REQUIRED_ASSET",
+      "reason": "Required map/public/icon/license resource; not expendable build output.",
+      "runtimeConnected": true,
+      "sha256": "8c71590c286c3d4bac53c291705ce4aa0f0c192125b778f3f5b4e3f7c199cf16",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1549840,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": [
+          "src/main/main.ts → mapService.ts"
+        ]
+      }
+    },
+    {
+      "path": "assets/map-v2/official-coverage-reference.json",
+      "category": "REQUIRED_ASSET",
+      "reason": "Required map/public/icon/license resource; not expendable build output.",
+      "runtimeConnected": false,
+      "sha256": "8ba89fb2452fc32bf28c770cbb9e610ec89a1e5192218931075eb55bef6de1af",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 111461,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": [
+          "scripts/import-map-v2.mjs / audit-map-coverage.mjs"
+        ]
+      }
+    },
+    {
+      "path": "assets/map-v2/places.json",
+      "category": "REQUIRED_ASSET",
+      "reason": "Required map/public/icon/license resource; not expendable build output.",
+      "runtimeConnected": true,
+      "sha256": "56aeb49046cbd17c43b9c57504cf490827f95cb3a08ffcbae6f237fa12a4d609",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 222212,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": [
+          "src/main/main.ts → mapService.ts"
+        ]
+      }
+    },
+    {
+      "path": "assets/map-v2/SOURCE.md",
+      "category": "REQUIRED_ASSET",
+      "reason": "Required map/public/icon/license resource; not expendable build output.",
+      "runtimeConnected": false,
+      "sha256": "c7729e695025f8725b1f0ce09be9f350aaf30b7bd3d03c3e8f24e017f5e46b89",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 3172,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "assets/map-v2/source.osm.json.gz",
+      "category": "REQUIRED_ASSET",
+      "reason": "Required map/public/icon/license resource; not expendable build output.",
+      "runtimeConnected": false,
+      "sha256": "e321f5a64310e470e084853a387ec9063de5237fd36c27b970662ef929e13d29",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 364167,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": [
+          "scripts/import-map-v2.mjs / audit-map-coverage.mjs"
+        ]
+      }
+    },
+    {
+      "path": "build/icon.ico",
+      "category": "REQUIRED_ASSET",
+      "reason": "Required map/public/icon/license resource; not expendable build output.",
+      "runtimeConnected": false,
+      "sha256": "f687aeb052b6b756d8962d70d2b4937e32f04b9892a81d15095383dbcb9f09a3",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 23913,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "build/icon.png",
+      "category": "REQUIRED_ASSET",
+      "reason": "Required map/public/icon/license resource; not expendable build output.",
+      "runtimeConnected": false,
+      "sha256": "64286d19a9d5193a0cc9985362b1d9bde79a7215868f2196ae83d096ded2f780",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 21399,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "examples/campus.example.json",
+      "category": "TEST_SOURCE",
+      "reason": "Candidate synthetic example; content privacy review required before inclusion.",
+      "runtimeConnected": true,
+      "sha256": "43bdbcff853536a201ba9db0816d76ec1c56120f257217bc35b4fb16300eb804",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 805,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "licenses/Hermes-MIT.txt",
+      "category": "REQUIRED_ASSET",
+      "reason": "Required map/public/icon/license resource; not expendable build output.",
+      "runtimeConnected": true,
+      "sha256": "e29dfaf6905a8d396a58ea4bd84ad27057756bbd9599b5bec0971ae34d2a2118",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1091,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": [
+          "scripts/setup-hermes.mjs / runtime/hermes.ts"
+        ]
+      }
+    },
+    {
+      "path": "licenses/NotoSansSC-OFL.txt",
+      "category": "REQUIRED_ASSET",
+      "reason": "Required map/public/icon/license resource; not expendable build output.",
+      "runtimeConnected": false,
+      "sha256": "18aabf190848725e2576eefb5c29ba06aac1029d02132252a7f312eac2e50cf3",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4314,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "licenses/ODbL-1.0.txt",
+      "category": "REQUIRED_ASSET",
+      "reason": "Required map/public/icon/license resource; not expendable build output.",
+      "runtimeConnected": false,
+      "sha256": "607680718977f6f6c9607972afd98f208573f19251315ed1362a8589b51beaf5",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 25278,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "licenses/OpenLayers-BSD-2-Clause.txt",
+      "category": "REQUIRED_ASSET",
+      "reason": "Required map/public/icon/license resource; not expendable build output.",
+      "runtimeConnected": false,
+      "sha256": "6c4347b83a8c9feef18d57b18e3b6c44cf901b3c344a4a1fbd837e421555ab8e",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1337,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "licenses/osmtogeojson-MIT.txt",
+      "category": "REQUIRED_ASSET",
+      "reason": "Required map/public/icon/license resource; not expendable build output.",
+      "runtimeConnected": false,
+      "sha256": "df9efdeccb2dc3863c70bc5ddd63307bebf4a0c0cbd451c9532ccc7569e731cf",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1080,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "licenses/Python-LICENSE.txt",
+      "category": "REQUIRED_ASSET",
+      "reason": "Required map/public/icon/license resource; not expendable build output.",
+      "runtimeConnected": true,
+      "sha256": "62bec384df47b0328307db41455ff6ea2559e5546b394ac69148561b21703120",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 33861,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": [
+          "scripts/setup-hermes.mjs / runtime/hermes.ts"
+        ]
+      }
+    },
+    {
+      "path": "prompts/campus-tools.md",
+      "category": "RUNTIME_CORE",
+      "reason": "Pinned engine adapter or runtime prompt dependency.",
+      "runtimeConnected": true,
+      "sha256": "40ed1b52063b45185b21508e8c7182256f83741b2766560da699039ff392e108",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 6595,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "prompts/map-tools.md",
+      "category": "RUNTIME_CORE",
+      "reason": "Pinned engine adapter or runtime prompt dependency.",
+      "runtimeConnected": true,
+      "sha256": "1c1d6d7daea62613690277eddf563a6c7fe7bc370a6ed311f2dcb318eafb92e2",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 2296,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "prompts/system.md",
+      "category": "RUNTIME_CORE",
+      "reason": "Pinned engine adapter or runtime prompt dependency.",
+      "runtimeConnected": true,
+      "sha256": "94750e63e5422caa5ffd8f17eb1c021daad75f6c5ab6827202195bd0767ed764",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 3283,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "public/map-v2/geography.geojson",
+      "category": "REQUIRED_ASSET",
+      "reason": "Required map/public/icon/license resource; not expendable build output.",
+      "runtimeConnected": true,
+      "sha256": "ef6efb40ae4ecf7d32b92cb9001b622cac3ccbe47f930a265b7f6ba77aaacda3",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1226729,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": [
+          "src/renderer/map/"
+        ]
+      }
+    },
+    {
+      "path": "public/map-v2/manifest.json",
+      "category": "REQUIRED_ASSET",
+      "reason": "Required map/public/icon/license resource; not expendable build output.",
+      "runtimeConnected": false,
+      "sha256": "9518b8d97e4119eca1ace8439a92b6fe1cd01929200a5df2146ce4f30ae61235",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1598,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "public/map-v2/places.json",
+      "category": "REQUIRED_ASSET",
+      "reason": "Required map/public/icon/license resource; not expendable build output.",
+      "runtimeConnected": false,
+      "sha256": "56aeb49046cbd17c43b9c57504cf490827f95cb3a08ffcbae6f237fa12a4d609",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 222212,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "public/map-v2/source.osm.json.gz",
+      "category": "REQUIRED_ASSET",
+      "reason": "Required map/public/icon/license resource; not expendable build output.",
+      "runtimeConnected": false,
+      "sha256": "e321f5a64310e470e084853a387ec9063de5237fd36c27b970662ef929e13d29",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 364167,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "runtime/hermes/lock.json",
+      "category": "RUNTIME_CORE",
+      "reason": "Pinned engine adapter or runtime prompt dependency.",
+      "runtimeConnected": true,
+      "sha256": "74c9df3c75cbb45e7283459bcb7d82e2eb687d28e7f6d204f0f9a5db77fea6e2",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 260,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": [
+          "scripts/setup-hermes.mjs / runtime/hermes.ts"
+        ]
+      }
+    },
+    {
+      "path": "runtime/hermes/sidecar.py",
+      "category": "RUNTIME_CORE",
+      "reason": "Pinned engine adapter or runtime prompt dependency.",
+      "runtimeConnected": true,
+      "sha256": "c080cea41e89f2b2e5b6cfe33aa676ea4a5dbc5b6a1e983347f73807ad40b77e",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 17518,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": [
+          "scripts/setup-hermes.mjs / runtime/hermes.ts"
+        ]
+      }
+    },
+    {
+      "path": "scripts/assemble-visual-audit.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "e197d8865e8fd543cb03181dcc5278598a9e81ef78042849b9dc00bfdf3e3ade",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 5375,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/audit-map-coverage.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "d826ab1e7a5cddc55ff7c744ac3f3e51fffd974738e5eba3285e0f7d2c70136d",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 5828,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/audit-understanding-run.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "bad6da31ed39e9d54bb25a1ab1824becbc5c6f97322534416f61f6ec1e8d023f",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 7301,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/build-electron.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "9511d9c9c2ddf7d9f21d13b3f6082f66c35075d3083c75560dd986e3e779faa4",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 337,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/build-official-coverage-reference.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "17dd33103d1d6f073593a002b31b0270d9a93fae66c04b4f6f0db54a4a09b6d9",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4174,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/check-deepseek-balance.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "d42d0ef740367d2e238efbfac6236ee9b1a4bf9d02a42ad54999fdcd58551f08",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1406,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/check-project-docs.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "d9cdf6c5e31a8474cbd35698642b19c757339c1964f68e0ede64877421dd167c",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 8534,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/check-theme.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "1e24a76fdcef244eb4332364e977bfe66fcb42372412c28852946309af990ba0",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 3715,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/create-icon.py",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "acb01be7d99d1f14bc909ada2992551ced38f5f8546845bb4574435e4f4a7f90",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 808,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/dev.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "5d923e84cbb5ae41e5add3f39a67cbed1d5c7cd661416a56820bdc29914f5252",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 438,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/evaluate-harness.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "f9adcf50d4ae3815d2d3564b8c72d78c540e31737fcd91107c8d8a7abc1fc0ce",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4868,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/fetch-map-v2.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "8bee00d3392b6b4f6063d3e0a3ba52bb4445bce93b8b4c560b88079ad7a498d8",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1862,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/harness-evidence.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "05f262d78bc78a8cc03360c4fe0a9210b9b51a604bfd62593a3472c7b8c2e8c7",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4130,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/harness-recover.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "26e11ea18ef939a14111e2291460181506a61d938e31017be5162ef89837ba52",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 650,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/harness-recover.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "ee5bb966306fcb683d50ba38abbcf384bd604841155bc4858013be37ecda66aa",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 3820,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/harness-regression.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "93ec3118830777461f0a2206c731fa801e921aa76564a9c16e90551a83a521c6",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 351,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/import-map-v2.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "cd3232c3affd723c0a2d3e219c299edf366fa62ea3cbb685ac4d3724bc39a5fb",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 19408,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/inspect.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "3bdae046783604ff64a4be6360e9e4dc5aec2301d6a36a8da59acd4ff8b64baf",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 999,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/judge-live-acceptance.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "7a8c9a9f989c0d4867b49e2abae912c9c37c63135be4d7ec47ef1a5bb44f7391",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 7166,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/live-acceptance-eval.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "e1ea06a6e9bab92fc0ec2981fbfefc1db07b6f089b9a562a967685cea0c4c853",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 19678,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/live-zju-deepseek-eval.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "9316c986752b59d75a181e9b0aab21bc93e60f1ea93da2ef90c3ea8b65e05206",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 14625,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/live-zju-deepseek-smoke.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "9e6cecf78a8620bc9bf6e2b878745226b6b62483666af00b86a0a4b2162aa885",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 7554,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/map-geometry.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "11d04231bd249fd2715f2f7d68b74fe8eb5b0a33e111581e0737cb25df2fbf15",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 2518,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/probe-deepseek-vision.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "5b9a88c8e0396f2e12e65ae8b8a8efbf1d0b05dc1457f8be26650134b475ff4a",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 2034,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/probe-luna-transport.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "29d4a524f0c1579d39271ceba224edced7a377dee51a784f8524002931dba1b6",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 3555,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/record-map-v2.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "0f9f4c0513d54533550eaf0170f2a4f724d9c655c3eeb87fea07c802da21be8c",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 6358,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/run-judge-live-acceptance.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "7562ad4ccc30479a50023669ed49fc3fc1dbc9ac63e9444d01caf0913424c834",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 623,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/run-live-acceptance-eval.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "75de7f12b0638e0a3df1af4fa08313cb43ae5cff4fea13d0fa5b5d0092dcec16",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 650,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/run-live-zju-deepseek-eval.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "407a6b3cad3e3f03d63a9693677a954f3860084793602c59f9c6214f04a892b0",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 650,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/run-live-zju-smoke.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "f33e0ab3e26ef862807320f392f7c590a94450f9e6ba7afeb9bb951a9e780d70",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 646,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/run-luna-test.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "72444b05df9b825e6da07b0eab0d5817f6490cb8b75953286762d40ae7773a0e",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 722,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/run-understanding-ablations.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "2f94a22563c2a8b87fd759eb68a4d1e316e2ab79c5b6e42ac71a3e14a84011d5",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1966,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/run-understanding-comparison.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "5a417f3aa4aacc8dee811c01262399f2a73ec7b9ce7c5fc31238fdecf1182336",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 3384,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/score-conversation-quality.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "6e820d9652b3a9d94690f9a13183221957662633b2be483985c35c0665bfc441",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 5369,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/score-harness-evaluation.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "ebbf1386010866fde7f82bdc35d2d4709c902b85177d7d02e1fa151bf3dcbfc0",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4647,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/setup-hermes.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "8c354883dfc9272d62fe354c87f06f0397fd3a4c8e757ccfcfb3f62ade6b5ead",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4966,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/stage-hermes-runtime.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "10a18374d0914aa87b83fb20e745b24fb9b045c08a01ddd4f1dd4cb875790641",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 5502,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/summarize-understanding-evaluation.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "be0061422759bfc2248a011b75a51f8570b82fcca3b7136b4e77ea49dbcf1512",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 19255,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/summarize-understanding-usage.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "f6a4353f69a3a3874147d08dc3d345835605d701912b71ead47c7c8961af2cf1",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 7928,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/test-environment.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "9d3f02c3b5f8aaa2b6a28154e607c74293995dc95453206c9f69a2579ed815dd",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1213,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/test-harness.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "04faeecef56ef001e713eefbcf6c01b5e818b503e4b19b2a5ed633cdcb1e1c24",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4115,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/test.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "de691a0175cc90a33ce07db22e84e36fbfe7ecb6d0ac6f59962c3d8b20054553",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1579,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/understanding-baseline.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "f43f0ef62d0935d0808de4ee96e7ff6a0b0a83543b1e23453658fbc4855de0f4",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 2135,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/validate-trajectories.mjs",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "9d8667d418ede6bb35e5746b1c6be7196ae99a5bf0ff6a21a1f037c2d028178c",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 19783,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/verify-harness.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "6bfcfc28bbbed5bb558ca9ce2272eb3a2410f0a1c73ab4aec7b6f7faca5d74d4",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1085,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/verify-map-optimality.py",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "bd6a57ae02c6afe49abb24565ce1e7d207f12e1cf1c5716c1a8ec1bcecfae63e",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4526,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/verify-zju-account.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "e743c2ed1635b78587d87267320218c516a52da17c57c572ed6fd8c2f6eab511",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 6859,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "scripts/with-deepseek-key.ps1",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "50baf6d2a46f22e4b19f0c3e113ae7325f3c8bafd9c9f05706e99916f0d17f49",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 3710,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/demo.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "a8fce3d78c6ac14cdff2eef6050563de2e6d78c5b3b51980edc84564b26536c3",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4985,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/harness.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "db16fe2437c4b045bafe5ee4720fc82e9bdbb6a0641219d090da220012e439a4",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 62282,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/luna-provider.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "876649570da5db737c257918f0dfbd1f087a93363cc8e351e2ae83f35751d98b",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 18419,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/main.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "c43e5160532f64fa24afea40ec5fab6eaae7c5c6792e99273d313ae726323ef3",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 24776,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/mapLocation.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "0dabd0bba96293ac8af199ab6a2774c1e737accb8cffe37a5fe1601edd3e5e5d",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4647,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/mapService.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "934c3fbee600d780843f0167f38cbbba650e843b0443ee2522c416cb6c5b3336",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 8080,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/md.d.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": false,
+      "sha256": "1e0597b88cc935cc9d4474d03a33f2d6870ae1328285aaa124964b44eda42d69",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 77,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/model-selection.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "66ddd30cb42f603fa9153452dc66914ea053a2ba9347bb80d0a5cc22d36001fb",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 594,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/preload.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "b2ec48a35090e494ce577fb19d12f333c949ff759f22c70c199939c10e6b6213",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 3398,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/provider.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "81c11b75b99b2866c25d36167f9a1a5f93475267ab569e2f6c8703a85824040f",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 19778,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/store.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "2eb0d3e601fdb5d6b9c80f2d06226a42b12899f9ec07c825fc79f35fa121a145",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 15540,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/testBoundary.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "c9ab71310ffb754589c228522c9ae22714673a6d1f3981dd38c14cbfeab4032b",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1268,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/tools.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "3e3fb2197ea4ebd5a63997d476854aeeef01aaae8c4f310841c7ff59573a8dec",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 6426,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/zjuAdapter.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "6b74abe41ddb41d3632fb37f20778be7cc2776148c800efac1522dc5924678b9",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 46453,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/actions/availability.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "b658978d5c3296c54ac15fd60a2f1d96efe17f7598fbbdb05e5fd187a3690387",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 2497,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/actions/calendar.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "3526458748d7d31984b826c4c7f2bc586cdebf61457f9ce8cb09f0c95cfb272c",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 9117,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/actions/local-calendar.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "aac58542fe6f4b90467f34ec19e54d6bdcbc5a517601c50ca799ff897c94c5f1",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 5199,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/actions/reminders.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "d79476bf7c13391c7558913d5e6cbec87538db7196cf08be9d08ae92eae073b2",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 14121,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/actions/runtime.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "f7e008b448bdf86cf53ec95494b35e8dc5d4907c2fcce8518c4de0ebc7c1d25e",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 27977,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/capabilities/broker.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "83092b447dd6c118874cc97b04d0f64f39a8c5491ab47dcf8b09f5bf03f20102",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 24068,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/capabilities/builtin.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "ebc27f5ec8aeacfdf2cad406d0c63e93d99a4c58f7fdd53f4535f40d5172be36",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 24667,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/capabilities/ports.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "f53f96f94c8908cc1a10dad7751fcf16fd1c0554ebe48f11f10158a8f1bb02ce",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 22494,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/memory/model.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "d87b60a958ce66dcb50220ac92634209cf9010b3de1d95dda6073ce4c084c6b2",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 8036,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/memory/service.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "9866d30f755494eafc08ca48d6ceb3246089ff471e4ae504d5a579dc1f667986",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 34211,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/runtime/action-delegation.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "beac01f284416dd81ece0c13a70668b98d4d1147a92be6fc39e1b80c4227ff32",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4380,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/runtime/collaboration.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "d9b0bb9aca2eb00905853e68994f003d71dcbd2b0ada284d5259a5e64c23fe24",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 10877,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/runtime/completion-review.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "8a782548e73b6bea364cbdc49a09afe4c8173471628ca2f6e20e9ccd0f6d3455",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4364,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/runtime/context.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "43163da2c9a88f4d795921bd5542ed03342885a83c4ebad30ca9615badf0f3be",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 18407,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/runtime/controls.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "d4e409521edef5703ac14ef876b716f7f7812dc6d27c46a5047b74ed6cad4032",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 8317,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/runtime/coordinator.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "fe55241e79274155cd18a6fb59d800e4b89d247187abb1aa4be45e002ab72ee0",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 92900,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/runtime/discourse.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "bb7341333e1a3275bae21f549aa48d7e5cd01b340f83e5d8400344d953ddc879",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4242,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/runtime/hermes.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "70c825d08965fc913236bc74fafdaf2c40ed532238132396474e604c862e0627",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 8948,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/runtime/model-usage.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "664b64648f1effd087e0e16e33fb71bd6d1ed897b5a6dacd57c971a17a2926e6",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1044,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/runtime/policy.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "e55c32d008dc844d46f3f487b1991fc866da20e83c5307faec9e31ad727fd8ad",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 17247,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/runtime/privacy-control.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "0d5f247d1994d6b34337fee269a7dab4d6ef9b35d4556e395baecf3dbb5375bc",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1744,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/runtime/read-purpose.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "58bc6dddda98545106040e3d61d10a80f0f6735876853aa71af4a35aef991cc1",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 2077,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/runtime/redaction.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "8870453d68ef64b63505e440fba75a6f0a932585c3f34f8d91ef62d7886fdc41",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1167,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/runtime/release-composer.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "bfe9067a4cfe61eda4b78c215fde8a032f90547f0d24525d82a6fbecb7506b45",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 6267,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/runtime/release-projection.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "6fee2c95bebdb0d2ee3d9d1282d7b190e1d85bf37af03a4916c9c31380abf0ce",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 3109,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/runtime/release-store.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "ab93ec714153839cbd9c41f64712ff1fb63cf5df09365e96df8a5dc579e8fe3a",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4487,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/runtime/semantics.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "ee64d89294c181338e24660d0e9ffed346a27a38aa2b95c30161c06f770f1f62",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 5121,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/runtime/structured-result.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "f3a93c28caf53473f79f56d3978ff02bda059b17ccc6305de3fa866daa7c448e",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1776,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/runtime/turn-controls.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "2e5e5559f47d84b29d7d4cbfce075f121e385effefb300d8a10a1d2fbd556dc4",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 13420,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/runtime/work.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "ba89ae4d5c43f6d3523c2ffc63e7818ecd7d50c72237316b523dc38b7b3d31e8",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 34714,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/storage/domains.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "898535da53e86ddc7872015233bec8b408f92e55526016783a86750d5d0b334c",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 19681,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/storage/drafts.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "bb3214fe0478ea33bc048959bf179b096f0b1df6adc4f0fa01cb54c15fa8bf96",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 2566,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/main/storage/repository.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Current host implementation, including uncommitted source.",
+      "runtimeConnected": true,
+      "sha256": "d9f732792238fa039928c640c3aeb71fdec5d9689b08d36c4a8e07af29cb67a1",
+      "owner": "Host",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 75039,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/renderer/App.tsx",
+      "category": "RUNTIME_CORE",
+      "reason": "Current React UI and local resource imports.",
+      "runtimeConnected": true,
+      "sha256": "92a4ebf67b5329f3f92a8eb911b2aaa80ced684db6cff3433de5e51ac3fc81fe",
+      "owner": "UI",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 46549,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/renderer/global.d.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current React UI and local resource imports.",
+      "runtimeConnected": false,
+      "sha256": "87cf52854cc409f1bdcedd657c4d0c92c1ec5a3fe7024d76412f68d00728deef",
+      "owner": "UI",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 113,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/renderer/harness.css",
+      "category": "RUNTIME_CORE",
+      "reason": "Current React UI and local resource imports.",
+      "runtimeConnected": true,
+      "sha256": "4a621d39c0a1b355012412aac36f731f952a5d65d2ec5a2b9e2d2cdaf7c2ceb5",
+      "owner": "UI",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 35281,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/renderer/HarnessViews.tsx",
+      "category": "RUNTIME_CORE",
+      "reason": "Current React UI and local resource imports.",
+      "runtimeConnected": true,
+      "sha256": "9cfefe7dbc70193b1db6bfaea9fb69062ea1daadd05222b524b85c87fb998bb8",
+      "owner": "UI",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 70953,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/renderer/main.tsx",
+      "category": "RUNTIME_CORE",
+      "reason": "Current React UI and local resource imports.",
+      "runtimeConnected": true,
+      "sha256": "4cb017487b70a30b4e0efd58b4775ab5178d5656e2ae551261e7c1107d71edf6",
+      "owner": "UI",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 333,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/renderer/refinements.css",
+      "category": "RUNTIME_CORE",
+      "reason": "Current React UI and local resource imports.",
+      "runtimeConnected": true,
+      "sha256": "5da2149a511375b02ab4b3b7431b688ff1d95d091a9c78329023618c91e9d551",
+      "owner": "UI",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 27848,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/renderer/SettingsPanel.tsx",
+      "category": "RUNTIME_CORE",
+      "reason": "Current React UI and local resource imports.",
+      "runtimeConnected": true,
+      "sha256": "e413ddb084fc268c75382f5d193c68caa89a4bd1ce54b5aa92561b77c3c79e0e",
+      "owner": "UI",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 23602,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/renderer/style.css",
+      "category": "RUNTIME_CORE",
+      "reason": "Current React UI and local resource imports.",
+      "runtimeConnected": true,
+      "sha256": "f0af1d086387cd2e58abd6c44dddc05e8d2e64493694c2d6d7c10a294ebf4a7d",
+      "owner": "UI",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 38664,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/renderer/tokens.css",
+      "category": "RUNTIME_CORE",
+      "reason": "Current React UI and local resource imports.",
+      "runtimeConnected": false,
+      "sha256": "9042e27c0c8b86deb4b4c731216bb7e8fb0dc9bfa14c2db95b0f40b411d363cb",
+      "owner": "UI",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1595,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/renderer/ui.tsx",
+      "category": "RUNTIME_CORE",
+      "reason": "Current React UI and local resource imports.",
+      "runtimeConnected": true,
+      "sha256": "66ac1d6234c0fe1439a5ecec8b45d8a6d12e160c3a32e1e1ff19fcae65ab9db2",
+      "owner": "UI",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 3544,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/renderer/map/CampusMap.tsx",
+      "category": "RUNTIME_CORE",
+      "reason": "Current React UI and local resource imports.",
+      "runtimeConnected": true,
+      "sha256": "7ca97791771692db441849f2773a9b478d3f2b4e874e594bf6c9210dcc023798",
+      "owner": "UI",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 35032,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/renderer/map/geometry-layer.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current React UI and local resource imports.",
+      "runtimeConnected": true,
+      "sha256": "50c8a4bb66de4b22df22cc7a19bc93433260de33a3b2558b40e3913e57a2d872",
+      "owner": "UI",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 6171,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/renderer/map/gpu-style.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current React UI and local resource imports.",
+      "runtimeConnected": true,
+      "sha256": "ad8dfaa0dbdc03e1e21a37bf109ddf50164850ace1920035a22daeb06d4fa4bc",
+      "owner": "UI",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 3365,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/renderer/map/map-engine.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current React UI and local resource imports.",
+      "runtimeConnected": true,
+      "sha256": "2a187c608ea79afcc4b476119b06c55f422a4c6c5b6b8918a312ecbb5c93bd5f",
+      "owner": "UI",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 31554,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/renderer/map/map-state.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current React UI and local resource imports.",
+      "runtimeConnected": true,
+      "sha256": "0173fd8512ada007ab55866231131c7a62ad9ce3e3117564921aacd34a621481",
+      "owner": "UI",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 2641,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/renderer/map/map-theme.ts",
+      "category": "RUNTIME_CORE",
+      "reason": "Current React UI and local resource imports.",
+      "runtimeConnected": true,
+      "sha256": "458d5bded04d19bc24e8bffaf9267fde5aaab0b41eb5552fc744aa20a9b95d69",
+      "owner": "UI",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 931,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/renderer/map/map.css",
+      "category": "RUNTIME_CORE",
+      "reason": "Current React UI and local resource imports.",
+      "runtimeConnected": true,
+      "sha256": "5b41e2ca51c38a36076a45794d89ac4954822404cdc0873f718e4ab2a50f3bfd",
+      "owner": "UI",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 16026,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/shared/calendar.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Shared runtime/domain/schema contracts.",
+      "runtimeConnected": true,
+      "sha256": "d56811056097038ba2d9b423673d2203f2f4dcf6ade2e0f42ca3c4d137d77ad0",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 3109,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/shared/harness.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Shared runtime/domain/schema contracts.",
+      "runtimeConnected": true,
+      "sha256": "311708ec8d3c0c845a7b7daea532b0da3ec957b86067d2af40fc9953920beda7",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 23746,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/shared/limits.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Shared runtime/domain/schema contracts.",
+      "runtimeConnected": true,
+      "sha256": "e7ae59bdecd6566b826f0d309bcdfb0ee8c279246dbd07405b52eae0fee6f7f5",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 223,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/shared/map-routing.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Shared runtime/domain/schema contracts.",
+      "runtimeConnected": true,
+      "sha256": "2bb5ddeb095957cce6e77c16a8975ced00df95e9a4df24a21582d3ba679a89aa",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4379,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/shared/map-v2.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Shared runtime/domain/schema contracts.",
+      "runtimeConnected": true,
+      "sha256": "741aec5b2f917bec2d075efaaae0d7599cec7c21b717063d405fab3336974a98",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 3472,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/shared/schemas.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Shared runtime/domain/schema contracts.",
+      "runtimeConnected": true,
+      "sha256": "54dbe70c4f2f72924643bf3ac9cbb9125174c5c059b71c18cc03b5828414d168",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 2910,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "src/shared/types.ts",
+      "category": "RUNTIME_SUPPORT",
+      "reason": "Shared runtime/domain/schema contracts.",
+      "runtimeConnected": true,
+      "sha256": "42bd2d2cc3ba375cf383df7403bbfa9d7f9a9756808de3198880f3dad51b291d",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 9783,
+      "usedBy": {
+        "runtime": true,
+        "buildOrPackaging": true,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/connection.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "21ce6f586bae1f362aab75a08dac9c6feb66d1834047e95aa2205cbfa763dd7d",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 27564,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/core.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "b091cd596fc3fa9a3dbc00b7a86bdd52416211c22a2a365719ac319af6f9c122",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 39851,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/desktop.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "de3df9c7a2f728c369148f6146ef98ce6c4930d919fe19a0bcd298f77f25eeff",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 13486,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/evaluation-time.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "6984a5ec99852b871029caf916249958797ffdc5d6c00160dcd502ca6e091736",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1247,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness-ui.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "02336949cf7a380e14f68c1e3c0216411ec21f54d48318bb4e148d9ecea4bd9f",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 13161,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/inspect-geometry.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "2801288b5df9a6e7f30c1b459018ac579f15417bea9885af1137f179dd2dbd13",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1459,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/luna-provider.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "04bb2e9b7791c7cf5d21bcdf4ebacab76ec367a6ceee726a81ab2528364aad85",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 7013,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/map-browser-server.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "eafcbc14541941a66c5231427f22e46f58c1051f676ef1a7266da0bed593d3e0",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 3136,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/map-v2-faults.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "819d67ba08862e04d9d3b2295b8b92f27e24db5f7f53021a069395a91b509260",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4682,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/map-v2-performance.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "46eac726bc442f38a2d8b2c484ee592c50cb93f6cd38a1498a8ef579636c918e",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 10822,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/map-v2.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "d582f412f9beacc11746aa0d696840b76ccc7f561999378e555564f169ffdfef",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 20116,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/map-v2.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "39e79d34ba59e5268fb6a2e23234f763eb710a6c1de0bfac293e8429cd3729db",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 17504,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/multimodal-ui.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "57414b9c069e7d88f63c80867b20871a4d630b72a4e24ad8035e482ec3ef7247",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 8916,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/package.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "4838b88e18857030ab0fd01532e55d10ec94032d8ffa804507239f290918c59f",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4430,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/trajectory-validation.test.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "1504e12a82fd9e4870697eb482e1724effd6b867c4b398334d0053d7f4bec6c8",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 2451,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/understanding-audit.test.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "9666720ddcc6ccc38ae01fcf726ef68439af921bb0591b1f67379cdb28c724a7",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 2356,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/understanding-report.test.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "153cd4e1c2c0414d49ce1b4ad24e98e5d754ddc19e6c0ad70879f59c38d1a4a4",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1435,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/understanding-usage.test.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "c5eec6044b55b7b9fd426a4946f2b55fcc44b9d1cce0fe890c31b05d38612ecf",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 2710,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/fixtures/luna-app-server.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "7bbd569c92039dbe9f6a75189ac879560a237a0d659ab5c62d1e88c6912a0aff",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1471,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/calendar.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "413755bdacc9d0e87c58fc36f631b081e93a6877d2b096e04e1001716ce8c8d2",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 9821,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/collaboration-paging.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "defab9f0a2431a09cd0cdae022d2afad57ab83a5c33007793c06da7f073f4a1c",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4490,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/controls.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "fd6b8e83fbdda23eecd958791eaea028d755162d5ad8f97fbfb7cb3086fdc64f",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 13421,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/conversation-quality-corpus.json",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "bffc791700ec2ae6923e7df9cc1ab4081488ef57a36edc8f08dd70f5dc20818b",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4770,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/crash-process.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "d7af40e1365fdf7191465a2e648e88d99d333d037029ed402587d7ea03941e63",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 556,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/desktop-entry.mjs",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "23d5b636196a17a8a78d5ccbe14be55c4c520b1f2f9b194b780c5a02952d4acb",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4089,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/drafts.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "1b7f7124377d0a1f51d63e5f101c50f8bbf2a0646917887bf1b87f89d3743b06",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1677,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/evaluation-time.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "7c9bbf937ca25f660d88f2113c5e224ffdbdab13d1b4594033ab4f911bbbeb87",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1043,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/evaluation.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "3110f4174e5e537108062790868ca0e0d822078ddfea98219f3b251986b690c0",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1956,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/extensions.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "9b75df13b3fda91afd6677346c7c79cc5b38de023098a649024206359f0d4f2e",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 7153,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/faults.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "594358f3b7cd0c4bfbf2161a4e0749617fafbe2bbc5587c2bc21045d3f87bcf3",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 8348,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/hermes.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "9c0a237767703e3057b7be850b66857de32adf93e53c2813743a5918ba75bf9e",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 16699,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/live-eval.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "95bffafcb24b5720cd2424978d2beacfcdc44938441d7b38dccb59d82dc1890a",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 12856,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/live-model.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "5f7072fa4efa73c01f0437b0bb96a8cc4d5fee2bbfd0762d795493d77b15cfcc",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1172,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/long-input-review.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "832b43579061b46f987ab66dbdfc0f914bd56008f4eb934680a74e94ee889c02",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 3278,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/migration.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "18f5fd25254760ae5f4ce5a9479219c464303469530190894e92d5f6631fdfb7",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4637,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/performance.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "d6eec5fc3958126e824bda40c35ed006f4073a7d88e2a8617442e2b94491365a",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 3099,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/ports.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "fa9851e46903342a04d921f611fd8aefa0c7fb9b319f4e8503126a2ab9270bb5",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 7949,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/privacy.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "c9d964d74461dc4aebf14adbf3d6fd4f67e678a9ee12f11f27929dcc2c388c22",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 14167,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/protocol.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "5bf3bb9638e570bdd990b77b6627c71a1f229566bd2883d109593140f466a2c4",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 14626,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/release-composer.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "ff8e04702affc5d1e8b00ff4ce0c0acf737af00942786cdac0fd44ec735bf686",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 16006,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/release.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "51eb6ccaf30c75454217a0a5243d4793cd768f8960ae123daef34288ef8bd88b",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4522,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/retention-effects.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "97498f74d731f164b0072972bb658c7944c7d3f35c6ccf21879375dea0128930",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 5163,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/scenario-fixture.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "f496600ee725823aad1a9b1fd5bf7ff49180be84f1822452ef138aaafb5bd45e",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 80431,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/scenarios.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "d2deeb6fee9ae60dbd36c353e57c47cbf463bd369e13ccd6595c745a250a0acb",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 8525,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/scripted.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "7edffcdfbcecf7433c3a62b3d282e946c7f08780ef64643e3a8e5c8f6b726cd3",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 13561,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/seed-ui.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "2fdf94eb4b6a732662453ff9db4b56df37c7644427cb84220b6f85d089cbd9c5",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4692,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/semantic-corpus.json",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "025ec6f35441d9d739c22325d753b7274b4d83d77d939f5c14598ee27004aa00",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4167,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/sink.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "f46e9c1482e70f953463ae16090df1507306c23c0554984fcd0366a0e9185428",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4016,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/state.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "e2bcda4faccabaacb95ae14efbd253e6c8a80dc577522b3227b1d1beaefd5301",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 12941,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/structured-result.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "f660008c256e82928dd25e7d98c5e53e7c50def0aeee6b2c42b5c0f262e2c4e3",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 3261,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/support.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "9febbf0a58b21561ac920edbf24d43bf0bd36c27277db3764531db94550f7e43",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 6264,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/understanding-ablation-cases.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "57bdb07a062cf237b670f314233a52f928be445238f092f66bdf58eece5bbc9b",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 5947,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/understanding-cases.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "b236466b66b83eec4a4a818a35f7fa069c91d4bb12b6ca9cb5c162cc984d9f06",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 16320,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/understanding-comparison-live.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "de0e32b2297e75f89089b163801ca38618c4a07f1cb2714ba8a97f6314363ea5",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 8301,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/understanding-controls-live.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "84179dca61038e193870f47929ec20f782a704e983e9f2ee08d570b84d3fc4bd",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 5878,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/understanding-delegation-live.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "f350585d6a742808f7704780377a1577e4b508e1952e26b9709a8478dfa83df9",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 4939,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/understanding-fixtures.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "722604b3508707b9057b85396f8153c13a305c1bd293514c5c8ec97ec46a23ba",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 609,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/understanding-fixtures.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "bb9ae57b16cbf7f1ea9be3345f59851bae2b0e4e403fcef1951f7a78ab710a35",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 10221,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/understanding-judge-replay.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "6bd3bdb3aa0e3dbe982c44c9d4cd80c140cd00862adb1508917a0f28770b7e8c",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 5486,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/understanding-live.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "6e5e115ab960e4c85a5442eb66f53d6e3dacbcee9c04ea0b86a4d707189c5fcd",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 24389,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/understanding-long-tail-live.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "8703eb115ed6da486af43c5a4fdd469c2fe170e7be050555183501fbfb2368c1",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 5994,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/understanding-new-stories.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "03c9c5ac673e3f831ae88853020545a7911c104a4617e0f2cda7ca0d11ef57e7",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 10406,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/understanding-protocol-live.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "d8bb057be3f85915e7d11fcabbc3819df78ed290e53199484da765efe9721073",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 5812,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/understanding-repair-variants.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "7e60f79d63183008124036bc7e5d51f592644523ddd48ebdaa1d540daa35997a",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 21127,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/understanding-scoring.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "2892e4fcadf9dc4ab67fdd1c109f5df1f29caac596b91e51b9e88d47f72d24f6",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 2160,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/understanding-scoring.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "5aac1623ce5f67648ec9fbc2505041604d64dd5e852e4bc3497b96ebb39537aa",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 2662,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/understanding-slice-live.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "25cfd86bcb6cad7f55baa983c73c22632aff65b5bbcaea1c8fd735d9b7292c6d",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 6575,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/understanding.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "46f64aba2141aabfeb019e45e783bcecf68d348a96d0596821b236b23889a7da",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 47031,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "tests/harness/unit.test.ts",
+      "category": "TEST_SOURCE",
+      "reason": "Current development/build/test entry source; real-account commands are documented but not executed.",
+      "runtimeConnected": false,
+      "sha256": "1b5ca5e91d13d6708f30dd9030319ebefde128d477b0a240d2fa877eec0cb593",
+      "owner": "Development/test tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 18085,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": true,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "在场-Harness-人本协作设计与Codex实施包/在场-Harness-人本协作重构/02-人本协作架构.md",
+      "category": "TEST_SOURCE",
+      "reason": "Verified static/dynamic dependency of retained tests or tooling; original relative path preserved.",
+      "runtimeConnected": false,
+      "sha256": "8ba4d144c03893571812b2a2e2592d4d49ef49e2d147fe94c1e19a189b88da1b",
+      "owner": "Acceptance/test specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 30486,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": [
+          "scripts/validate-trajectories.mjs"
+        ]
+      }
+    },
+    {
+      "path": "在场-Harness-人本协作设计与Codex实施包/在场-Harness-人本协作重构/04-行为验收规范.md",
+      "category": "TEST_SOURCE",
+      "reason": "Verified static/dynamic dependency of retained tests or tooling; original relative path preserved.",
+      "runtimeConnected": false,
+      "sha256": "1d6ea06af16d3fd14cdc51085be298ed888a5f60584f09fe227faafb1c815f3e",
+      "owner": "Acceptance/test specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 17134,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": [
+          "scripts/validate-trajectories.mjs"
+        ]
+      }
+    },
+    {
+      "path": "在场-Harness-人本协作设计与Codex实施包/在场-Harness-人本协作重构/交付一致性说明.json",
+      "category": "TEST_SOURCE",
+      "reason": "Verified static/dynamic dependency of retained tests or tooling; original relative path preserved.",
+      "runtimeConnected": false,
+      "sha256": "326ab5a2c83e5409e54b8caeb9eb39fce485ca5dd4c2f0f3b74303de8dbd23bd",
+      "owner": "Acceptance/test specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1743,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": [
+          "scripts/validate-trajectories.mjs"
+        ]
+      }
+    },
+    {
+      "path": "在场-Harness-人本协作设计与Codex实施包/在场-Harness-人本协作重构/acceptance/trajectories.json",
+      "category": "TEST_SOURCE",
+      "reason": "Verified static/dynamic dependency of retained tests or tooling; original relative path preserved.",
+      "runtimeConnected": false,
+      "sha256": "aa352eb91844fd36ac44dec3c3fc8c61a6d13fb8760b59360179d085ec4f1265",
+      "owner": "Acceptance/test specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 63025,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": [
+          "scripts/validate-trajectories.mjs"
+        ]
+      }
+    },
+    {
+      "path": "在场-Harness-理解与行动-设计实施包/在场-Harness-理解与行动架构包/00-阅读说明.md",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "08492fa329889d99a62be665cfa83f0bb82db4b98f6dd71a698b660b2a38cd2e",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 2254,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "在场-Harness-理解与行动-设计实施包/在场-Harness-理解与行动架构包/01-架构批判与完整设计.md",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "c1d540c00b8187c80fe723ba24426084a520c2cf2b53923dfaa9e06c5fc7a3cb",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 47173,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "在场-Harness-理解与行动-设计实施包/在场-Harness-理解与行动架构包/02-Codex-完整实施提示词.md",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "bb2d3521b1e7624e3779340a47d1d74128857f2343d61859ef2c02bfc10a9577",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 23204,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "在场-Harness-理解与行动-设计实施包/在场-Harness-理解与行动架构包/03-验收机制与40个状态场景.md",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "0f3620d3e6b261b34dd92553cb57eebb9c5e98ce85efc7a0aea66d65e24d0194",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 25037,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "在场-Harness-理解与行动-设计实施包/在场-Harness-理解与行动架构包/04-研究依据与决策记录.md",
+      "category": "CURRENT_SPEC",
+      "reason": "Required current documentation, development guidance, package or configuration.",
+      "runtimeConnected": false,
+      "sha256": "7412fff2ed0b8e7039d23640abdcd9003e0a3421c5bfabfbf2e15196f0ffc52a",
+      "owner": "Project resources/specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 10402,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "在场-Harness-设计与Codex实施包/zaichang-harness-design/acceptance/README.md",
+      "category": "TEST_SOURCE",
+      "reason": "Verified static/dynamic dependency of retained tests or tooling; original relative path preserved.",
+      "runtimeConnected": false,
+      "sha256": "5bf6a44462d9acece02432b75455f112991c6a4a0dfd5275d4c57098fda37852",
+      "owner": "Acceptance/test specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 2929,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "在场-Harness-设计与Codex实施包/zaichang-harness-design/acceptance/scenarios.json",
+      "category": "TEST_SOURCE",
+      "reason": "Verified static/dynamic dependency of retained tests or tooling; original relative path preserved.",
+      "runtimeConnected": false,
+      "sha256": "c0f3f3bfaf85171ee4fc4ba5661bff438e0eb849039a509c2feda307365d0cd9",
+      "owner": "Acceptance/test specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 143931,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": [
+          "tests/harness/scenarios.test.ts / evaluation.test.ts / harness-evidence.mjs"
+        ]
+      }
+    },
+    {
+      "path": "在场-Harness-设计与Codex实施包/zaichang-harness-design/acceptance/student-200-questions.json",
+      "category": "TEST_SOURCE",
+      "reason": "Verified static/dynamic dependency of retained tests or tooling; original relative path preserved.",
+      "runtimeConnected": false,
+      "sha256": "4505ed50395636a7945043aba62f0422a8553a6c13ee88a1a58dd8ca45e94bc6",
+      "owner": "Acceptance/test specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 33840,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": []
+      }
+    },
+    {
+      "path": "在场-Harness-设计与Codex实施包/zaichang-harness-design/acceptance/traceability.json",
+      "category": "TEST_SOURCE",
+      "reason": "Verified static/dynamic dependency of retained tests or tooling; original relative path preserved.",
+      "runtimeConnected": false,
+      "sha256": "dd786ca7daab40aaf094747902ff4bfa604e8800a636b4a89a829b37948d62c1",
+      "owner": "Acceptance/test specification",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 25944,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": [
+          "tests/harness/scenarios.test.ts / evaluation.test.ts / harness-evidence.mjs"
+        ]
+      }
+    },
+    {
+      "path": "在场-Harness-设计与Codex实施包/zaichang-harness-design/CHECKSUMS.sha256",
+      "category": "TEST_SOURCE",
+      "reason": "Required dynamic checksum input of scripts/harness-evidence.mjs.",
+      "runtimeConnected": false,
+      "sha256": "5163fb33776cae8afe7451852be38b4be2e2cd4271da39546f266e13cdc56778",
+      "owner": "Acceptance evidence tooling",
+      "type": "file",
+      "include": true,
+      "count": 1,
+      "size": 1399,
+      "usedBy": {
+        "runtime": false,
+        "buildOrPackaging": false,
+        "testOrEvaluation": false,
+        "dynamicReferencedBy": [
+          "tests/harness/scenarios.test.ts / evaluation.test.ts / harness-evidence.mjs"
+        ]
+      }
+    },
+    {
+      "path": "tmp-live.cjs",
+      "type": "file",
+      "category": "UNKNOWN_REVIEW",
+      "include": false,
+      "reason": "Not part of default source scope; requires dependency review.",
+      "runtimeConnected": false,
+      "count": 1,
+      "size": 1239027,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [],
+      "usedBy": {
+        "runtimeAfterGeneration": false,
+        "buildOrTestAfterGeneration": false,
+        "included": false
+      }
+    },
+    {
+      "path": "tmp-meta.json",
+      "type": "file",
+      "category": "UNKNOWN_REVIEW",
+      "include": false,
+      "reason": "Not part of default source scope; requires dependency review.",
+      "runtimeConnected": false,
+      "count": 1,
+      "size": 49548,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [],
+      "usedBy": {
+        "runtimeAfterGeneration": false,
+        "buildOrTestAfterGeneration": false,
+        "included": false
+      }
+    },
+    {
+      "path": "tmp-print-argv.cmd",
+      "type": "file",
+      "category": "UNKNOWN_REVIEW",
+      "include": false,
+      "reason": "Not part of default source scope; requires dependency review.",
+      "runtimeConnected": false,
+      "count": 1,
+      "size": 41,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [],
+      "usedBy": {
+        "runtimeAfterGeneration": false,
+        "buildOrTestAfterGeneration": false,
+        "included": false
+      }
+    },
+    {
+      "path": "tmp-print-argv.mjs",
+      "type": "file",
+      "category": "UNKNOWN_REVIEW",
+      "include": false,
+      "reason": "Not part of default source scope; requires dependency review.",
+      "runtimeConnected": false,
+      "count": 1,
+      "size": 101,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [],
+      "usedBy": {
+        "runtimeAfterGeneration": false,
+        "buildOrTestAfterGeneration": false,
+        "included": false
+      }
+    },
+    {
+      "path": "tmp-probe.cjs",
+      "type": "file",
+      "category": "UNKNOWN_REVIEW",
+      "include": false,
+      "reason": "Not part of default source scope; requires dependency review.",
+      "runtimeConnected": false,
+      "count": 1,
+      "size": 1290453,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [],
+      "usedBy": {
+        "runtimeAfterGeneration": false,
+        "buildOrTestAfterGeneration": false,
+        "included": false
+      }
+    },
+    {
+      "path": "tmp-probe.ts",
+      "type": "file",
+      "category": "UNKNOWN_REVIEW",
+      "include": false,
+      "reason": "Not part of default source scope; requires dependency review.",
+      "runtimeConnected": false,
+      "count": 1,
+      "size": 476,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [],
+      "usedBy": {
+        "runtimeAfterGeneration": false,
+        "buildOrTestAfterGeneration": false,
+        "included": false
+      }
+    },
+    {
+      "path": "在场-Harness-理解与行动-设计实施包.zip",
+      "type": "file",
+      "category": "GENERATED_OUTPUT",
+      "include": false,
+      "reason": "Old archive or log; excluded to avoid duplicates and private data.",
+      "runtimeConnected": false,
+      "count": 1,
+      "size": 52610,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [],
+      "usedBy": {
+        "runtimeAfterGeneration": false,
+        "buildOrTestAfterGeneration": false,
+        "included": false
+      }
+    },
+    {
+      "path": ".git",
+      "type": "directory",
+      "category": "HISTORICAL_REFERENCE",
+      "include": false,
+      "reason": "Version control metadata, not a working-tree source snapshot.",
+      "runtimeConnected": false,
+      "count": 3616,
+      "size": 384211526,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [],
+      "usedBy": {
+        "runtimeAfterGeneration": false,
+        "buildOrTestAfterGeneration": false,
+        "included": false
+      }
+    },
+    {
+      "path": ".runtime",
+      "type": "directory",
+      "category": "EXTERNAL_DEPENDENCY",
+      "include": false,
+      "reason": "Rebuild pinned Hermes and Python using setup:hermes; may contain runtime state.",
+      "runtimeConnected": false,
+      "count": 18164,
+      "size": 364761163,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [],
+      "usedBy": {
+        "runtimeAfterGeneration": true,
+        "buildOrTestAfterGeneration": true,
+        "included": false
+      }
+    },
+    {
+      "path": ".test-data",
+      "type": "directory",
+      "category": "PRIVATE_OR_SECRET",
+      "include": false,
+      "reason": "Database/environment or isolated runtime data; metadata only, content not read.",
+      "runtimeConnected": false,
+      "count": 41389,
+      "size": 12096636559,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [],
+      "usedBy": {
+        "runtimeAfterGeneration": false,
+        "buildOrTestAfterGeneration": true,
+        "included": false
+      }
+    },
+    {
+      "path": "artifacts",
+      "type": "directory",
+      "category": "GENERATED_OUTPUT",
+      "include": false,
+      "reason": "Generated build/runtime/evidence output. Raw trajectories and account reports are excluded.",
+      "runtimeConnected": false,
+      "count": 9769,
+      "size": 599791284,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [],
+      "usedBy": {
+        "runtimeAfterGeneration": false,
+        "buildOrTestAfterGeneration": true,
+        "included": false
+      }
+    },
+    {
+      "path": "build",
+      "type": "directory",
+      "category": "GENERATED_OUTPUT",
+      "include": false,
+      "reason": "Generated build/runtime/evidence output. Raw trajectories and account reports are excluded.",
+      "runtimeConnected": false,
+      "count": 30204,
+      "size": 616067514,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [
+        "build/icon.ico",
+        "build/icon.png"
+      ],
+      "usedBy": {
+        "runtimeAfterGeneration": false,
+        "buildOrTestAfterGeneration": true,
+        "included": false
+      }
+    },
+    {
+      "path": "dist",
+      "type": "directory",
+      "category": "GENERATED_OUTPUT",
+      "include": false,
+      "reason": "Generated build/runtime/evidence output. Raw trajectories and account reports are excluded.",
+      "runtimeConnected": false,
+      "count": 106,
+      "size": 7515748,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [],
+      "usedBy": {
+        "runtimeAfterGeneration": true,
+        "buildOrTestAfterGeneration": true,
+        "included": false
+      }
+    },
+    {
+      "path": "dist-electron",
+      "type": "directory",
+      "category": "GENERATED_OUTPUT",
+      "include": false,
+      "reason": "Generated build/runtime/evidence output. Raw trajectories and account reports are excluded.",
+      "runtimeConnected": false,
+      "count": 4,
+      "size": 4105849,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [],
+      "usedBy": {
+        "runtimeAfterGeneration": true,
+        "buildOrTestAfterGeneration": true,
+        "included": false
+      }
+    },
+    {
+      "path": "node_modules",
+      "type": "directory",
+      "category": "EXTERNAL_DEPENDENCY",
+      "include": false,
+      "reason": "Rebuild with npm ci from package-lock.json.",
+      "runtimeConnected": false,
+      "count": 17784,
+      "size": 675487172,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [],
+      "usedBy": {
+        "runtimeAfterGeneration": true,
+        "buildOrTestAfterGeneration": true,
+        "included": false
+      }
+    },
+    {
+      "path": "output",
+      "type": "directory",
+      "category": "GENERATED_OUTPUT",
+      "include": false,
+      "reason": "Generated build/runtime/evidence output. Raw trajectories and account reports are excluded.",
+      "runtimeConnected": false,
+      "count": 1,
+      "size": 460032,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [],
+      "usedBy": {
+        "runtimeAfterGeneration": false,
+        "buildOrTestAfterGeneration": false,
+        "included": false
+      }
+    },
+    {
+      "path": "release",
+      "type": "directory",
+      "category": "GENERATED_OUTPUT",
+      "include": false,
+      "reason": "Generated build/runtime/evidence output. Raw trajectories and account reports are excluded.",
+      "runtimeConnected": false,
+      "count": 20357,
+      "size": 1919400258,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [],
+      "usedBy": {
+        "runtimeAfterGeneration": false,
+        "buildOrTestAfterGeneration": true,
+        "included": false
+      }
+    },
+    {
+      "path": "scripts",
+      "type": "directory",
+      "category": "HISTORICAL_REFERENCE",
+      "include": false,
+      "reason": "Unused historical PDF generator with a hardcoded original-machine write path; not an app/build/package/test dependency.",
+      "runtimeConnected": false,
+      "count": 1,
+      "size": 42850,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [
+        "scripts/assemble-visual-audit.mjs",
+        "scripts/audit-map-coverage.mjs",
+        "scripts/audit-understanding-run.mjs",
+        "scripts/build-electron.mjs",
+        "scripts/build-official-coverage-reference.mjs",
+        "scripts/check-deepseek-balance.mjs",
+        "scripts/check-project-docs.mjs",
+        "scripts/check-theme.mjs",
+        "scripts/create-icon.py",
+        "scripts/dev.mjs",
+        "scripts/evaluate-harness.mjs",
+        "scripts/fetch-map-v2.mjs",
+        "scripts/harness-evidence.mjs",
+        "scripts/harness-recover.mjs",
+        "scripts/harness-recover.ts",
+        "scripts/harness-regression.mjs",
+        "scripts/import-map-v2.mjs",
+        "scripts/inspect.mjs",
+        "scripts/judge-live-acceptance.ts",
+        "scripts/live-acceptance-eval.ts",
+        "scripts/live-zju-deepseek-eval.ts",
+        "scripts/live-zju-deepseek-smoke.ts",
+        "scripts/map-geometry.mjs",
+        "scripts/probe-deepseek-vision.mjs",
+        "scripts/probe-luna-transport.ts",
+        "scripts/record-map-v2.mjs",
+        "scripts/run-judge-live-acceptance.mjs",
+        "scripts/run-live-acceptance-eval.mjs",
+        "scripts/run-live-zju-deepseek-eval.mjs",
+        "scripts/run-live-zju-smoke.mjs",
+        "scripts/run-luna-test.mjs",
+        "scripts/run-understanding-ablations.mjs",
+        "scripts/run-understanding-comparison.mjs",
+        "scripts/score-conversation-quality.mjs",
+        "scripts/score-harness-evaluation.mjs",
+        "scripts/setup-hermes.mjs",
+        "scripts/stage-hermes-runtime.mjs",
+        "scripts/summarize-understanding-evaluation.mjs",
+        "scripts/summarize-understanding-usage.mjs",
+        "scripts/test-environment.mjs",
+        "scripts/test-harness.mjs",
+        "scripts/test.mjs",
+        "scripts/understanding-baseline.mjs",
+        "scripts/validate-trajectories.mjs",
+        "scripts/verify-harness.mjs",
+        "scripts/verify-map-optimality.py",
+        "scripts/verify-zju-account.ts",
+        "scripts/with-deepseek-key.ps1"
+      ],
+      "usedBy": {
+        "runtimeAfterGeneration": false,
+        "buildOrTestAfterGeneration": false,
+        "included": false
+      }
+    },
+    {
+      "path": "tmp",
+      "type": "directory",
+      "category": "GENERATED_OUTPUT",
+      "include": false,
+      "reason": "Generated build/runtime/evidence output. Raw trajectories and account reports are excluded.",
+      "runtimeConnected": false,
+      "count": 33,
+      "size": 5388207,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [],
+      "usedBy": {
+        "runtimeAfterGeneration": false,
+        "buildOrTestAfterGeneration": false,
+        "included": false
+      }
+    },
+    {
+      "path": "在场-Harness-人本协作设计与Codex实施包",
+      "type": "directory",
+      "category": "HISTORICAL_REFERENCE",
+      "include": false,
+      "reason": "Historical design; retain only verified dynamic test dependencies.",
+      "runtimeConnected": false,
+      "count": 5,
+      "size": 66705,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [
+        "在场-Harness-人本协作设计与Codex实施包/在场-Harness-人本协作重构/02-人本协作架构.md",
+        "在场-Harness-人本协作设计与Codex实施包/在场-Harness-人本协作重构/04-行为验收规范.md",
+        "在场-Harness-人本协作设计与Codex实施包/在场-Harness-人本协作重构/交付一致性说明.json",
+        "在场-Harness-人本协作设计与Codex实施包/在场-Harness-人本协作重构/acceptance/trajectories.json"
+      ],
+      "usedBy": {
+        "runtimeAfterGeneration": false,
+        "buildOrTestAfterGeneration": false,
+        "included": false
+      }
+    },
+    {
+      "path": "在场-Harness-审查研究与语义重构包",
+      "type": "directory",
+      "category": "HISTORICAL_REFERENCE",
+      "include": false,
+      "reason": "Historical design; retain only verified dynamic test dependencies.",
+      "runtimeConnected": false,
+      "count": 15,
+      "size": 284883,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [],
+      "usedBy": {
+        "runtimeAfterGeneration": false,
+        "buildOrTestAfterGeneration": false,
+        "included": false
+      }
+    },
+    {
+      "path": "在场-Harness-设计与Codex实施包",
+      "type": "directory",
+      "category": "HISTORICAL_REFERENCE",
+      "include": false,
+      "reason": "Historical design; retain only verified dynamic test dependencies.",
+      "runtimeConnected": false,
+      "count": 11,
+      "size": 160246,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [
+        "在场-Harness-设计与Codex实施包/zaichang-harness-design/acceptance/README.md",
+        "在场-Harness-设计与Codex实施包/zaichang-harness-design/acceptance/scenarios.json",
+        "在场-Harness-设计与Codex实施包/zaichang-harness-design/acceptance/student-200-questions.json",
+        "在场-Harness-设计与Codex实施包/zaichang-harness-design/acceptance/traceability.json",
+        "在场-Harness-设计与Codex实施包/zaichang-harness-design/CHECKSUMS.sha256"
+      ],
+      "usedBy": {
+        "runtimeAfterGeneration": false,
+        "buildOrTestAfterGeneration": false,
+        "included": false
+      }
+    },
+    {
+      "path": "在场-手机驻留式演进-v2-研究与Codex实施包",
+      "type": "directory",
+      "category": "HISTORICAL_REFERENCE",
+      "include": false,
+      "reason": "Historical design; retain only verified dynamic test dependencies.",
+      "runtimeConnected": false,
+      "count": 9,
+      "size": 189337,
+      "owner": "Generated/runtime/private data owner; original remains in place",
+      "sha256": null,
+      "hashNotComputedReason": "Excluded file content not read or distributed; counts and sizes are metadata only.",
+      "includedExceptions": [],
+      "usedBy": {
+        "runtimeAfterGeneration": false,
+        "buildOrTestAfterGeneration": false,
+        "included": false
+      }
+    }
+  ],
+  "aggregationNote": "Included files are listed individually. Large excluded trees are complete directory-level selections with total counts/bytes; private contents are not read or hashed."
+}

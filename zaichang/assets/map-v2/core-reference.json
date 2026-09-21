@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "campus-map/core-reference/v1",
+  "retrievedAt": "2026-09-12T00:30:00+08:00",
+  "description": "核心校园对象覆盖清单。OSM 对象使用源几何；求是大道使用浙江大学当前公开 WFS 的名称锚点，未把专有 2.5D 道路面复制为可导航路段。",
+  "sources": [
+    {
+      "kind": "osm",
+      "url": "https://www.openstreetmap.org/copyright",
+      "license": "ODbL-1.0"
+    },
+    {
+      "kind": "zju-public-wfs",
+      "url": "https://map.zju.edu.cn/geoserver/wfs",
+      "layer": "IMAP:hotmap_221027",
+      "featureId": "hotmap_221027.1321",
+      "accessConstraintsObserved": "NONE",
+      "use": "名称与位置交叉核验；不复制官网 2.5D 几何或栅格底图"
+    }
+  ],
+  "landmarks": [
+    {"id":"way/161322822","name":"紫金港西田径场","aliases":["西田径场","西操场"],"source":"osm"},
+    {"id":"way/817997263","name":"东田径场","aliases":["东操场"],"source":"osm-spatial-match"},
+    {"id":"way/161417081","name":"风雨操场","aliases":[],"source":"osm"},
+    {"id":"relation/9772853","name":"中心湖","aliases":[],"source":"osm"},
+    {"id":"relation/7927357","name":"启真湖","aliases":[],"source":"osm"},
+    {"id":"way/322644186","name":"望月公寓","aliases":["桂花苑","望月公寓（桂花苑）"],"source":"osm-user-confirmed-alias"},
+    {"id":"node/3300077166","name":"紫金港校区东大门","aliases":["东大门"],"source":"osm"},
+    {"id":"node/12961372149","name":"紫金港校区西1门","aliases":["西1门"],"source":"osm"},
+    {"id":"node/12961372151","name":"紫金港校区西2门","aliases":["西2门"],"source":"osm"},
+    {"id":"official/hotmap_221027.1321","name":"求是大道","aliases":["求是大道"],"source":"zju-public-wfs","coordinate":[120.076650370937,30.30512950973]}
+  ]
+}

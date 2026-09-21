@@ -1,0 +1,27 @@
+{
+  "sourceScan": "no_real_credential_candidates",
+  "reviewedSyntheticLiteralPaths": [
+    "tests/connection.mjs",
+    "tests/harness/desktop-entry.mjs"
+  ],
+  "reviewedMaliciousFixturePath": "legacy acceptance/scenarios.json synthetic unregistered-plugin path",
+  "excludedMachineSpecificGenerator": "scripts/build-harness-pdf.py",
+  "externalAuthenticationReadOrCopied": false,
+  "screenshots": "five newly generated synthetic-data screenshots inspected",
+  "originalIntegrity": {
+    "checkedAt": "2026-09-15T11:38:01.900504+08:00",
+    "originalWriteOperationsPerformed": 0,
+    "includedOriginalFilesChecked": 248,
+    "originalSourceHashChanges": [],
+    "snapshotSourceHashChanges": [],
+    "cleanValidationSourceHashChanges": [],
+    "gitStatusIdentical": true,
+    "gitStatusBeforeSha256": "e0a90f7cad55400fc0372a0151c9fd172394f8c0d708de583dee33e43498b83d",
+    "gitStatusAfterSha256": "e0a90f7cad55400fc0372a0151c9fd172394f8c0d708de583dee33e43498b83d",
+    "privateOrGeneratedContentsHashed": false,
+    "limitation": "No claim of byte-wise verification of excluded private databases, caches, or active-process outputs; those contents were not read."
+  },
+  "scopeLimit": "Automated patterns and contextual review are not proof of absence of every possible undisclosed secret; private external stores were excluded without reading contents.",
+  "highEntropyReview": "The second literal is explicitly synthetic and used only after fetch is replaced with a fixed HTTP401 mock.",
+  "pngMetadataScan": "No tEXt/zTXt/iTXt/eXIf chunks in the included icon.png and five fresh screenshots."
+}

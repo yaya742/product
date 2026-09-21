@@ -1,0 +1,4477 @@
+{
+  "schemaVersion": "campus-map/official-coverage-reference/v1",
+  "retrievedAt": "2026-09-11T18:00:59.596Z",
+  "source": "https://map.zju.edu.cn/geoserver/wfs",
+  "layer": "IMAP:hotmap_221027",
+  "projection": "EPSG:32651 transformed from current public map 2.5D coordinates",
+  "note": "Names and point coordinates are used for coverage cross-reference and search aliases only. Official 2.5D polygons are not copied into the renderer or walking graph.",
+  "records": [
+    {
+      "officialId": "hotmap_221027.709",
+      "name": "蓝田三幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07616149150752,
+        30.31191063555997
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 26.209373152558648
+    },
+    {
+      "officialId": "hotmap_221027.710",
+      "name": "樱花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08612787548566,
+        30.313120199839574
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.711",
+      "name": "紫金港食堂（东区）",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07973505478101,
+        30.31030676305992
+      ],
+      "mappedPlaceId": "way/161322492",
+      "nearestDistanceM": 7.124989634460311
+    },
+    {
+      "officialId": "hotmap_221027.712",
+      "name": "亚运比赛馆",
+      "displayLevel": 7,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08442315446013,
+        30.308453919237316
+      ],
+      "mappedPlaceId": "way/161417065",
+      "nearestDistanceM": 4.883041442395683
+    },
+    {
+      "officialId": "hotmap_221027.713",
+      "name": "港湾家园",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.07999288311711,
+        30.314270701318534
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.714",
+      "name": "紫云四幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07816505154364,
+        30.310284918349105
+      ],
+      "mappedPlaceId": "way/161393434",
+      "nearestDistanceM": 10.392175315113944
+    },
+    {
+      "officialId": "hotmap_221027.715",
+      "name": "碧峰四幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07639929099358,
+        30.310038230811156
+      ],
+      "mappedPlaceId": "way/288874064",
+      "nearestDistanceM": 15.751820510698373
+    },
+    {
+      "officialId": "hotmap_221027.716",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0791928440913,
+        30.312883133195566
+      ],
+      "mappedPlaceId": "way/982026093",
+      "nearestDistanceM": 19.388669304672597
+    },
+    {
+      "officialId": "hotmap_221027.717",
+      "name": "风雨操场",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.08612816435092,
+        30.308662192615245
+      ],
+      "mappedPlaceId": "way/161417081",
+      "nearestDistanceM": 5.577009288113628
+    },
+    {
+      "officialId": "hotmap_221027.718",
+      "name": "茶花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08560587494951,
+        30.316273328659793
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.719",
+      "name": "翠柏一幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.08117780127448,
+        30.311463932900832
+      ],
+      "mappedPlaceId": "way/408887340",
+      "nearestDistanceM": 13.128502679221688
+    },
+    {
+      "officialId": "hotmap_221027.720",
+      "name": "丹阳四幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07874688691234,
+        30.311815391757282
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 44.98308495323751
+    },
+    {
+      "officialId": "hotmap_221027.721",
+      "name": "留学生公寓A楼",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.08211686017432,
+        30.31169528212088
+      ],
+      "mappedPlaceId": "way/306105478",
+      "nearestDistanceM": 18.536068846503177
+    },
+    {
+      "officialId": "hotmap_221027.722",
+      "name": "茶花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08578959348702,
+        30.315116231164758
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.723",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08142347343677,
+        30.313202193334043
+      ],
+      "mappedPlaceId": "way/982026109",
+      "nearestDistanceM": 19.429374162730248
+    },
+    {
+      "officialId": "hotmap_221027.724",
+      "name": "桂花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08505103862105,
+        30.31192973124427
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.725",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08218884495275,
+        30.31344378836039
+      ],
+      "mappedPlaceId": "way/982026112",
+      "nearestDistanceM": 18.538643610890823
+    },
+    {
+      "officialId": "hotmap_221027.726",
+      "name": "港湾家园29幢（大学生创业实训基地）",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.07743670122576,
+        30.31289359297161
+      ],
+      "mappedPlaceId": "way/1245558458",
+      "nearestDistanceM": 7.702222390606111
+    },
+    {
+      "officialId": "hotmap_221027.727",
+      "name": "游泳馆",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.08399990486701,
+        30.310188258925976
+      ],
+      "mappedPlaceId": "way/519369449",
+      "nearestDistanceM": 16.883725592523408
+    },
+    {
+      "officialId": "hotmap_221027.728",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0785044491531,
+        30.31369394533662
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.729",
+      "name": "金秀楼（校医院）",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.08371718753016,
+        30.311471311930596
+      ],
+      "mappedPlaceId": "way/237812468",
+      "nearestDistanceM": 9.50194046070221
+    },
+    {
+      "officialId": "hotmap_221027.730",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08176703055413,
+        30.31504135273372
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.731",
+      "name": "青溪一幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.08012638341233,
+        30.311290245081263
+      ],
+      "mappedPlaceId": "way/306105489",
+      "nearestDistanceM": 13.396581183137252
+    },
+    {
+      "officialId": "hotmap_221027.732",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08121653627349,
+        30.314834852557816
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.733",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08228619395459,
+        30.315148869797596
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.734",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0807454569362,
+        30.31454153304512
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.735",
+      "name": "翠柏四幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.08094789992703,
+        30.312568634495907
+      ],
+      "mappedPlaceId": "way/408887316",
+      "nearestDistanceM": 12.501579953744018
+    },
+    {
+      "officialId": "hotmap_221027.736",
+      "name": "青溪四幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07991374719371,
+        30.312401608998076
+      ],
+      "mappedPlaceId": "way/306105490",
+      "nearestDistanceM": 22.71456861641544
+    },
+    {
+      "officialId": "hotmap_221027.737",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0779836469707,
+        30.313457824547626
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.738",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08072079893448,
+        30.31303144528526
+      ],
+      "mappedPlaceId": "way/982026097",
+      "nearestDistanceM": 15.755246767822596
+    },
+    {
+      "officialId": "hotmap_221027.739",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.07998867614708,
+        30.312930335676775
+      ],
+      "mappedPlaceId": "way/982026095",
+      "nearestDistanceM": 16.565793487815977
+    },
+    {
+      "officialId": "hotmap_221027.740",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.07903918668352,
+        30.31386830944566
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.741",
+      "name": "留学生公寓B楼",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.08173225393568,
+        30.31236431158233
+      ],
+      "mappedPlaceId": "way/306105479",
+      "nearestDistanceM": 22.13369846045808
+    },
+    {
+      "officialId": "hotmap_221027.742",
+      "name": "看台",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.07766011000761,
+        30.30744378715438
+      ],
+      "mappedPlaceId": "way/255623996",
+      "nearestDistanceM": 9.516940109863057
+    },
+    {
+      "officialId": "hotmap_221027.743",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08145687116418,
+        30.314058590270072
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.744",
+      "name": "机器人与智能装备",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08614170170307,
+        30.309403544069937
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.745",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08227020529964,
+        30.31430619241111
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.746",
+      "name": "青溪二幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.08012169993307,
+        30.31168417927123
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.747",
+      "name": "桂花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08496515726662,
+        30.312312552509933
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.748",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08298476435665,
+        30.31551123461398
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.749",
+      "name": "青溪三幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.08005439949231,
+        30.312045332565972
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 35.264954067132074
+    },
+    {
+      "officialId": "hotmap_221027.750",
+      "name": "翠柏三幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.08096846504446,
+        30.312186635233488
+      ],
+      "mappedPlaceId": "way/408887347",
+      "nearestDistanceM": 11.886035074690188
+    },
+    {
+      "officialId": "hotmap_221027.751",
+      "name": "樱花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08539277928224,
+        30.313316536559032
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.752",
+      "name": "桃花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0848294385301,
+        30.31473676328734
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.753",
+      "name": "樱花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08534697018597,
+        30.313610078925773
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.754",
+      "name": "桃花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08489917658088,
+        30.315042580812314
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.755",
+      "name": "桃花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08409159533142,
+        30.315218240650793
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.756",
+      "name": "桃花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08411404518287,
+        30.314929735761133
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.757",
+      "name": "樱花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08545446647184,
+        30.313034282320146
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.758",
+      "name": "樱花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08553032713579,
+        30.312766491939968
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.759",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08062287875441,
+        30.31360750843224
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 34.14267249967549
+    },
+    {
+      "officialId": "hotmap_221027.760",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.07970956831551,
+        30.313478928308612
+      ],
+      "mappedPlaceId": "way/982026102",
+      "nearestDistanceM": 16.842594797735803
+    },
+    {
+      "officialId": "hotmap_221027.761",
+      "name": "丹阳二幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07878167137397,
+        30.311070753560898
+      ],
+      "mappedPlaceId": "way/305829558",
+      "nearestDistanceM": 9.325317199844655
+    },
+    {
+      "officialId": "hotmap_221027.762",
+      "name": "丹阳六幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07856900626415,
+        30.312185933630158
+      ],
+      "mappedPlaceId": "way/306105482",
+      "nearestDistanceM": 11.232153501573585
+    },
+    {
+      "officialId": "hotmap_221027.763",
+      "name": "桂花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08485774637278,
+        30.312603888697623
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.764",
+      "name": "丹阳一幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07929208280028,
+        30.3111423716555
+      ],
+      "mappedPlaceId": "way/305829557",
+      "nearestDistanceM": 11.380371013728931
+    },
+    {
+      "officialId": "hotmap_221027.765",
+      "name": "丹阳五幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07907938285993,
+        30.31225724746127
+      ],
+      "mappedPlaceId": "way/306105481",
+      "nearestDistanceM": 10.999475320876542
+    },
+    {
+      "officialId": "hotmap_221027.767",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0826975129645,
+        30.313832708765005
+      ],
+      "mappedPlaceId": "way/982026113",
+      "nearestDistanceM": 15.441336266863198
+    },
+    {
+      "officialId": "hotmap_221027.768",
+      "name": "桃花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0840741597879,
+        30.3143335582388
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.769",
+      "name": "桂花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08461831720415,
+        30.313991329552742
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.770",
+      "name": "樱花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0853852737235,
+        30.313924016089235
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.771",
+      "name": "桃花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08467133337959,
+        30.31441307471375
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.772",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08304418501459,
+        30.31455369469524
+      ],
+      "mappedPlaceId": "way/982026115",
+      "nearestDistanceM": 13.451501806920383
+    },
+    {
+      "officialId": "hotmap_221027.773",
+      "name": "桃花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08405875373982,
+        30.314629451563334
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.774",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0833829742844,
+        30.31357233555519
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.775",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0829704327892,
+        30.31417965193503
+      ],
+      "mappedPlaceId": "way/982026114",
+      "nearestDistanceM": 15.093367521389052
+    },
+    {
+      "officialId": "hotmap_221027.776",
+      "name": "桃花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08480719656878,
+        30.315328151666222
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.778",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08296943676048,
+        30.314970536625253
+      ],
+      "mappedPlaceId": "way/982026116",
+      "nearestDistanceM": 13.096435771586696
+    },
+    {
+      "officialId": "hotmap_221027.779",
+      "name": "桂花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08475703529807,
+        30.31316068709968
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.780",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08361369223248,
+        30.313040349032416
+      ],
+      "mappedPlaceId": "way/982001090",
+      "nearestDistanceM": 7.04021173131128
+    },
+    {
+      "officialId": "hotmap_221027.781",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08365499692512,
+        30.312667291252275
+      ],
+      "mappedPlaceId": "way/982001088",
+      "nearestDistanceM": 6.014937048565634
+    },
+    {
+      "officialId": "hotmap_221027.782",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08369423479728,
+        30.312311373602316
+      ],
+      "mappedPlaceId": "way/982001089",
+      "nearestDistanceM": 1.012997427007829
+    },
+    {
+      "officialId": "hotmap_221027.783",
+      "name": "桂花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08468015808289,
+        30.313432677061797
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.784",
+      "name": "桂花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08459334754613,
+        30.313699750380792
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.785",
+      "name": "桂花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0847571608385,
+        30.312874722655202
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.786",
+      "name": "教学楼",
+      "displayLevel": 7,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08479336221086,
+        30.316356401062038
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.787",
+      "name": "桂花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08435350601228,
+        30.312127502116606
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.788",
+      "name": "桂花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08412045831555,
+        30.31359276431238
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.789",
+      "name": "桂花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0842121640602,
+        30.312999056517786
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.790",
+      "name": "桂花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08424729417396,
+        30.312706374141168
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.791",
+      "name": "桂花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08408560964193,
+        30.313881351052686
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.793",
+      "name": "桂花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08419347539035,
+        30.313300829943664
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.794",
+      "name": "桂花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08429938898256,
+        30.31241672244364
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.795",
+      "name": "桃花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08429375507616,
+        30.315548958495153
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.797",
+      "name": "桃花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08471493648173,
+        30.315628986254936
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.798",
+      "name": "茶花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0850018997298,
+        30.31608491035896
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.799",
+      "name": "樱花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08558186001541,
+        30.312487784491086
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.802",
+      "name": "茶花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08515779803244,
+        30.315797228713038
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.803",
+      "name": "教学楼",
+      "displayLevel": 7,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07649799433655,
+        30.308438095091088
+      ],
+      "mappedPlaceId": "way/252088095",
+      "nearestDistanceM": 23.69336623046809
+    },
+    {
+      "officialId": "hotmap_221027.807",
+      "name": "教学楼12",
+      "displayLevel": 7,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08465667463796,
+        30.31606833512606
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.808",
+      "name": "教学楼",
+      "displayLevel": 7,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08191736900015,
+        30.31265806155908
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.813",
+      "name": "教学楼",
+      "displayLevel": 7,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07795882768939,
+        30.308478091184927
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.814",
+      "name": "教学楼12",
+      "displayLevel": 7,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08541031223012,
+        30.316720198509476
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.816",
+      "name": "教学楼",
+      "displayLevel": 7,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07596587610917,
+        30.31151367072098
+      ],
+      "mappedPlaceId": "way/305829554",
+      "nearestDistanceM": 23.070382756330435
+    },
+    {
+      "officialId": "hotmap_221027.819",
+      "name": "教学楼",
+      "displayLevel": 7,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.0767476207874,
+        30.31259329701857
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.821",
+      "name": "农生环大楼C座（农业生命环境学部、交叉平台）",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08686798900884,
+        30.30110259723265
+      ],
+      "mappedPlaceId": "way/504974816",
+      "nearestDistanceM": 21.502902012170104
+    },
+    {
+      "officialId": "hotmap_221027.823",
+      "name": "西一教学楼",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08005287071714,
+        30.30487800222682
+      ],
+      "mappedPlaceId": "way/161416716",
+      "nearestDistanceM": 19.307466158000796
+    },
+    {
+      "officialId": "hotmap_221027.824",
+      "name": "蒙民伟楼",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08596462141558,
+        30.306072662628747
+      ],
+      "mappedPlaceId": "way/255623995",
+      "nearestDistanceM": 9.310181715465061
+    },
+    {
+      "officialId": "hotmap_221027.825",
+      "name": "安中大楼",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07850628557219,
+        30.304070600479044
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.826",
+      "name": "建工试验厅",
+      "displayLevel": 3,
+      "entityType": "实验室",
+      "coordinate": [
+        120.07744053558221,
+        30.304151703149387
+      ],
+      "mappedPlaceId": "way/411343684",
+      "nearestDistanceM": 10.510699338332948
+    },
+    {
+      "officialId": "hotmap_221027.827",
+      "name": "生科楼",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08523143009056,
+        30.29880644586295
+      ],
+      "mappedPlaceId": "way/504974784",
+      "nearestDistanceM": 9.164343999241543
+    },
+    {
+      "officialId": "hotmap_221027.828",
+      "name": "纳米楼",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.08397563786302,
+        30.299895460487306
+      ],
+      "mappedPlaceId": "way/411343688",
+      "nearestDistanceM": 20.47133466146087
+    },
+    {
+      "officialId": "hotmap_221027.829",
+      "name": "医学专业图书馆",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.08260915873596,
+        30.298491159010194
+      ],
+      "mappedPlaceId": "way/448480118",
+      "nearestDistanceM": 6.773744488817025
+    },
+    {
+      "officialId": "hotmap_221027.830",
+      "name": "图书信息A楼（基础图书馆）",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.0837882182948,
+        30.306177068239005
+      ],
+      "mappedPlaceId": "way/237812466",
+      "nearestDistanceM": 10.252932368169796
+    },
+    {
+      "officialId": "hotmap_221027.831",
+      "name": "药学楼",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08117378911334,
+        30.29898002836942
+      ],
+      "mappedPlaceId": "way/255623986",
+      "nearestDistanceM": 10.775115039495214
+    },
+    {
+      "officialId": "hotmap_221027.832",
+      "name": "白沙四幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.08221748281413,
+        30.310701832100044
+      ],
+      "mappedPlaceId": "way/408887342",
+      "nearestDistanceM": 11.878848664531517
+    },
+    {
+      "officialId": "hotmap_221027.833",
+      "name": "白沙二幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.08148631102856,
+        30.310705633349787
+      ],
+      "mappedPlaceId": "way/408887333",
+      "nearestDistanceM": 8.694866810428241
+    },
+    {
+      "officialId": "hotmap_221027.834",
+      "name": "海洋与计算中心楼",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07855194506575,
+        30.304827726571407
+      ],
+      "mappedPlaceId": "way/1073555298",
+      "nearestDistanceM": 18.33776993659782
+    },
+    {
+      "officialId": "hotmap_221027.835",
+      "name": "海洋试验厅",
+      "displayLevel": 5,
+      "entityType": "实验室",
+      "coordinate": [
+        120.07742626088725,
+        30.305214581006723
+      ],
+      "mappedPlaceId": "way/411343685",
+      "nearestDistanceM": 12.547341550707324
+    },
+    {
+      "officialId": "hotmap_221027.836",
+      "name": "东二教学楼",
+      "displayLevel": 5,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08490252050548,
+        30.303862973826877
+      ],
+      "mappedPlaceId": "way/161325385",
+      "nearestDistanceM": 18.7099902675382
+    },
+    {
+      "officialId": "hotmap_221027.837",
+      "name": "校友楼",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08369418047586,
+        30.300562494438196
+      ],
+      "mappedPlaceId": "way/411343689",
+      "nearestDistanceM": 7.661034416649411
+    },
+    {
+      "officialId": "hotmap_221027.838",
+      "name": "西三教学楼",
+      "displayLevel": 5,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08119023871363,
+        30.30423922664749
+      ],
+      "mappedPlaceId": "way/237810386",
+      "nearestDistanceM": 4.193356434575213
+    },
+    {
+      "officialId": "hotmap_221027.839",
+      "name": "图书信息C楼",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08317625250976,
+        30.306153349644912
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.840",
+      "name": "动物中心楼",
+      "displayLevel": 3,
+      "entityType": "实验室",
+      "coordinate": [
+        120.08137829009563,
+        30.29794054611505
+      ],
+      "mappedPlaceId": "way/255623987",
+      "nearestDistanceM": 13.528719754624897
+    },
+    {
+      "officialId": "hotmap_221027.841",
+      "name": "学生综合楼",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08138998691732,
+        30.31032116665522
+      ],
+      "mappedPlaceId": "way/408887361",
+      "nearestDistanceM": 8.775059493443555
+    },
+    {
+      "officialId": "hotmap_221027.842",
+      "name": "动力中心",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.08395096546104,
+        30.298723043669327
+      ],
+      "mappedPlaceId": "way/415697412",
+      "nearestDistanceM": 4.587134834274003
+    },
+    {
+      "officialId": "hotmap_221027.847",
+      "name": "音乐厅",
+      "displayLevel": 5,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08074686277035,
+        30.305160622668208
+      ],
+      "mappedPlaceId": "way/306107352",
+      "nearestDistanceM": 3.574911510401697
+    },
+    {
+      "officialId": "hotmap_221027.850",
+      "name": "教工宿舍",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.06419972210634,
+        30.304097086151756
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.858",
+      "name": "教学楼",
+      "displayLevel": 7,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07789164594772,
+        30.305176566534865
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.861",
+      "name": "教学楼",
+      "displayLevel": 7,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07771031120907,
+        30.30466756412435
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.867",
+      "name": "紫金港校区求是物业苗圃玻璃房",
+      "displayLevel": 7,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08669641590241,
+        30.301858862591885
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.871",
+      "name": "南华园",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08130639898431,
+        30.300315322452175
+      ],
+      "mappedPlaceId": "way/252581201",
+      "nearestDistanceM": 13.323406170085308
+    },
+    {
+      "officialId": "hotmap_221027.873",
+      "name": "教学楼",
+      "displayLevel": 7,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07742308755202,
+        30.299978724136864
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.881",
+      "name": "教学楼",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.0775016955753,
+        30.29981533462018
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.888",
+      "name": "东四教学楼",
+      "displayLevel": 5,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08421487873065,
+        30.30186977811139
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.890",
+      "name": "东五教学楼",
+      "displayLevel": 5,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08632057999164,
+        30.304987148415524
+      ],
+      "mappedPlaceId": "way/232500019",
+      "nearestDistanceM": 13.20991883921524
+    },
+    {
+      "officialId": "hotmap_221027.893",
+      "name": "东六教学楼",
+      "displayLevel": 5,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08666004994139,
+        30.30352085246711
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.894",
+      "name": "西部发展研究院大楼",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08271303202075,
+        30.31274154294912
+      ],
+      "mappedPlaceId": "way/237812469",
+      "nearestDistanceM": 11.123150838639404
+    },
+    {
+      "officialId": "hotmap_221027.895",
+      "name": "桂花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08446667556328,
+        30.311747363723345
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.896",
+      "name": "樱花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08568953165054,
+        30.31212532644005
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.897",
+      "name": "樱花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08624552964658,
+        30.312237520749488
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.898",
+      "name": "樱花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08622701359802,
+        30.312557381381374
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.899",
+      "name": "教学楼",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0859453875384,
+        30.31403130738112
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.900",
+      "name": "樱花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08604834597182,
+        30.313706752031703
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.901",
+      "name": "樱花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08608199237365,
+        30.31340150390399
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.902",
+      "name": "樱花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08617889585308,
+        30.312842147446393
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.903",
+      "name": "茶花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08585559477885,
+        30.31458149579379
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.904",
+      "name": "茶花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08583246442242,
+        30.31483776635551
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.905",
+      "name": "茶花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08568958122135,
+        30.31541705884633
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.906",
+      "name": "茶花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08567331475639,
+        30.31568349269098
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.907",
+      "name": "茶花苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08564466799656,
+        30.31596540115169
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.908",
+      "name": "港湾家园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0784293904802,
+        30.312776090044277
+      ],
+      "mappedPlaceId": "way/982026091",
+      "nearestDistanceM": 23.140990328441514
+    },
+    {
+      "officialId": "hotmap_221027.909",
+      "name": "医学院科研楼辅楼",
+      "displayLevel": 7,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08030315845018,
+        30.298267712279856
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.910",
+      "name": "医学综合楼",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.0797231019234,
+        30.299121973862214
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.911",
+      "name": "农生环大楼A座（农学院）",
+      "displayLevel": 7,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08687417200703,
+        30.298742563403223
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.912",
+      "name": "农生环大楼B座（环资学院）",
+      "displayLevel": 7,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08661120152745,
+        30.299899009450407
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.913",
+      "name": "农生环大楼D座（生工食品学院）",
+      "displayLevel": 7,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08584016659088,
+        30.30080502179183
+      ],
+      "mappedPlaceId": "way/504974817",
+      "nearestDistanceM": 23.148790948004994
+    },
+    {
+      "officialId": "hotmap_221027.914",
+      "name": "农生环大楼E座（动物科学学院）",
+      "displayLevel": 7,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08491486178592,
+        30.300151170690526
+      ],
+      "mappedPlaceId": "way/411343678",
+      "nearestDistanceM": 8.503573836261987
+    },
+    {
+      "officialId": "hotmap_221027.915",
+      "name": "校医院2号楼",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08372003876882,
+        30.311824334886914
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.916",
+      "name": "白沙三幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.08224210781279,
+        30.31109954937983
+      ],
+      "mappedPlaceId": "way/408887320",
+      "nearestDistanceM": 13.595050301232753
+    },
+    {
+      "officialId": "hotmap_221027.918",
+      "name": "白沙一幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.08143141395814,
+        30.311053879030688
+      ],
+      "mappedPlaceId": "way/306105473",
+      "nearestDistanceM": 11.582862829013711
+    },
+    {
+      "officialId": "hotmap_221027.919",
+      "name": "翠柏二幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.08102756113732,
+        30.311834998000087
+      ],
+      "mappedPlaceId": "way/408887350",
+      "nearestDistanceM": 14.174788670410246
+    },
+    {
+      "officialId": "hotmap_221027.920",
+      "name": "丹阳三幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07881774675309,
+        30.31145168775595
+      ],
+      "mappedPlaceId": "way/306105480",
+      "nearestDistanceM": 11.37564334931333
+    },
+    {
+      "officialId": "hotmap_221027.921",
+      "name": "紫云二幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07758911593729,
+        30.310480658334637
+      ],
+      "mappedPlaceId": "way/161393402",
+      "nearestDistanceM": 11.273898911638847
+    },
+    {
+      "officialId": "hotmap_221027.922",
+      "name": "紫云三幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07809419448789,
+        30.310599769734548
+      ],
+      "mappedPlaceId": "way/161393431",
+      "nearestDistanceM": 12.545264446937134
+    },
+    {
+      "officialId": "hotmap_221027.923",
+      "name": "紫云五幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07821648665625,
+        30.30995534049195
+      ],
+      "mappedPlaceId": "way/161393432",
+      "nearestDistanceM": 8.66791132635075
+    },
+    {
+      "officialId": "hotmap_221027.924",
+      "name": "紫云一幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.0776841279789,
+        30.309941077657808
+      ],
+      "mappedPlaceId": "way/161393397",
+      "nearestDistanceM": 14.960155532221458
+    },
+    {
+      "officialId": "hotmap_221027.925",
+      "name": "碧峰一幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07698788804532,
+        30.30982681307413
+      ],
+      "mappedPlaceId": "way/288874062",
+      "nearestDistanceM": 13.962121137014115
+    },
+    {
+      "officialId": "hotmap_221027.926",
+      "name": "碧峰二幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07686543044791,
+        30.31036355120089
+      ],
+      "mappedPlaceId": "way/288874061",
+      "nearestDistanceM": 12.791344069166124
+    },
+    {
+      "officialId": "hotmap_221027.927",
+      "name": "碧峰三幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07633714390433,
+        30.310357874919568
+      ],
+      "mappedPlaceId": "way/288874065",
+      "nearestDistanceM": 15.778556506910746
+    },
+    {
+      "officialId": "hotmap_221027.928",
+      "name": "碧峰五幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07646573033716,
+        30.309706874309214
+      ],
+      "mappedPlaceId": "way/288874063",
+      "nearestDistanceM": 13.272386410239783
+    },
+    {
+      "officialId": "hotmap_221027.929",
+      "name": "蓝田五幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07713099486195,
+        30.310851383344662
+      ],
+      "mappedPlaceId": "way/305829555",
+      "nearestDistanceM": 11.54974378404161
+    },
+    {
+      "officialId": "hotmap_221027.930",
+      "name": "蓝田六幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07779579240201,
+        30.3113809774797
+      ],
+      "mappedPlaceId": "way/305829556",
+      "nearestDistanceM": 20.727912332702125
+    },
+    {
+      "officialId": "hotmap_221027.931",
+      "name": "蓝田一幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07765652433523,
+        30.312107522623034
+      ],
+      "mappedPlaceId": "way/237808342",
+      "nearestDistanceM": 8.204152711984303
+    },
+    {
+      "officialId": "hotmap_221027.932",
+      "name": "蓝田二幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07678638266466,
+        30.312464691818345
+      ],
+      "mappedPlaceId": "way/543883197",
+      "nearestDistanceM": 15.628432051901958
+    },
+    {
+      "officialId": "hotmap_221027.933",
+      "name": "蓝田四幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07629745542283,
+        30.311180433377935
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 32.84226943112943
+    },
+    {
+      "officialId": "hotmap_221027.934",
+      "name": "紫金港剧场",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.08101849823203,
+        30.30637913466598
+      ],
+      "mappedPlaceId": "way/232499325",
+      "nearestDistanceM": 23.415259742826027
+    },
+    {
+      "officialId": "hotmap_221027.935",
+      "name": "月牙楼",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.08155221403089,
+        30.307565788519177
+      ],
+      "mappedPlaceId": "way/411343683",
+      "nearestDistanceM": 21.981674933665925
+    },
+    {
+      "officialId": "hotmap_221027.936",
+      "name": "咏曼阁（临水报告厅）",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.08352048876863,
+        30.304040743153227
+      ],
+      "mappedPlaceId": "way/161325273",
+      "nearestDistanceM": 7.442891134163457
+    },
+    {
+      "officialId": "hotmap_221027.937",
+      "name": "东一教学楼",
+      "displayLevel": 5,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08420701648818,
+        30.304900035376594
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 27.96567653154012
+    },
+    {
+      "officialId": "hotmap_221027.939",
+      "name": "东三教学楼",
+      "displayLevel": 5,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08426846706946,
+        30.30298354142779
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 47.08056354664003
+    },
+    {
+      "officialId": "hotmap_221027.943",
+      "name": "西二教学楼",
+      "displayLevel": 5,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.0800186250335,
+        30.303970965757227
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 35.328921067040675
+    },
+    {
+      "officialId": "hotmap_221027.946",
+      "name": "西四教学楼",
+      "displayLevel": 5,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.08034057693656,
+        30.302673861966248
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 34.314535339056036
+    },
+    {
+      "officialId": "hotmap_221027.950",
+      "name": "化学实验中心（周厚复楼）",
+      "displayLevel": 3,
+      "entityType": "实验室",
+      "coordinate": [
+        120.07867909920563,
+        30.30139929125083
+      ],
+      "mappedPlaceId": "way/255623998",
+      "nearestDistanceM": 5.435403095966369
+    },
+    {
+      "officialId": "hotmap_221027.951",
+      "name": "生物实验中心",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07824011388614,
+        30.30017077234653
+      ],
+      "mappedPlaceId": "way/255623997",
+      "nearestDistanceM": 14.785131948851848
+    },
+    {
+      "officialId": "hotmap_221027.952",
+      "name": "工程训练（金工）中心",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07779451780559,
+        30.302009629506994
+      ],
+      "mappedPlaceId": "way/252581090",
+      "nearestDistanceM": 3.08319240169063
+    },
+    {
+      "officialId": "hotmap_221027.955",
+      "name": "东田径场",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.07844035999419,
+        30.307555785161835
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.956",
+      "name": "西田径场",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.07701129441038,
+        30.3073598042776
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.957",
+      "name": "篮球场",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.07779669212394,
+        30.30905297928131
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.958",
+      "name": "篮球场",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0786040790976,
+        30.30527592745833
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.959",
+      "name": "羽毛球场",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.07792256765177,
+        30.305706799423593
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.960",
+      "name": "牌坊",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08609669295458,
+        30.31432526594639
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.961",
+      "name": "东二门",
+      "displayLevel": 5,
+      "entityType": null,
+      "coordinate": [
+        120.08715017909287,
+        30.307100410189133
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.963",
+      "name": "紫金港校区北门门卫房",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0844165066108,
+        30.31141429675555
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.993",
+      "name": "阳明桥",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08306511917316,
+        30.306982451875765
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1074",
+      "name": "竺可桢像",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08223187503853,
+        30.307111566259884
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1075",
+      "name": "宜山环路",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08203093641417,
+        30.306818257859582
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1076",
+      "name": "迪臣路",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.07936492243654,
+        30.303946010039265
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1077",
+      "name": "迪臣路",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.07926615334829,
+        30.30694464388565
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1078",
+      "name": "遵义西路",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08256243637788,
+        30.29925772165174
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1079",
+      "name": "紫荆花路",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08775950149335,
+        30.30075675864718
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1080",
+      "name": "余杭塘路",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08409894864091,
+        30.297122807326623
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1081",
+      "name": "藕舫路",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08318560888209,
+        30.30931599576008
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1082",
+      "name": "泰和路",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.08163050166814,
+        30.312801134481596
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1083",
+      "name": "留祥路",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.07921230385854,
+        30.31498996556448
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1084",
+      "name": "万物母气鼎",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0833084144209,
+        30.3001928495361
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1135",
+      "name": "南一门",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07687945259444,
+        30.297677862682416
+      ],
+      "mappedPlaceId": "way/519369434",
+      "nearestDistanceM": 9.757986213978901
+    },
+    {
+      "officialId": "hotmap_221027.1136",
+      "name": "研究生教育综合楼",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.07560641449697,
+        30.29795729040727
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 35.46733243477945
+    },
+    {
+      "officialId": "hotmap_221027.1137",
+      "name": "澄月2幢（研究生宿舍2幢）",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07553763241785,
+        30.298580840336367
+      ],
+      "mappedPlaceId": "way/703248080",
+      "nearestDistanceM": 18.40526847347199
+    },
+    {
+      "officialId": "hotmap_221027.1138",
+      "name": "澄月学园6幢（留学生宿舍）",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07371423028418,
+        30.298340287058952
+      ],
+      "mappedPlaceId": "way/703248092",
+      "nearestDistanceM": 18.765697238858436
+    },
+    {
+      "officialId": "hotmap_221027.1139",
+      "name": "成均苑3幢（创B大楼）",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.0759328501423,
+        30.30018456676898
+      ],
+      "mappedPlaceId": "relation/19301440",
+      "nearestDistanceM": 24.75992068079144
+    },
+    {
+      "officialId": "hotmap_221027.1140",
+      "name": "成均苑4幢（人文大楼）",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07510801820698,
+        30.300578200466596
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 29.808056358186263
+    },
+    {
+      "officialId": "hotmap_221027.1141",
+      "name": "成均苑7幢（经济大楼）",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07383212449612,
+        30.30052003223118
+      ],
+      "mappedPlaceId": "way/703251442",
+      "nearestDistanceM": 19.9904481436184
+    },
+    {
+      "officialId": "hotmap_221027.1143",
+      "name": "海纳苑5-7幢（化学大楼）",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.06979427387674,
+        30.302541406188208
+      ],
+      "mappedPlaceId": "way/703251464",
+      "nearestDistanceM": 11.71526969064915
+    },
+    {
+      "officialId": "hotmap_221027.1144",
+      "name": "海纳苑1幢（地科大楼）",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.06970671940307,
+        30.300506288922115
+      ],
+      "mappedPlaceId": "way/703251460",
+      "nearestDistanceM": 11.76932248788646
+    },
+    {
+      "officialId": "hotmap_221027.1145",
+      "name": "海纳苑8幢（物理大楼）",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.0691343382086,
+        30.301563896019314
+      ],
+      "mappedPlaceId": "way/703251461",
+      "nearestDistanceM": 12.955486340638739
+    },
+    {
+      "officialId": "hotmap_221027.1146",
+      "name": "海纳苑（理工创新研究大楼）（在建）/海纳苑9幢（物理学院）",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.06871871970009,
+        30.302466630323178
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1147",
+      "name": "玉湖学园7舍",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.06785651417229,
+        30.30114946377123
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 38.69396972683946
+    },
+    {
+      "officialId": "hotmap_221027.1148",
+      "name": "玉湖学园5舍",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.06638789634185,
+        30.301147618858078
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1149",
+      "name": "玉湖1幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.06649018165315,
+        30.302646668804005
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1150",
+      "name": "玉湖餐厅",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.0674490705912,
+        30.30243486695063
+      ],
+      "mappedPlaceId": "way/1122290579",
+      "nearestDistanceM": 12.75585658244382
+    },
+    {
+      "officialId": "hotmap_221027.1151",
+      "name": "艺术与考古博物馆",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.06656287971921,
+        30.300174775818665
+      ],
+      "mappedPlaceId": "way/322644189",
+      "nearestDistanceM": 19.683305399818344
+    },
+    {
+      "officialId": "hotmap_221027.1152",
+      "name": "文化艺术中心（待建中）",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.06853692209282,
+        30.2997382671302
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1153",
+      "name": "紫金西苑",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.0626684340162,
+        30.303506451661008
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1156",
+      "name": "开物苑（机械学院1幢）",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07078895212138,
+        30.306349698441647
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1157",
+      "name": "段永平教学楼（北教）",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.071436310973,
+        30.30761657709202
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1158",
+      "name": "段永平教学楼（北教学楼4号楼）",
+      "displayLevel": 5,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.0725594611149,
+        30.30801305513384
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1159",
+      "name": "观通楼（农科教大楼）",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.0735820998454,
+        30.30842871850682
+      ],
+      "mappedPlaceId": "way/1112646409",
+      "nearestDistanceM": 14.460797075504454
+    },
+    {
+      "officialId": "hotmap_221027.1160",
+      "name": "银泉1幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.0699043384078,
+        30.308129326782858
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 28.52179559595824
+    },
+    {
+      "officialId": "hotmap_221027.1161",
+      "name": "银泉2幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.06894298493718,
+        30.30771326528493
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1162",
+      "name": "银泉3幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.06948363477312,
+        30.308802209906194
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1163",
+      "name": "银泉4幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.06865683363161,
+        30.308458082522588
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1164",
+      "name": "银泉6幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.06828781877617,
+        30.309039889594096
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1165",
+      "name": "银泉7幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.06750024249203,
+        30.3074823034733
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 33.448376037395946
+    },
+    {
+      "officialId": "hotmap_221027.1166",
+      "name": "惟学1幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.06686052132402,
+        30.308342095554433
+      ],
+      "mappedPlaceId": "way/614260757",
+      "nearestDistanceM": 24.532748888888687
+    },
+    {
+      "officialId": "hotmap_221027.1167",
+      "name": "银泉8幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.06659244310347,
+        30.307077806533304
+      ],
+      "mappedPlaceId": "way/1302813125",
+      "nearestDistanceM": 8.43038522176187
+    },
+    {
+      "officialId": "hotmap_221027.1168",
+      "name": "银泉餐厅",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07114838075094,
+        30.308563165055727
+      ],
+      "mappedPlaceId": "way/1112646412",
+      "nearestDistanceM": 20.620572551119373
+    },
+    {
+      "officialId": "hotmap_221027.1169",
+      "name": "银泉学生服务中心",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07027092795401,
+        30.309229360724068
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 27.173353403672216
+    },
+    {
+      "officialId": "hotmap_221027.1170",
+      "name": "生物物理楼",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.07245537115251,
+        30.310044375097966
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1171",
+      "name": "西区动物中心A座",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.07288510030321,
+        30.310726582137146
+      ],
+      "mappedPlaceId": "way/1502850910",
+      "nearestDistanceM": 17.015137726464747
+    },
+    {
+      "officialId": "hotmap_221027.1172",
+      "name": "西区动物中心D座",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.07336720848375,
+        30.309879964619178
+      ],
+      "mappedPlaceId": "way/1502850912",
+      "nearestDistanceM": 14.068325504975606
+    },
+    {
+      "officialId": "hotmap_221027.1173",
+      "name": "附属用房（待建中）",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.06726847417495,
+        30.305621937331413
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1174",
+      "name": "主体育场（待建中）",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.0672978705848,
+        30.304232746181743
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1175",
+      "name": "新医科大楼（新之苑）（规划）",
+      "displayLevel": 5,
+      "entityType": null,
+      "coordinate": [
+        120.06590885976959,
+        30.30419237921113
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1177",
+      "name": "段永平教学楼（北教学楼2号楼）",
+      "displayLevel": 5,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07295363781677,
+        30.307347832445963
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1178",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.06133715282778,
+        30.303219583038995
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1179",
+      "name": "浙大求是第二附属小学",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.06020293238046,
+        30.303123620862003
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1180",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.059713778346,
+        30.304121441339966
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1181",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.05909895291579,
+        30.303987759196644
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1182",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.06080173878998,
+        30.303793328503307
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1183",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0614151854698,
+        30.303930978472938
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1184",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.06216635339688,
+        30.30409695591247
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1185",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.06278643524546,
+        30.304233922118524
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1186",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.06259397322268,
+        30.304896423774892
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1187",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0624148969004,
+        30.305492483373776
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1188",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.06225292711855,
+        30.30604035877968
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1189",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.06194422934529,
+        30.304740542067194
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1190",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.06122960209504,
+        30.304583547229466
+      ],
+      "mappedPlaceId": "way/652569765",
+      "nearestDistanceM": 19.749719125772415
+    },
+    {
+      "officialId": "hotmap_221027.1191",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.06100615491236,
+        30.305348069223747
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1192",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0616652856303,
+        30.30566904688587
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1193",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.05947979295975,
+        30.304775262802
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1194",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.05881118459145,
+        30.304565905777007
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1195",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.06047919954769,
+        30.304338315488945
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1196",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0602676458244,
+        30.305012563264956
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1197",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.06006732220413,
+        30.305810336001137
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1198",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.05854531800726,
+        30.30523289746196
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1199",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.06070899862256,
+        30.30609839197642
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1200",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.05932235761664,
+        30.30552358663479
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1201",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0618653891872,
+        30.306638600059003
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1202",
+      "name": "紫金西苑",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.06124145845892,
+        30.30634776836425
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1203",
+      "name": "紫金西苑附属幼儿园",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0637514658334,
+        30.303685431746025
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1204",
+      "name": "澄月4幢（研究生宿舍3幢）",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07449841179955,
+        30.29785953375511
+      ],
+      "mappedPlaceId": "way/703248087",
+      "nearestDistanceM": 18.054827193852105
+    },
+    {
+      "officialId": "hotmap_221027.1205",
+      "name": "澄月9幢(国教院）",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.0726720360043,
+        30.298835607762268
+      ],
+      "mappedPlaceId": "way/703248094",
+      "nearestDistanceM": 24.657595321701407
+    },
+    {
+      "officialId": "hotmap_221027.1206",
+      "name": "成均苑1幢（传媒大楼）",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07516201949821,
+        30.299789826693605
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 29.395119197500236
+    },
+    {
+      "officialId": "hotmap_221027.1207",
+      "name": "文科组团古籍图书馆",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07449335594151,
+        30.300317310674135
+      ],
+      "mappedPlaceId": "way/703251441",
+      "nearestDistanceM": 14.604301589569728
+    },
+    {
+      "officialId": "hotmap_221027.1208",
+      "name": "成均苑10幢（教育大楼）",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.07363365191756,
+        30.2997864379431
+      ],
+      "mappedPlaceId": "way/703251444",
+      "nearestDistanceM": 19.335333457933476
+    },
+    {
+      "officialId": "hotmap_221027.1209",
+      "name": "成均苑8幢（创A大楼）",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.07257226960277,
+        30.300263468460344
+      ],
+      "mappedPlaceId": "way/703251447",
+      "nearestDistanceM": 17.499514344834438
+    },
+    {
+      "officialId": "hotmap_221027.1210",
+      "name": "海纳苑2幢（数学大楼）",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.0706743196332,
+        30.300383405601156
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 26.182984849620553
+    },
+    {
+      "officialId": "hotmap_221027.1211",
+      "name": "海纳苑4幢（理学部大楼）",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.07019861391326,
+        30.30131067637184
+      ],
+      "mappedPlaceId": "way/703251462",
+      "nearestDistanceM": 16.315701056462366
+    },
+    {
+      "officialId": "hotmap_221027.1212",
+      "name": "海纳苑3幢（心理大楼）",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.07055126488703,
+        30.30089057238832
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 26.00245281670285
+    },
+    {
+      "officialId": "hotmap_221027.1213",
+      "name": "澄月食堂",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07453067833032,
+        30.298702590777687
+      ],
+      "mappedPlaceId": "relation/9772852",
+      "nearestDistanceM": 18.555639986722703
+    },
+    {
+      "officialId": "hotmap_221027.1214",
+      "name": "澄月学园8幢（留学生宿舍）",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07261840032858,
+        30.29821486702505
+      ],
+      "mappedPlaceId": "way/703248096",
+      "nearestDistanceM": 21.16364166853065
+    },
+    {
+      "officialId": "hotmap_221027.1215",
+      "name": "澄月学生活动中心",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07293947235362,
+        30.297879466760193
+      ],
+      "mappedPlaceId": "way/703248097",
+      "nearestDistanceM": 2.292749229757718
+    },
+    {
+      "officialId": "hotmap_221027.1216",
+      "name": "澄月学园7幢（留学生宿舍）",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07361148101374,
+        30.297903063994696
+      ],
+      "mappedPlaceId": "way/703248093",
+      "nearestDistanceM": 16.39103694613257
+    },
+    {
+      "officialId": "hotmap_221027.1217",
+      "name": "澄月学园5幢（留学生宿舍）",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07357865611124,
+        30.29885070819089
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 35.962509180429116
+    },
+    {
+      "officialId": "hotmap_221027.1218",
+      "name": "玉湖学园3舍",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.06596021851132,
+        30.301837157089164
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 49.251913927265306
+    },
+    {
+      "officialId": "hotmap_221027.1219",
+      "name": "尧坤楼（学生服务中心楼）",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.06756823617884,
+        30.301789433658197
+      ],
+      "mappedPlaceId": "way/614260756",
+      "nearestDistanceM": 16.83710816546569
+    },
+    {
+      "officialId": "hotmap_221027.1220",
+      "name": "惟学2幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.06739646331162,
+        30.308144796600867
+      ],
+      "mappedPlaceId": "way/703248077",
+      "nearestDistanceM": 15.537526270717287
+    },
+    {
+      "officialId": "hotmap_221027.1221",
+      "name": "求是大讲堂",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07517741823915,
+        30.304278286989508
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 42.07670641355457
+    },
+    {
+      "officialId": "hotmap_221027.1222",
+      "name": "主图书馆（浙江大学校史校情馆）",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.07550713186829,
+        30.305302857264124
+      ],
+      "mappedPlaceId": "way/1208408934",
+      "nearestDistanceM": 10.201402236697685
+    },
+    {
+      "officialId": "hotmap_221027.1223",
+      "name": "浙江大学动物医院",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07409822756182,
+        30.311230774058895
+      ],
+      "mappedPlaceId": "way/1410577281",
+      "nearestDistanceM": 13.284955127283343
+    },
+    {
+      "officialId": "hotmap_221027.1224",
+      "name": "变电站",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.07474477499936,
+        30.311503535350823
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1225",
+      "name": "澄月1幢（研究生宿舍1幢）",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07563814770332,
+        30.2989118959725
+      ],
+      "mappedPlaceId": "way/703248079",
+      "nearestDistanceM": 18.018301534900797
+    },
+    {
+      "officialId": "hotmap_221027.1226",
+      "name": "澄月3幢（研究生宿舍3幢）",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07444926565152,
+        30.29825135150794
+      ],
+      "mappedPlaceId": "way/703248086",
+      "nearestDistanceM": 16.443446670898282
+    },
+    {
+      "officialId": "hotmap_221027.1227",
+      "name": "玉湖2幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.06583779079519,
+        30.30263270891015
+      ],
+      "mappedPlaceId": "way/703251455",
+      "nearestDistanceM": 11.640539000449238
+    },
+    {
+      "officialId": "hotmap_221027.1228",
+      "name": "玉湖4舍",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.0657724614695,
+        30.301136980001242
+      ],
+      "mappedPlaceId": "way/703251452",
+      "nearestDistanceM": 19.31317208143255
+    },
+    {
+      "officialId": "hotmap_221027.1229",
+      "name": "玉湖6舍",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.06723923511261,
+        30.301146882158303
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1230",
+      "name": "成均苑9幢（公管大楼）",
+      "displayLevel": 5,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07323885369486,
+        30.300210058101516
+      ],
+      "mappedPlaceId": "way/703251443",
+      "nearestDistanceM": 16.390650946137626
+    },
+    {
+      "officialId": "hotmap_221027.1231",
+      "name": "成均苑2幢（马院大楼）",
+      "displayLevel": 5,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07545943502588,
+        30.300051282115557
+      ],
+      "mappedPlaceId": "way/703251439",
+      "nearestDistanceM": 20.719187648583468
+    },
+    {
+      "officialId": "hotmap_221027.1233",
+      "name": "足球场",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0712519776823,
+        30.309559126485855
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1234",
+      "name": "篮球场",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.07216739037503,
+        30.309063381345727
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1239",
+      "name": "和同苑1-5幢（化工大楼）",
+      "displayLevel": 3,
+      "entityType": null,
+      "coordinate": [
+        120.06932627871075,
+        30.30410024137598
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1241",
+      "name": "和同苑9幢10幢（材料大楼）",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.06857812205784,
+        30.305667848757256
+      ],
+      "mappedPlaceId": "way/1125378162",
+      "nearestDistanceM": 14.405473072186068
+    },
+    {
+      "officialId": "hotmap_221027.1243",
+      "name": "和同苑6-8幢（高分子大楼）",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.06939052364817,
+        30.305606266187493
+      ],
+      "mappedPlaceId": "way/1125378163",
+      "nearestDistanceM": 23.022442145648156
+    },
+    {
+      "officialId": "hotmap_221027.1248",
+      "name": "段永平教学楼（北教学楼1号楼）",
+      "displayLevel": 5,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.0718046658396,
+        30.306877583932298
+      ],
+      "mappedPlaceId": "way/1112645055",
+      "nearestDistanceM": 17.74590882575218
+    },
+    {
+      "officialId": "hotmap_221027.1254",
+      "name": "成章楼（管院大楼）",
+      "displayLevel": 3,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07075608420544,
+        30.299081338954583
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1256",
+      "name": "会议中心",
+      "displayLevel": 5,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.0711989386154,
+        30.298422727784725
+      ],
+      "mappedPlaceId": "way/703251450",
+      "nearestDistanceM": 15.359426495119164
+    },
+    {
+      "officialId": "hotmap_221027.1258",
+      "name": "网球场",
+      "displayLevel": 3,
+      "entityType": " ",
+      "coordinate": [
+        120.07660434257085,
+        30.308971130143703
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1260",
+      "name": "银泉5幢",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.0691300547541,
+        30.309435767224695
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1261",
+      "name": "临湖餐厅",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.08101616693779,
+        30.305983375409397
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1262",
+      "name": "网球场",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.07876129892705,
+        30.3058881820246
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1263",
+      "name": "东三门",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.0872707602011,
+        30.299278055955128
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1264",
+      "name": "东一门",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.08327533034236,
+        30.31080829968065
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1265",
+      "name": "学生长廊",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.08448883712217,
+        30.30374667890726
+      ],
+      "mappedPlaceId": "way/1122111924",
+      "nearestDistanceM": 7.444188264059368
+    },
+    {
+      "officialId": "hotmap_221027.1290",
+      "name": "大食堂停车场",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.07986904972535,
+        30.30956340113894
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1291",
+      "name": "留学生行政办公楼",
+      "displayLevel": 5,
+      "entityType": " ",
+      "coordinate": [
+        120.07248283414853,
+        30.29853429719479
+      ],
+      "mappedPlaceId": "way/703248095",
+      "nearestDistanceM": 13.349865103314658
+    },
+    {
+      "officialId": "hotmap_221027.1292",
+      "name": "校友林小木屋",
+      "displayLevel": 7,
+      "entityType": " ",
+      "coordinate": [
+        120.0798892138451,
+        30.308591981406995
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1315",
+      "name": "医学教学楼",
+      "displayLevel": 5,
+      "entityType": "实验室",
+      "coordinate": [
+        120.07869948836486,
+        30.299067985512135
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1316",
+      "name": "医学科研楼",
+      "displayLevel": 3,
+      "entityType": "实验室",
+      "coordinate": [
+        120.07923816367465,
+        30.29813906105157
+      ],
+      "mappedPlaceId": "way/255623985",
+      "nearestDistanceM": 16.919522753794592
+    },
+    {
+      "officialId": "hotmap_221027.1317",
+      "name": "启真湖",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.08249261176594,
+        30.304494768917465
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1318",
+      "name": "化学试剂仓库",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.07532898080238,
+        30.307966156197647
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1319",
+      "name": "段永平生命科学研究交叉中心",
+      "displayLevel": 5,
+      "entityType": null,
+      "coordinate": [
+        120.08412965809389,
+        30.298319014096695
+      ],
+      "mappedPlaceId": "way/415697414",
+      "nearestDistanceM": 13.114991710070536
+    },
+    {
+      "officialId": "hotmap_221027.1320",
+      "name": "西迁纪念亭",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.08009457936953,
+        30.308135360166496
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1321",
+      "name": "求是大道",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.07665197171426,
+        30.305129623182978
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1322",
+      "name": "紫荆花路",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.0876566203476,
+        30.306038821059534
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1323",
+      "name": "蒋墩路",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.06477561117184,
+        30.305154037063897
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1324",
+      "name": "新之桥",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.0651442134202,
+        30.305509769629655
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1325",
+      "name": "湖滨路",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.06644023303818,
+        30.306019316851973
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1326",
+      "name": "惟学桥",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.06739356148539,
+        30.306663230603263
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1327",
+      "name": "观通桥",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.06826378905397,
+        30.30672439188861
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1328",
+      "name": "玉泉路",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.0680521502282,
+        30.303745990237022
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1329",
+      "name": "五常港路",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.06124863846252,
+        30.302626302334446
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1330",
+      "name": "和同桥",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.0652353493393,
+        30.303308655418405
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1331",
+      "name": "天目路",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.06570567093631,
+        30.303345505684625
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1332",
+      "name": "知至桥",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.06699364880825,
+        30.303000875461528
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1333",
+      "name": "知聪桥",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.06806033271414,
+        30.303031528043853
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1334",
+      "name": "天目路",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.0683554437069,
+        30.303282989889166
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1335",
+      "name": "有质桥",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.06996481892723,
+        30.3030550084834
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1336",
+      "name": "求真桥",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.06933090797766,
+        30.297183108574828
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1337",
+      "name": "尚亭桥",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.07202667189732,
+        30.299585607948103
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1338",
+      "name": "遵义西路",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.07404764153857,
+        30.299239649371536
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1339",
+      "name": "湖滨路",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.07074250720287,
+        30.30776726059027
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.1340",
+      "name": "思睿桥",
+      "displayLevel": 7,
+      "entityType": null,
+      "coordinate": [
+        120.0744977290513,
+        30.309021363830393
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000030",
+      "name": "小白楼",
+      "displayLevel": 5,
+      "entityType": "教学楼",
+      "coordinate": [
+        120.07777804640595,
+        30.29967628239452
+      ],
+      "mappedPlaceId": "way/652569974",
+      "nearestDistanceM": 13.659588399193412
+    },
+    {
+      "officialId": "hotmap_221027.70000033",
+      "name": "成章苑（智能创新大楼（规划））",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": [
+        120.06979860725343,
+        30.29930404859533
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000034",
+      "name": "海纳苑5-7幢（化学系）",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": [
+        120.06998729843178,
+        30.30189678361084
+      ],
+      "mappedPlaceId": "way/1122290580",
+      "nearestDistanceM": 20.92763277674598
+    },
+    {
+      "officialId": "hotmap_221027.70000035",
+      "name": "海纳苑5-7幢（化学系）",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": [
+        120.06972757228532,
+        30.30226757680059
+      ],
+      "mappedPlaceId": "way/1122290581",
+      "nearestDistanceM": 12.416998990311773
+    },
+    {
+      "officialId": "hotmap_221027.70000036",
+      "name": "海纳苑5-7幢（化学系）",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": [
+        120.06945685696232,
+        30.302695874352896
+      ],
+      "mappedPlaceId": "way/703251464",
+      "nearestDistanceM": 24.054822611421937
+    },
+    {
+      "officialId": "hotmap_221027.70000037",
+      "name": "西区动物中心C座",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": [
+        120.07320848630322,
+        30.31012510573836
+      ],
+      "mappedPlaceId": "way/1502850911",
+      "nearestDistanceM": 23.843409961804852
+    },
+    {
+      "officialId": "hotmap_221027.70000038",
+      "name": "西区动物中心B座",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": [
+        120.07309126146421,
+        30.310347697149037
+      ],
+      "mappedPlaceId": "way/1502850911",
+      "nearestDistanceM": 15.684692213235733
+    },
+    {
+      "officialId": "hotmap_221027.70000039",
+      "name": "开物苑（机械学院2幢）",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": [
+        120.07096685002654,
+        30.30673180072577
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000040",
+      "name": "开物苑（机械学院3幢）",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": [
+        120.07053421341907,
+        30.307331859381254
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000041",
+      "name": "开物苑（机械学院4幢）",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": [
+        120.06962758508892,
+        30.307140748687743
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000042",
+      "name": "开物苑（机械学院5幢）",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": [
+        120.06981167631986,
+        30.306791732248055
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000043",
+      "name": "开物苑（机械学院6幢）",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": [
+        120.07033833371909,
+        30.306424433610132
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000044",
+      "name": "和同苑2幢（化工大楼）",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": [
+        120.06857452666677,
+        30.30380316045066
+      ],
+      "mappedPlaceId": "way/1125378161",
+      "nearestDistanceM": 8.33351911137875
+    },
+    {
+      "officialId": "hotmap_221027.70000045",
+      "name": "和同苑1幢（化工大楼）",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": [
+        120.06864807661651,
+        30.304220397180064
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000046",
+      "name": "和同苑3幢（化工大楼）",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": [
+        120.06940193579777,
+        30.303699760655103
+      ],
+      "mappedPlaceId": "way/1410577280",
+      "nearestDistanceM": 24.256163740745823
+    },
+    {
+      "officialId": "hotmap_221027.70000047",
+      "name": "和同苑5幢（化工大楼）",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": [
+        120.06939654780109,
+        30.304411502388774
+      ],
+      "mappedPlaceId": "way/1410577279",
+      "nearestDistanceM": 5.186538667970729
+    },
+    {
+      "officialId": "hotmap_221027.70000048",
+      "name": "和同苑6幢（高分子大楼）",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": [
+        120.06934502324539,
+        30.304878400479847
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 41.28959844664567
+    },
+    {
+      "officialId": "hotmap_221027.70000049",
+      "name": "和同苑7幢（高分子大楼）",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": [
+        120.06935050887418,
+        30.305247781689186
+      ],
+      "mappedPlaceId": "way/1410577278",
+      "nearestDistanceM": 0.36009120045292164
+    },
+    {
+      "officialId": "hotmap_221027.70000050",
+      "name": "和同苑10幢（材料大楼）",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": [
+        120.06860828965681,
+        30.305171004129026
+      ],
+      "mappedPlaceId": null,
+      "nearestDistanceM": 40.91493269880556
+    },
+    {
+      "officialId": "hotmap_221027.70000056",
+      "name": "农业科技创新试验中心D",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000057",
+      "name": "实验果园",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000058",
+      "name": "匹克球场",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000061",
+      "name": "大健康组团",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000062",
+      "name": "北二门",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000063",
+      "name": "潘方仁求是馆",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000064",
+      "name": "西三门",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000065",
+      "name": "南二门",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000066",
+      "name": "西一门",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000067",
+      "name": "西二门",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000068",
+      "name": "亚运热身馆",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000081",
+      "name": "东7",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000082",
+      "name": "待定",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000083",
+      "name": "基础交叉研究大楼（在建）",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000084",
+      "name": "前沿学科综合大楼（来同馆）（在建）",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000085",
+      "name": "学科交叉创新大楼",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000086",
+      "name": "重大前沿研究大楼（思睿馆）",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000087",
+      "name": "新农科大楼（新之苑）（规划）",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000088",
+      "name": "综合训练馆（在建）",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000089",
+      "name": "农业试验站C",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000090",
+      "name": "农业试验站B",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000091",
+      "name": "农业试验站A",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000092",
+      "name": "北一门",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000093",
+      "name": "之江路",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000094",
+      "name": "建德路",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000095",
+      "name": "华家池路",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    },
+    {
+      "officialId": "hotmap_221027.70000096",
+      "name": "西溪路",
+      "displayLevel": null,
+      "entityType": null,
+      "coordinate": null,
+      "mappedPlaceId": null,
+      "nearestDistanceM": null
+    }
+  ]
+}
