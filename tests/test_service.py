@@ -14,7 +14,8 @@ from weather_plugin.models import (
     WeatherLocationRequest,
     parse_activity_kind,
 )
-from weather_plugin.service import WeatherService
+from weather_plugin.providers.base import WeatherProviderError, parse_datetime
+from weather_plugin.service import FallbackProvider, WeatherService
 
 
 class FakeProvider:
@@ -52,6 +53,16 @@ class FakeProvider:
         )
 
 
+class RetryableProvider:
+    source = "primary"
+
+    async def get_current(self, location: WeatherLocation) -> CurrentWeatherResponse:
+        raise WeatherProviderError("PROVIDER_TIMEOUT", "主来源超时。")
+
+    async def get_forecast(self, location: WeatherLocation, hours: int) -> WeatherForecastResponse:
+        raise WeatherProviderError("PROVIDER_TIMEOUT", "主来源超时。")
+
+
 def make_point(at: datetime, **overrides: object) -> HourlyWeather:
     values = {
         "forecast_time": at,
@@ -87,6 +98,13 @@ def test_gps_payload_uses_default_timezone() -> None:
     assert location.accuracy_m == 35
 
 
+def test_epoch_provider_timestamp_is_interpreted_as_utc() -> None:
+    parsed = parse_datetime(0, "Asia/Shanghai")
+
+    assert parsed.tzinfo == timezone.utc
+    assert parsed.hour == 0
+
+
 @pytest.mark.asyncio
 async def test_forecast_is_cached() -> None:
     location = WeatherLocation(latitude=30, longitude=120, timezone="Asia/Shanghai")
@@ -98,6 +116,35 @@ async def test_forecast_is_cached() -> None:
     await service.get_forecast(location, 4)
 
     assert provider.forecast_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_fallback_provider_warning_survives_cache() -> None:
+    location = WeatherLocation(latitude=30, longitude=120, timezone="Asia/Shanghai")
+    service = WeatherService(FallbackProvider(RetryableProvider(), FakeProvider([])))
+
+    first = await service.get_current(location)
+    second = await service.get_current(location)
+
+    assert first.source == "fake"
+    assert any("备用来源" in warning for warning in first.warnings)
+    assert any("备用来源" in warning for warning in second.warnings)
+
+
+@pytest.mark.asyncio
+async def test_past_activity_window_is_rejected() -> None:
+    location = WeatherLocation(latitude=30, longitude=120, timezone="UTC")
+    provider = FakeProvider([])
+    service = WeatherService(provider)
+    end = datetime.now(timezone.utc) - timedelta(hours=1)
+
+    with pytest.raises(ValueError, match="已经结束"):
+        await service.evaluate_outdoor_activity(
+            location,
+            ActivityKind.WALKING,
+            end - timedelta(hours=1),
+            end,
+        )
 
 
 @pytest.mark.asyncio

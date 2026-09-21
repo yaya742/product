@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import math
 from typing import Any
 
 import httpx
@@ -15,6 +16,9 @@ from ..models import (
     WeatherLocation,
 )
 from .base import WeatherProviderError, parse_datetime
+
+
+_MISSING = object()
 
 
 class OpenMeteoProvider:
@@ -55,6 +59,9 @@ class OpenMeteoProvider:
         current = payload.get("current")
         if not isinstance(current, dict):
             raise WeatherProviderError("INVALID_RESPONSE", "天气服务返回的当前天气数据无效。", retryable=False)
+        observed_at = current.get("time")
+        if not isinstance(observed_at, (str, int, float, datetime)):
+            raise WeatherProviderError("INVALID_RESPONSE", "天气服务缺少当前天气时间。", retryable=False)
 
         fetched_at = datetime.now(timezone.utc)
         return CurrentWeatherResponse(
@@ -62,16 +69,16 @@ class OpenMeteoProvider:
             fetched_at=fetched_at,
             location=response_location,
             current=CurrentWeather(
-                observed_at=parse_datetime(current["time"], response_location.timezone),
-                temperature_c=float(current["temperature_2m"]),
-                feels_like_c=float(current["apparent_temperature"]),
-                humidity_percent=float(current["relative_humidity_2m"]),
-                precipitation_mm=float(current.get("precipitation", 0)),
+                observed_at=parse_datetime(observed_at, response_location.timezone),
+                temperature_c=self._number(current.get("temperature_2m"), "temperature_2m"),
+                feels_like_c=self._number(current.get("apparent_temperature"), "apparent_temperature"),
+                humidity_percent=self._number(current.get("relative_humidity_2m"), "relative_humidity_2m"),
+                precipitation_mm=self._number(current.get("precipitation", 0), "precipitation"),
                 precipitation_probability_percent=self._optional_percent(
                     current.get("precipitation_probability")
                 ),
-                wind_speed_mps=float(current["wind_speed_10m"]),
-                weather_code=str(current["weather_code"]),
+                wind_speed_mps=self._number(current.get("wind_speed_10m"), "wind_speed_10m"),
+                weather_code=str(current.get("weather_code", "unknown")),
                 condition_text=self._weather_code_text(current.get("weather_code")),
                 precipitation_type=self._precipitation_type(current.get("weather_code")),
                 is_day=bool(current["is_day"]) if current.get("is_day") is not None else None,
@@ -109,21 +116,21 @@ class OpenMeteoProvider:
             update={"timezone": payload.get("timezone", location.timezone)}
         )
         hourly = payload.get("hourly")
-        if not isinstance(hourly, dict) or not hourly.get("time"):
+        if not isinstance(hourly, dict) or not isinstance(hourly.get("time"), list) or not hourly["time"]:
             raise WeatherProviderError("INVALID_RESPONSE", "天气服务返回的预报数据无效。", retryable=False)
 
         times = hourly["time"][:hours]
         points = [
             HourlyWeather(
                 forecast_time=parse_datetime(time_value, response_location.timezone),
-                temperature_c=float(self._at(hourly, "temperature_2m", index)),
-                feels_like_c=float(self._at(hourly, "apparent_temperature", index)),
-                humidity_percent=float(self._at(hourly, "relative_humidity_2m", index)),
-                precipitation_mm=float(self._at(hourly, "precipitation", index, 0)),
+                temperature_c=self._number(self._at(hourly, "temperature_2m", index), "temperature_2m"),
+                feels_like_c=self._number(self._at(hourly, "apparent_temperature", index), "apparent_temperature"),
+                humidity_percent=self._number(self._at(hourly, "relative_humidity_2m", index), "relative_humidity_2m"),
+                precipitation_mm=self._number(self._at(hourly, "precipitation", index, 0), "precipitation"),
                 precipitation_probability_percent=self._optional_percent(
                     self._at(hourly, "precipitation_probability", index, None)
                 ),
-                wind_speed_mps=float(self._at(hourly, "wind_speed_10m", index)),
+                wind_speed_mps=self._number(self._at(hourly, "wind_speed_10m", index), "wind_speed_10m"),
                 weather_code=str(self._at(hourly, "weather_code", index)),
                 condition_text=self._weather_code_text(self._at(hourly, "weather_code", index)),
                 precipitation_type=self._precipitation_type(self._at(hourly, "weather_code", index)),
@@ -154,17 +161,27 @@ class OpenMeteoProvider:
         return payload
 
     @staticmethod
-    def _at(values: dict[str, list[Any]], key: str, index: int, default: Any = None) -> Any:
+    def _at(values: dict[str, list[Any]], key: str, index: int, default: Any = _MISSING) -> Any:
         items = values.get(key, [])
-        if index >= len(items):
-            if default is not None:
+        if not isinstance(items, list) or index >= len(items):
+            if default is not _MISSING:
                 return default
             raise WeatherProviderError("INVALID_RESPONSE", f"天气服务缺少字段：{key}。", retryable=False)
         return items[index]
 
     @staticmethod
     def _optional_percent(value: Any) -> float | None:
-        return None if value is None else float(value)
+        return None if value is None else OpenMeteoProvider._number(value, "precipitation_probability")
+
+    @staticmethod
+    def _number(value: Any, field: str) -> float:
+        try:
+            number = float(value)
+        except (TypeError, ValueError) as error:
+            raise WeatherProviderError("INVALID_RESPONSE", f"天气服务返回的字段无效：{field}。", retryable=False) from error
+        if not math.isfinite(number):
+            raise WeatherProviderError("INVALID_RESPONSE", f"天气服务返回的字段无效：{field}。", retryable=False)
+        return number
 
     @staticmethod
     def _weather_code_text(code: Any) -> str:

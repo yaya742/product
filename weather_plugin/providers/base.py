@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Protocol
 
 from ..models import (
@@ -54,7 +54,7 @@ def parse_datetime(value: str | int | float | datetime, timezone_name: str) -> d
     if isinstance(value, datetime):
         parsed = value
     elif isinstance(value, (int, float)):
-        parsed = datetime.fromtimestamp(value)
+        parsed = datetime.fromtimestamp(value, timezone.utc)
     else:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
 
@@ -66,6 +66,4 @@ def parse_datetime(value: str | int | float | datetime, timezone_name: str) -> d
 
         return parsed.replace(tzinfo=ZoneInfo(timezone_name))
     except Exception:
-        from datetime import timezone
-
         return parsed.replace(tzinfo=timezone.utc)
