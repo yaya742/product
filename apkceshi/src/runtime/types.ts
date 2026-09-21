@@ -62,6 +62,29 @@ export interface CampusTodo {
   status: string;
 }
 
+export interface CampusPracticeSummary {
+  secondClassPoints: number | null;
+  thirdClassPoints: number | null;
+  fourthClassPoints: number | null;
+  aestheticEducationPassed: boolean | null;
+  laborEducationPassed: boolean | null;
+  source: string;
+}
+
+export interface CampusPracticeProject {
+  id: string;
+  name: string;
+  category: string;
+  projectType: string;
+  qualityType: string;
+  score: number | null;
+  status: string;
+  approved: boolean;
+  role: string;
+  remark: string;
+  activityTime: string;
+}
+
 export interface CampusNotice {
   id: string;
   title: string;
@@ -80,6 +103,8 @@ export interface MobileCampusData {
   exams: CampusExam[];
   grades: CampusGrade[];
   todos: CampusTodo[];
+  practiceSummary: CampusPracticeSummary | null;
+  practiceProjects: CampusPracticeProject[];
   gpa: number | null;
   totalCredit: number;
   warnings: string[];

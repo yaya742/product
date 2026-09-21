@@ -4,6 +4,8 @@ import type {
   CampusExam,
   CampusGrade,
   CampusNotice,
+  CampusPracticeProject,
+  CampusPracticeSummary,
   CampusTodo,
   MobileCampusData,
 } from './types';
@@ -17,6 +19,10 @@ const EXAMS_URL = 'https://zdbk.zju.edu.cn/jwglxt/xskscx/kscx_cxXsgrksIndex.html
 const GRADES_URL = 'https://zdbk.zju.edu.cn/jwglxt/cxdy/xscjcx_cxXscjIndex.html?doType=query&queryModel.showCount=5000';
 const COURSES_HOME = 'https://courses.zju.edu.cn/user/index';
 const TODOS_URL = 'https://courses.zju.edu.cn/api/todos';
+const SZTZ_SERVICE = 'https://sztz.zju.edu.cn/dekt/';
+const SZTZ_CTX = 'https://sztz.zju.edu.cn/dekt/ctx';
+const SZTZ_PROJECTS = 'https://sztz.zju.edu.cn/dekt/student/home/getSqjl';
+const SZTZ_SUMMARY = 'https://sztz.zju.edu.cn/dekt/student/home/getMyInfo';
 const NOTICES_LIST_URL = 'https://zdbk.zju.edu.cn/jwglxt/xtgl/xwck_cxMoreLoginNews.html';
 const NOTICE_DETAIL_PATH = '/jwglxt/xtgl/xwck_ckLoginNews.html';
 
@@ -25,6 +31,7 @@ const TRUSTED_HOSTS = new Set([
   'identity.zju.edu.cn',
   'zdbk.zju.edu.cn',
   'courses.zju.edu.cn',
+  'sztz.zju.edu.cn',
 ]);
 
 export type CampusErrorCode = 'native_required' | 'credentials' | 'network' | 'authentication' | 'captcha' | 'response';
@@ -292,6 +299,7 @@ async function clearCampusCookies() {
     CapacitorCookies.clearCookies({ url: 'https://identity.zju.edu.cn' }),
     CapacitorCookies.clearCookies({ url: 'https://zdbk.zju.edu.cn' }),
     CapacitorCookies.clearCookies({ url: 'https://courses.zju.edu.cn' }),
+    CapacitorCookies.clearCookies({ url: 'https://sztz.zju.edu.cn' }),
   ]);
 }
 
@@ -342,6 +350,153 @@ async function loginZdbk() {
     throw new CampusError('教务网登录会话不完整，请重新读取校园信息。', 'authentication');
   }
   zdbkSessionReady = true;
+}
+
+function decodeBase64Utf8(value: string): string {
+  const binary = atob(value.replace(/\s/g, '') + '='.repeat((4 - value.length % 4) % 4));
+  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+function isAuthenticatedSztzContext(body: string): boolean {
+  try {
+    const payload = JSON.parse(body) as Record<string, unknown>;
+    if (payload.success !== true || Number(payload.code) !== 0 || typeof payload.data !== 'string') return false;
+    const context = JSON.parse(decodeBase64Utf8(payload.data)) as Record<string, unknown>;
+    const userId = typeof context.userId === 'string' ? context.userId.trim() : '';
+    return context.anonymous === false && !!userId && userId.toUpperCase() !== 'ANONYMOUS' && !JSON.stringify(context.roles || '').includes('ANONYMOUS_USER_ROLE');
+  } catch {
+    return false;
+  }
+}
+
+async function loginSztz() {
+  const serviceLogin = `${LOGIN_URL}?service=${encodeURIComponent(SZTZ_SERVICE)}`;
+  const ticketResponse = await request({ url: serviceLogin, responseType: 'text', disableRedirects: true });
+  const location = headerValue(ticketResponse.headers, 'location');
+  if (ticketResponse.status < 300 || ticketResponse.status >= 400 || !location) throw new CampusError('素质拓展平台没有返回有效的统一认证跳转。', 'authentication');
+  const callback = trustedUrl(location, ticketResponse.url);
+  const parsed = new URL(callback);
+  if (parsed.hostname.toLowerCase() !== 'sztz.zju.edu.cn' || parsed.pathname.replace(/\/$/, '') !== '/dekt' || !parsed.searchParams.get('ticket')) {
+    throw new CampusError('素质拓展平台返回了不受信任的认证回调。', 'authentication');
+  }
+  const callbackResponse = await request({ url: callback, responseType: 'text', disableRedirects: true });
+  if (callbackResponse.status !== 200 || !activeCookieJar?.has('SESSION', 'sztz.zju.edu.cn')) throw new CampusError('素质拓展平台没有建立正式登录会话。', 'authentication');
+  const contextResponse = await request({
+    url: SZTZ_CTX,
+    method: 'POST',
+    data: {},
+    headers: {
+      Accept: 'application/json, text/plain, */*',
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Origin: 'https://sztz.zju.edu.cn',
+      Referer: SZTZ_SERVICE,
+    },
+    responseType: 'text',
+    disableRedirects: true,
+  });
+  if (contextResponse.status !== 200 || !isAuthenticatedSztzContext(responseText(contextResponse))) throw new CampusError('素质拓展平台身份确认未完成。', 'authentication');
+}
+
+function practiceBoolean(value: unknown): boolean | null {
+  if (typeof value === 'boolean') return value;
+  if (value === 1 || value === '1' || value === 'true' || value === '通过' || value === '已通过' || value === '达标' || value === '合格') return true;
+  if (value === 0 || value === '0' || value === 'false' || value === '未通过' || value === '不通过' || value === '未达标' || value === '不合格') return false;
+  return null;
+}
+
+function practiceNumber(value: unknown): number | null {
+  const parsed = numberValue(String(value ?? ''));
+  return parsed === undefined ? null : parsed;
+}
+
+function normalizePracticeSummary(value: Record<string, unknown>): CampusPracticeSummary {
+  if (!['dektJf', 'dsktJf', 'dsiktJf'].some((key) => key in value)) throw new CampusError('素质拓展汇总缺少课堂记点字段。', 'response');
+  return {
+    secondClassPoints: practiceNumber(value.dektJf) ?? 0,
+    thirdClassPoints: practiceNumber(value.dsktJf) ?? 0,
+    fourthClassPoints: practiceNumber(value.dsiktJf) ?? 0,
+    aestheticEducationPassed: practiceBoolean(value.myTg),
+    laborEducationPassed: practiceBoolean(value.lyTg),
+    source: '素质拓展平台 getMyInfo',
+  };
+}
+
+function normalizePracticeProject(value: Record<string, unknown>, index: number): CampusPracticeProject | null {
+  const id = String(value.id ?? '').trim();
+  if (!id) return null;
+  const project = value.xm && typeof value.xm === 'object' && !Array.isArray(value.xm) ? value.xm as Record<string, unknown> : {};
+  const category = project.xmfl && typeof project.xmfl === 'object' && !Array.isArray(project.xmfl) ? project.xmfl as Record<string, unknown> : {};
+  const projectType = project.xmlb && typeof project.xmlb === 'object' && !Array.isArray(project.xmlb) ? project.xmlb as Record<string, unknown> : {};
+  const qualityType = project.xmlx && typeof project.xmlx === 'object' && !Array.isArray(project.xmlx) ? project.xmlx as Record<string, unknown> : {};
+  const status = value.cyrshzt && typeof value.cyrshzt === 'object' && !Array.isArray(value.cyrshzt) ? value.cyrshzt as Record<string, unknown> : {};
+  const currentState = value.currentState && typeof value.currentState === 'object' && !Array.isArray(value.currentState) ? value.currentState as Record<string, unknown> : {};
+  const categoryId = Number(category.id || 0);
+  const categoryName = field(category, ['mc'], categoryId === 1 ? '第二课堂' : categoryId === 2 ? '第三课堂' : categoryId === 3 ? '第四课堂' : '未分类课堂');
+  const statusLabel = field(status, ['label'], field(currentState, ['name'], '状态未知'));
+  const statusValue = Number(status.value);
+  const approved = statusValue === 5 || statusLabel === '审核通过';
+  return {
+    id: `${id}-${index}`,
+    name: field(project, ['mc'], '未命名项目'),
+    category: categoryName,
+    projectType: field(projectType, ['mc'], '未填写'),
+    qualityType: field(qualityType, ['mc'], '未填写'),
+    score: practiceNumber(value.jd),
+    status: statusLabel,
+    approved,
+    role: field(value, ['hdjjygrcdgz']),
+    remark: field(value, ['qksm']),
+    activityTime: [field(value, ['hdsj']), field(value, ['hdjssj'])].filter(Boolean).join(' — '),
+  };
+}
+
+async function readPractice(): Promise<{ summary: CampusPracticeSummary | null; projects: CampusPracticeProject[]; warnings: string[] }> {
+  await loginSztz();
+  let summary: CampusPracticeSummary | null = null;
+  const projects: CampusPracticeProject[] = [];
+  const warnings: string[] = [];
+  try {
+    const response = await request({ url: SZTZ_SUMMARY, responseType: 'text', headers: { Accept: 'application/json, text/plain, */*', Referer: SZTZ_SERVICE }, disableRedirects: true });
+    if (response.status !== 200) throw new CampusError(`素质拓展汇总请求失败（HTTP ${response.status}）。`, 'response');
+    const payload = parseJson(response, '素质拓展汇总');
+    const root = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload as Record<string, unknown> : {};
+    const extend = root.extend && typeof root.extend === 'object' && !Array.isArray(root.extend) ? root.extend as Record<string, unknown> : {};
+    const myInfo = extend.myInfo && typeof extend.myInfo === 'object' && !Array.isArray(extend.myInfo) ? extend.myInfo as Record<string, unknown> : {};
+    summary = normalizePracticeSummary(myInfo);
+  } catch (error) {
+    if (error instanceof CampusError && (error.code === 'authentication' || error.code === 'captcha')) throw error;
+    warnings.push(`素质拓展汇总：${error instanceof Error ? error.message : '读取失败'}`);
+  }
+  try {
+    const response = await request({ url: SZTZ_PROJECTS, responseType: 'text', headers: { Accept: 'application/json, text/html, */*', Referer: SZTZ_SERVICE }, disableRedirects: true });
+    if (response.status !== 200) throw new CampusError(`素质拓展项目请求失败（HTTP ${response.status}）。`, 'response');
+    const payload = parseJson(response, '素质拓展项目');
+    const root = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload as Record<string, unknown> : {};
+    if (root.success !== true || Number(root.code) !== 0 || !Array.isArray(root.data)) throw new CampusError('素质拓展项目返回了无法识别的数据。', 'response');
+    const seen = new Set<string>();
+    root.data.forEach((item, index) => {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) return;
+      const normalized = normalizePracticeProject(item as Record<string, unknown>, index);
+      if (!normalized || seen.has(normalized.id)) return;
+      seen.add(normalized.id);
+      projects.push(normalized);
+    });
+  } catch (error) {
+    if (error instanceof CampusError && (error.code === 'authentication' || error.code === 'captcha')) throw error;
+    warnings.push(`素质拓展项目：${error instanceof Error ? error.message : '读取失败'}`);
+  }
+  if (!summary && !projects.length) throw new CampusError(warnings.join('；') || '素质拓展没有返回可识别的数据。', 'response');
+  if (!summary) {
+    const totals = projects.reduce((result, project) => {
+      if (!project.approved || project.score === null) return result;
+      const key = project.category === '第二课堂' ? 'secondClassPoints' : project.category === '第三课堂' ? 'thirdClassPoints' : project.category === '第四课堂' ? 'fourthClassPoints' : '';
+      if (key) result[key] += project.score;
+      return result;
+    }, { secondClassPoints: 0, thirdClassPoints: 0, fourthClassPoints: 0 });
+    summary = { ...totals, aestheticEducationPassed: null, laborEducationPassed: null, source: '素质拓展项目明细合计（汇总接口不可用）' };
+  }
+  return { summary, projects, warnings };
 }
 
 function ajaxHeaders() {
@@ -652,12 +807,23 @@ export async function readCampusInfo(studentId: string, password: string): Promi
     let exams: CampusExam[] = [];
     let grades: CampusGrade[] = [];
     let todos: CampusTodo[] = [];
+    let practiceSummary: CampusPracticeSummary | null = null;
+    let practiceProjects: CampusPracticeProject[] = [];
     let successfulModules = 0;
 
     try { courses = await readSchedule(year, term); successfulModules += 1; } catch (error) { if (isFatalModuleError(error)) throw error; warnings.push(`课表：${errorText(error)}`); }
     try { exams = await readExams(); successfulModules += 1; } catch (error) { if (isFatalModuleError(error)) throw error; warnings.push(`考试：${errorText(error)}`); }
     try { grades = await readGrades(); successfulModules += 1; } catch (error) { if (isFatalModuleError(error)) throw error; warnings.push(`成绩：${errorText(error)}`); }
     try { todos = await readTodos(); successfulModules += 1; } catch (error) { if (isFatalModuleError(error)) throw error; warnings.push(`待办：${errorText(error)}`); }
+    try {
+      const practice = await readPractice();
+      practiceSummary = practice.summary;
+      practiceProjects = practice.projects;
+      warnings.push(...practice.warnings);
+      successfulModules += 1;
+    } catch (error) {
+      warnings.push(`体育与素质拓展：${errorText(error)}`);
+    }
     if (!successfulModules && warnings.length) throw new CampusError(warnings.join('；'), 'response');
 
     const countedGrades = grades.flatMap((grade) => {
@@ -669,7 +835,7 @@ export async function readCampusInfo(studentId: string, password: string): Promi
     const gpaGrades = countedGrades.filter((grade): grade is { credit: number; point: number } => grade.point !== undefined && Number.isFinite(grade.point));
     const gpaDenominator = gpaGrades.reduce((sum, grade) => sum + grade.credit, 0);
     const gpa = gpaDenominator ? gpaGrades.reduce((sum, grade) => sum + grade.credit * grade.point, 0) / gpaDenominator : null;
-    return { fetchedAt: new Date().toISOString(), academicYear: year, term, courses, exams, grades, todos, gpa, totalCredit, warnings };
+    return { fetchedAt: new Date().toISOString(), academicYear: year, term, courses, exams, grades, todos, practiceSummary, practiceProjects, gpa, totalCredit, warnings };
   } finally {
     activeCookieJar = null;
     zdbkSessionReady = false;
