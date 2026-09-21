@@ -11,11 +11,13 @@ import sys
 sys.path.insert(0, str(ROOT))
 
 from zju_connector.auth import _encrypt_password
+from zju_connector.zdbk import fetch_learning
 import zju_connector.cli as cli
 from zju_connector.holidays import discover_calendar_pages, parse_calendar_page, parse_holiday_notice
 from zju_connector.notices import fetch_public_notices, parse_notice_detail, parse_public_notices
 from zju_connector.college_notices import fetch_college_notices
 from zju_connector.normalize import courses_from_schedule, exam_items, grade_alerts, grade_items, grade_semester_summaries, grade_summary, schedule_item
+from zju_connector.sztz import _ctx_is_authenticated, fetch_practice
 
 
 class ConnectorTests(unittest.TestCase):
@@ -23,6 +25,45 @@ class ConnectorTests(unittest.TestCase):
         encrypted = _encrypt_password("password", "ffffffffffffffffffffffffffffffff", "1")
         self.assertTrue(encrypted.endswith("70617373776f7264"))
         self.assertNotIn("password", encrypted)
+
+    def test_learning_platform_courses_and_activities_are_normalized_read_only(self):
+        class FakeClient:
+            def request(self, url, **kwargs):
+                if url == "https://courses.zju.edu.cn/user/index":
+                    return 200, "<html><title>学在浙大</title></html>", {}
+                raise AssertionError(url)
+
+            def json(self, url, **kwargs):
+                if "/api/my-courses" in url:
+                    return ({"courses": [{
+                        "id": 42,
+                        "name": "数据结构",
+                        "course_code": "CS101",
+                        "credit": 3,
+                        "semester_id": "2026-2027-1",
+                        "student_id": "must-not-leak",
+                    }]}, {})
+                if url.endswith("/api/courses/42/activities"):
+                    return ({"activities": [{
+                        "id": 7,
+                        "title": "第一次作业",
+                        "type": "assignment",
+                        "end_time": "2026-10-01T23:59:00+08:00",
+                        "student_id": "must-not-leak",
+                    }]}, {})
+                raise AssertionError(url)
+
+            def has_cookie(self, name, domain_suffix=None):
+                return name == "session" and domain_suffix == "courses.zju.edu.cn"
+
+        session = type("Session", (), {"client": FakeClient()})()
+        result = fetch_learning(session, "42")
+        self.assertEqual(result["records"][0]["name"], "数据结构")
+        self.assertEqual(result["records"][0]["id"], "42")
+        self.assertEqual(result["activities"][0]["name"], "第一次作业")
+        self.assertEqual(result["activities"][0]["course_id"], "42")
+        self.assertNotIn("student_id", result["records"][0])
+        self.assertNotIn("student_id", result["activities"][0])
 
     def test_schedule_is_normalized_to_recurrence_without_private_fields(self):
         record = schedule_item(
@@ -87,6 +128,50 @@ class ConnectorTests(unittest.TestCase):
         alerts = grade_alerts(records)
         self.assertEqual([item["level"] for item in alerts], ["failed", "attention"])
         self.assertTrue(all("不代表学校最终" in item["note"] for item in alerts))
+
+    def test_sztz_context_requires_non_anonymous_base64_identity(self):
+        import base64
+
+        context = base64.b64encode(json.dumps({"anonymous": False, "userId": "student", "roles": []}).encode()).decode()
+        body = json.dumps({"success": True, "code": 0, "data": context})
+        self.assertTrue(_ctx_is_authenticated(body))
+        anonymous = base64.b64encode(json.dumps({"anonymous": True, "userId": "student", "roles": []}).encode()).decode()
+        self.assertFalse(_ctx_is_authenticated(json.dumps({"success": True, "code": 0, "data": anonymous})))
+
+    def test_sztz_fetch_keeps_summary_and_project_details_separate(self):
+        import base64
+
+        ctx = base64.b64encode(json.dumps({"anonymous": False, "userId": "student", "roles": []}).encode()).decode()
+
+        class FakeClient:
+            def request(self, url, **kwargs):
+                if "zjuam.zju.edu.cn/cas/login" in url:
+                    return 302, "", {"Location": "https://sztz.zju.edu.cn/dekt/?ticket=ST-1"}
+                if "ticket=ST-1" in url:
+                    return 200, "", {}
+                if url.endswith("/dekt/ctx"):
+                    return 200, json.dumps({"success": True, "code": 0, "data": ctx}), {}
+                if url.endswith("getMyInfo"):
+                    return 200, json.dumps({"code": 0, "extend": {"myInfo": {"xh": "student", "dektJf": "4.5", "dsktJf": 2, "dsiktJf": 0, "myTg": True}}}), {}
+                if url.endswith("getSqjl"):
+                    return 200, json.dumps({"success": True, "code": 0, "data": [{
+                        "id": 7,
+                        "jd": 1.5,
+                        "cyrshzt": {"value": 5, "label": "审核通过"},
+                        "xm": {"mc": "校园志愿服务", "xmfl": {"id": 1, "mc": "第二课堂"}},
+                        "hdsj": "2026-09-01",
+                        "xh": "must-not-leak",
+                    }]}), {}
+                raise AssertionError(url)
+
+            def has_cookie(self, name, domain_suffix=None):
+                return name == "SESSION" and domain_suffix == "sztz.zju.edu.cn"
+
+        result = fetch_practice(type("Session", (), {"client": FakeClient()})(), "student")
+        self.assertEqual(result["practice_summary"][0]["dektJf"], 4.5)
+        self.assertEqual(result["projects"][0]["projectName"], "校园志愿服务")
+        self.assertNotIn("xh", result["projects"][0])
+        self.assertTrue(result["coverage"]["complete"])
 
     def test_public_calendar_parser_keeps_official_sources_and_explicit_dates(self):
         index = '''<li><a href="/2026/0710/c28218a3187939/page.htm"><p>浙江大学2026—2027学年校历</p></a></li>'''

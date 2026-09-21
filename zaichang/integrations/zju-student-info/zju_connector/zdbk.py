@@ -14,6 +14,8 @@ EXAMS_URL = "https://zdbk.zju.edu.cn/jwglxt/xskscx/kscx_cxXsgrksIndex.html?doTyp
 GRADES_URL = "https://zdbk.zju.edu.cn/jwglxt/cxdy/xscjcx_cxXscjIndex.html?doType=query&queryModel.showCount=5000"
 COURSES_HOME = "https://courses.zju.edu.cn/user/index"
 TODOS_URL = "https://courses.zju.edu.cn/api/todos"
+MY_COURSES_URL = "https://courses.zju.edu.cn/api/my-courses"
+COURSE_ACTIVITIES_URL = "https://courses.zju.edu.cn/api/courses/{course_id}/activities"
 
 
 def _ajax_headers() -> dict[str, str]:
@@ -22,6 +24,74 @@ def _ajax_headers() -> dict[str, str]:
         "Accept": "application/json, text/javascript, */*; q=0.01",
         "X-Requested-With": "XMLHttpRequest",
         "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
+    }
+
+
+def _courses_headers() -> dict[str, str]:
+    return {
+        "Referer": COURSES_HOME,
+        "Accept": "application/json, text/plain, */*",
+        "X-Requested-With": "XMLHttpRequest",
+    }
+
+
+def _payload_list(payload: object, keys: tuple[str, ...]) -> list[dict]:
+    if isinstance(payload, list):
+        return [item for item in payload if isinstance(item, dict)]
+    if not isinstance(payload, dict):
+        return []
+    for key in keys:
+        value = payload.get(key)
+        if isinstance(value, list):
+            return [item for item in value if isinstance(item, dict)]
+        if isinstance(value, dict):
+            nested = _payload_list(value, keys)
+            if nested:
+                return nested
+    for key in ("data", "result", "response"):
+        value = payload.get(key)
+        if isinstance(value, dict):
+            nested = _payload_list(value, keys)
+            if nested:
+                return nested
+    return []
+
+
+def _text(item: dict, *keys: str, default: str = "") -> str:
+    for key in keys:
+        value = item.get(key)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return default
+
+
+def _course_record(item: dict, index: int) -> dict | None:
+    course_id = _text(item, "id", "course_id", "courseId")
+    if not course_id:
+        return None
+    return {
+        "id": course_id,
+        "name": _text(item, "name", "title", "course_name", "courseName", default="未命名课程"),
+        "course_code": _text(item, "course_code", "courseCode", "code", "course_no") or None,
+        "credit": item.get("credit", item.get("credits")),
+        "semester_id": _text(item, "semester_id", "semesterId", "semester", "term_name", "termName") or None,
+        "start_date": _text(item, "start_date", "startDate", "start_time", "startTime") or None,
+        "end_date": _text(item, "end_date", "endDate", "end_time", "endTime") or None,
+        "study_completeness": item.get("study_completeness", item.get("completion", item.get("progress"))),
+    }
+
+
+def _activity_record(item: dict, course_id: str, index: int) -> dict:
+    activity_id = _text(item, "id", "activity_id", "activityId", default=f"{course_id}:activity:{index}")
+    return {
+        "activity_id": activity_id,
+        "course_id": course_id,
+        "name": _text(item, "title", "name", "activity_name", "activityName", default="未命名活动"),
+        "type": _text(item, "type", "activity_type", "activityType", default="unknown"),
+        "starts_at": _text(item, "start_time", "startTime", "starts_at", "startAt") or None,
+        "deadline": _text(item, "end_time", "endTime", "deadline", "due_date", "dueDate") or None,
+        "scores": item.get("scores", item.get("score")),
+        "completion": item.get("completion", item.get("completed", item.get("status"))),
     }
 
 
@@ -100,18 +170,8 @@ def _meta_refresh(body: str, source: str) -> str | None:
 
 
 def fetch_todos(session: AuthenticatedSession) -> list[dict]:
-    current = COURSES_HOME
-    for _ in range(5):
-        status, body, _headers = session.client.request(current)
-        if not 200 <= status < 300:
-            raise RuntimeError(f"学在浙大登录失败（HTTP {status}）。")
-        target = _meta_refresh(body, current)
-        if not target:
-            break
-        current = target
-    if not session.client.has_cookie("session", "courses.zju.edu.cn"):
-        raise RuntimeError("学在浙大没有建立可用会话。")
-    payload, _headers = session.client.json(TODOS_URL)
+    ensure_courses_session(session)
+    payload, _headers = session.client.json(TODOS_URL, headers=_courses_headers())
     todos = payload.get("todo_list") if isinstance(payload, dict) else None
     if not isinstance(todos, list):
         raise RuntimeError("学在浙大响应缺少待办列表。")
@@ -126,3 +186,62 @@ def fetch_todos(session: AuthenticatedSession) -> list[dict]:
         for item in todos
         if isinstance(item, dict) and item.get("is_student") in (True, 1, "1") and item.get("id")
     ]
+
+
+def ensure_courses_session(session: AuthenticatedSession) -> None:
+    """Exchange the already authenticated ZJU SSO cookie for a courses session."""
+    current = COURSES_HOME
+    for _ in range(8):
+        status, body, _headers = session.client.request(current)
+        if not 200 <= status < 300:
+            raise RuntimeError(f"学在浙大登录失败（HTTP {status}）。")
+        target = _meta_refresh(body, current)
+        if not target:
+            break
+        current = target
+    if not session.client.has_cookie("session", "courses.zju.edu.cn"):
+        raise RuntimeError("学在浙大没有建立可用会话，请重新验证浙大账号。")
+    if "统一身份认证" in body and ("name=\"username\"" in body or "name='username'" in body):
+        raise RuntimeError("学在浙大登录态未建立，请重新验证浙大账号。")
+
+
+def fetch_learning_courses(session: AuthenticatedSession) -> list[dict]:
+    ensure_courses_session(session)
+    from urllib.parse import urlencode
+
+    query = urlencode({"page": 1, "page_size": 1000, "sort": "all"})
+    payload, _headers = session.client.json(f"{MY_COURSES_URL}?{query}", headers=_courses_headers())
+    records = []
+    for index, item in enumerate(_payload_list(payload, ("courses", "items", "records", "list"))):
+        record = _course_record(item, index)
+        if record:
+            records.append(record)
+    if not records and isinstance(payload, dict) and any(key in payload for key in ("courses", "items", "records", "list")):
+        return []
+    if not records:
+        raise RuntimeError("学在浙大课程接口返回了无法识别的数据。")
+    return records
+
+
+def fetch_course_activities(session: AuthenticatedSession, course_id: str) -> list[dict]:
+    ensure_courses_session(session)
+    safe_id = quote(str(course_id).strip(), safe="")
+    if not safe_id or len(safe_id) > 80:
+        raise RuntimeError("学在浙大课程编号不合法。")
+    payload, _headers = session.client.json(
+        COURSE_ACTIVITIES_URL.format(course_id=safe_id),
+        headers=_courses_headers(),
+    )
+    items = _payload_list(payload, ("activities", "items", "records", "list"))
+    return [_activity_record(item, str(course_id), index) for index, item in enumerate(items)]
+
+
+def fetch_learning(session: AuthenticatedSession, course_id: str | None = None) -> dict:
+    records = fetch_learning_courses(session)
+    activities = fetch_course_activities(session, course_id) if course_id else []
+    return {
+        "records": records,
+        "activities": activities,
+        "course_id": course_id,
+        "coverage": {"complete": True, "course_list": True, "activities": bool(course_id)},
+    }

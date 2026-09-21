@@ -13,13 +13,16 @@ from .normalize import courses_from_schedule, exam_items, grade_alerts, grade_it
 from .holidays import fetch_public_calendar
 from .notices import fetch_public_notices
 from .college_notices import SUPPORTED_CATEGORIES, fetch_college_notices
-from .storage import forget_bundles, history, load_bundle, save_academic_bundle, save_calendar_bundle, save_notices_bundle
-from .zdbk import fetch_exams, fetch_grades, fetch_schedule, fetch_todos
+from .storage import forget_bundles, history, load_bundle, save_academic_bundle, save_calendar_bundle, save_learning_bundle, save_notices_bundle
+from .zdbk import fetch_exams, fetch_grades, fetch_learning, fetch_schedule, fetch_todos
+from .sztz import fetch_practice
 
 
 SUPPORTED_RESOURCES = {
     "classes",
     "courses",
+    "records",
+    "activities",
     "exams",
     "todos",
     "grades",
@@ -27,6 +30,8 @@ SUPPORTED_RESOURCES = {
     "gpa_overall",
     "gpa_semesters",
     "gpa_cumulative",
+    "practice_summary",
+    "projects",
     "holidays",
     "notices",
     "source_status",
@@ -89,6 +94,13 @@ def _parser() -> argparse.ArgumentParser:
     notices.add_argument("--refresh", action="store_true")
     history_parser = commands.add_parser("history")
     history_parser.add_argument("--limit", type=int, default=20)
+    learning = commands.add_parser("learning")
+    learning.add_argument("--course-id")
+    read = commands.add_parser("read")
+    read.add_argument("--bundle", required=True)
+    read.add_argument("--pointer", required=True)
+    read.add_argument("--offset", type=int, default=0)
+    read.add_argument("--limit", type=int, default=8)
     quick = commands.add_parser("quick")
     quick.add_argument("resource")
     quick.add_argument("--bundle")
@@ -284,7 +296,8 @@ def _notices(
 def _academic(year: str, term: str) -> dict[str, Any]:
     if not year.startswith("20") or len(year) != 9 or year[4] != "-":
         return {"status": "error", "error": {"code": "INVALID_TERM", "message": "学年格式应为 2026-2027。"}}
-    session = authenticate(load_credentials())
+    credentials = load_credentials()
+    session = authenticate(credentials)
     semester_id = f"{year}-{term}"
     previous = _previous_academic_bundle(semester_id)
     issues: list[dict[str, str]] = []
@@ -292,6 +305,7 @@ def _academic(year: str, term: str) -> dict[str, Any]:
     raw_exams: list[dict] = []
     raw_grades: list[dict] = []
     todos: list[dict] = []
+    practice: dict[str, Any] = {}
     try:
         raw_schedule = fetch_schedule(session, year, term)
     except Exception as exception:
@@ -308,6 +322,11 @@ def _academic(year: str, term: str) -> dict[str, Any]:
         todos = fetch_todos(session)
     except Exception as exception:
         issues.append(_resource_issue("todos", exception))
+    try:
+        practice = fetch_practice(session, credentials.username)
+        issues.extend(practice.get("issues", []))
+    except Exception as exception:
+        issues.append(_resource_issue("practice", exception))
     classes = [record for index, raw in enumerate(raw_schedule) if (record := schedule_item(raw, semester_id, index))]
     grades = grade_items(raw_grades)
     alerts = grade_alerts(grades)
@@ -323,11 +342,15 @@ def _academic(year: str, term: str) -> dict[str, Any]:
         "gpa_semesters": gpa_semesters,
         "gpa_cumulative": gpa,
         "todos": todos,
+        "practice_summary": practice.get("practice_summary", []),
+        "projects": practice.get("projects", []),
+        "practice_coverage": practice.get("coverage", {"complete": False}),
         "source_status": [
             {"name": "教务网课表", "status": "ok" if not any(i["resource"] == "classes" for i in issues) else "failed"},
             {"name": "教务网考试", "status": "ok" if not any(i["resource"] == "exams" for i in issues) else "failed"},
             {"name": "教务网成绩", "status": "ok" if not any(i["resource"] == "grades" for i in issues) else "failed"},
             {"name": "学在浙大待办", "status": "ok" if not any(i["resource"] == "todos" for i in issues) else "failed"},
+            {"name": "素质拓展平台", "status": "ok" if not any(i["resource"] == "practice" for i in issues) else "failed"},
         ],
     }
     # A transient endpoint failure must never replace a known-good section with
@@ -353,7 +376,12 @@ def _academic(year: str, term: str) -> dict[str, Any]:
         if "todos" in failed_resources and previous.get("todos"):
             normalized["todos"] = previous["todos"]
             preserved_resources.append("todos")
-    if not any(normalized[key] for key in ("classes", "courses", "exams", "grades", "todos")) and issues:
+        if "practice" in failed_resources and (previous.get("practice_summary") or previous.get("projects")):
+            normalized["practice_summary"] = previous.get("practice_summary", normalized["practice_summary"])
+            normalized["projects"] = previous.get("projects", normalized["projects"])
+            normalized["practice_coverage"] = previous.get("practice_coverage", normalized["practice_coverage"])
+            preserved_resources.extend(["practice_summary", "projects"])
+    if not any(normalized[key] for key in ("classes", "courses", "exams", "grades", "todos", "practice_summary", "projects")) and issues:
         return {"status": "error", "error": {"code": "ACADEMIC_SYNC_FAILED", "message": issues[0]["message"]}}
     bundle_id = save_academic_bundle(semester_id, normalized)
     return {
@@ -395,6 +423,23 @@ def _quick(args: argparse.Namespace) -> dict[str, Any]:
             if isinstance(record, dict)
             and query in " ".join(str(record.get(key) or "") for key in ("title", "publisher", "summary")).casefold()
         ]
+    if resource == "projects" and args.query:
+        query = args.query.casefold().strip()
+        records = [
+            record for record in records
+            if isinstance(record, dict)
+            and query in " ".join(
+                str(record.get(key) or "")
+                for key in ("projectName", "categoryName", "projectType", "qualityType", "statusLabel")
+            ).casefold()
+        ]
+    if resource == "records" and args.query:
+        query = args.query.casefold().strip()
+        records = [
+            record for record in records
+            if isinstance(record, dict)
+            and query in " ".join(str(record.get(key) or "") for key in ("name", "course_code", "semester_id")).casefold()
+        ]
     offset = max(0, args.offset)
     limit = max(1, min(50, args.limit))
     selected = records[offset : offset + limit]
@@ -426,6 +471,16 @@ def _quick(args: argparse.Namespace) -> dict[str, Any]:
         note = normalized.get("coverage", {}).get("note") or (
             "当前没有读到浙大官方通知公告。" if not complete else None
         )
+    if resource == "practice_summary":
+        complete = bool(normalized.get("practice_coverage", {}).get("summary"))
+        note = normalized.get("practice_coverage", {}).get("note") or (
+            "当前没有读到素质拓展汇总。" if not complete else None
+        )
+    if resource == "projects":
+        complete = bool(normalized.get("practice_coverage", {}).get("projects"))
+        note = normalized.get("practice_coverage", {}).get("note") or (
+            "当前没有读到素质拓展项目明细。" if not complete else None
+        )
     return {
         "status": "ok" if complete else "partial",
         "resource": resource,
@@ -441,6 +496,47 @@ def _quick(args: argparse.Namespace) -> dict[str, Any]:
         },
         "source": {"service": "ZJU local compatibility connector", "evidence": "encrypted normalized cache"},
         "schema_version": 1,
+    }
+
+
+def _learning(course_id: str | None = None) -> dict[str, Any]:
+    credentials = load_credentials()
+    session = authenticate(credentials)
+    normalized = fetch_learning(session, course_id)
+    bundle_id = save_learning_bundle(course_id, normalized)
+    return {
+        "status": "ok",
+        "bundle_id": bundle_id,
+        "course_id": course_id,
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "counts": {"records": len(normalized.get("records", [])), "activities": len(normalized.get("activities", []))},
+        "source": {"service": "ZJU 学在浙大", "evidence": "live authenticated read"},
+        "raw_data_preserved": False,
+    }
+
+
+def _read_bundle(bundle_id: str, pointer: str, offset: int, limit: int) -> dict[str, Any]:
+    if pointer not in {"/normalized/records", "/normalized/activities"}:
+        return {"status": "error", "error": {"code": "POINTER_NOT_ALLOWED", "message": "只能读取学在浙大规范化课程或活动列表。"}}
+    bundle = load_bundle(bundle_id)
+    if bundle.get("kind") != "learning":
+        return {"status": "error", "error": {"code": "BUNDLE_KIND_MISMATCH", "message": "这不是学在浙大资料包。"}}
+    key = pointer.rsplit("/", 1)[-1]
+    records = bundle.get("normalized", {}).get(key, [])
+    if not isinstance(records, list):
+        records = []
+    start = max(0, int(offset))
+    size = max(1, min(50, int(limit)))
+    selected = records[start : start + size]
+    return {
+        "status": "ok",
+        "data": selected,
+        "total_items": len(records),
+        "offset": start,
+        "next_offset": start + size if start + size < len(records) else None,
+        "fetched_at": bundle.get("fetched_at"),
+        "coverage": {"complete": True, "scope": bundle.get("course_id") or "all"},
+        "source": {"service": "ZJU 学在浙大", "evidence": "encrypted normalized cache"},
     }
 
 
@@ -463,6 +559,10 @@ def main(argv: list[str] | None = None) -> int:
             return emit(_notices(args.refresh, args.query, args.page, args.detail, args.college, args.category))
         if args.command == "history":
             return emit({"status": "ok", "items": history(args.limit)})
+        if args.command == "learning":
+            return emit(_learning(args.course_id))
+        if args.command == "read":
+            return emit(_read_bundle(args.bundle, args.pointer, args.offset, args.limit))
         if args.command == "quick":
             return emit(_quick(args))
         return error("UNKNOWN_COMMAND", "不支持的连接器命令。")

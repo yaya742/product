@@ -11,6 +11,7 @@
     "zdbk.zju.edu.cn",
     "courses.zju.edu.cn",
     "ugrs.zju.edu.cn",
+    "sztz.zju.edu.cn",
     "www.zju.edu.cn",
     "*.zju.edu.cn"
   ],
@@ -24,6 +25,11 @@
     "gpa",
     "gpa_semesters",
     "gpa_cumulative",
+    "practice",
+    "sports",
+    "projects",
+    "learning_courses",
+    "activities",
     "holidays",
     "notices",
     "source_status"
@@ -33,6 +39,8 @@
     "credentials forget",
     "auth",
     "academic",
+    "learning",
+    "read",
     "calendar",
     "notices",
     "history",

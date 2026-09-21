@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import http.cookiejar
 import json
+import ssl
 from urllib.error import HTTPError, URLError
 from urllib.parse import urljoin, urlparse
 from urllib.request import (
     HTTPCookieProcessor,
     HTTPRedirectHandler,
+    HTTPSHandler,
     Request,
     build_opener,
 )
@@ -18,6 +20,7 @@ ALLOWED_HOSTS = {
     "zdbk.zju.edu.cn",
     "courses.zju.edu.cn",
     "ugrs.zju.edu.cn",
+    "sztz.zju.edu.cn",
 }
 USER_AGENT = "Zaichang-ZJU-Connector/0.1 (Windows; read-only)"
 
@@ -50,8 +53,25 @@ class CampusHttpClient:
     def __init__(self, allow_official_subdomains: bool = False) -> None:
         self.allow_official_subdomains = allow_official_subdomains
         self.cookies = http.cookiejar.CookieJar()
-        self.opener = build_opener(HTTPCookieProcessor(self.cookies), SafeRedirectHandler(allow_official_subdomains))
-        self.no_redirect_opener = build_opener(HTTPCookieProcessor(self.cookies), NoRedirectHandler())
+        # courses.zju.edu.cn still presents a legacy DH parameter during TLS
+        # negotiation. Python/OpenSSL rejects that parameter at its default
+        # security level before any HTTP request is sent. Keep certificate
+        # verification while lowering only the cipher security level needed
+        # for this official ZJU compatibility endpoint.
+        context = ssl.create_default_context()
+        try:
+            context.minimum_version = ssl.TLSVersion.TLSv1_2
+        except AttributeError:
+            pass
+        try:
+            context.set_ciphers("DEFAULT:@SECLEVEL=1")
+        except ssl.SSLError:
+            # Some bundled Windows OpenSSL builds do not expose SECLEVEL;
+            # their default context is still the safest available fallback.
+            pass
+        https = HTTPSHandler(context=context)
+        self.opener = build_opener(https, HTTPCookieProcessor(self.cookies), SafeRedirectHandler(allow_official_subdomains))
+        self.no_redirect_opener = build_opener(https, HTTPCookieProcessor(self.cookies), NoRedirectHandler())
 
     def request(
         self,

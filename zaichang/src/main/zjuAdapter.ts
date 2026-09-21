@@ -246,6 +246,7 @@ const SENSITIVE_DOMAINS = new Set<CampusDomain>([
 const DIRECT_REFRESH_DOMAINS = new Set<CampusDomain>([
   'holidays',
   'notices',
+  'learning_courses',
   'reservations',
   'reservation_violations',
   'card',
@@ -301,7 +302,7 @@ function readManifest(root: string): ConnectorManifest | null {
       !Array.isArray(manifest.allowedHosts) ||
       !manifest.allowedHosts.includes('zjuam.zju.edu.cn') ||
       !Array.isArray(manifest.supportedDomains) ||
-      !manifest.supportedDomains.every((domain) => ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'practice', 'sports', 'projects', 'holidays', 'notices', 'source_status'].includes(domain))
+      !manifest.supportedDomains.every((domain) => ['schedule', 'courses', 'learning_courses', 'activities', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'practice', 'sports', 'projects', 'holidays', 'notices', 'source_status'].includes(domain))
     ) return null;
     return manifest;
   } catch {
@@ -498,6 +499,7 @@ function sanitize(value: any, key = '', depth = 0): any {
 export class ZjuAdapter {
   private authInFlight?: Promise<any>;
   private academicInFlight = new Map<string, Promise<any>>();
+  private learningInFlight = new Map<string, Promise<any>>();
   private calendarInFlight = new Map<string, Promise<any>>();
   private noticesInFlight = new Map<string, Promise<any>>();
   private academicBundles = new Map<string, string>();
@@ -972,7 +974,7 @@ export class ZjuAdapter {
   async run(args: string[], signal: AbortSignal, timeoutMs = 45_000): Promise<any> {
     const root = this.root();
     if (!root) return { status: 'unavailable', reason: '浙大个人信息连接器尚未配置。', connector: this.describe() };
-    const allowedCommands = new Set(['auth', 'academic', 'calendar', 'notices', 'history', 'quick', 'credentials']);
+    const allowedCommands = new Set(['auth', 'academic', 'learning', 'read', 'calendar', 'notices', 'history', 'quick', 'credentials']);
     if (!args[0] || !allowedCommands.has(args[0]))
       return { status: 'error', error: { code: 'COMMAND_NOT_ALLOWED', message: '连接器命令不在宿主允许范围内。' }, connector: this.describe() };
     const python = this.pythonCommand();
@@ -1052,6 +1054,22 @@ export class ZjuAdapter {
     return result;
   }
 
+  private async bootstrapLearning(signal: AbortSignal, courseId?: string) {
+    const key = courseId || 'all';
+    let pending = this.learningInFlight.get(key);
+    if (!pending) {
+      const args = ['learning'];
+      if (courseId) args.push('--course-id', courseId);
+      pending = this.run(args, signal, 85_000).finally(() => {
+        this.learningInFlight.delete(key);
+      });
+      this.learningInFlight.set(key, pending);
+    }
+    const result = await pending;
+    if (result?.bundle_id) this.learningBundles.set(key, String(result.bundle_id));
+    return result;
+  }
+
   private cacheFreshness(fetchedAt: unknown, now = Date.now()) {
     const timestamp = typeof fetchedAt === 'string' ? Date.parse(fetchedAt) : NaN;
     if (!Number.isFinite(timestamp)) {
@@ -1108,6 +1126,34 @@ export class ZjuAdapter {
     const synced = await this.bootstrapAcademic(signal, academicYear, term);
     if (synced?.bundle_id) return String(synced.bundle_id);
     return undefined;
+  }
+
+  private async resolveLearningBundle(signal: AbortSignal, courseId?: string): Promise<string | undefined> {
+    const key = courseId || 'all';
+    const cached = this.learningBundles.get(key);
+    if (cached) return cached;
+    const history = await this.run(['history', '--limit', '100'], signal, 20_000);
+    const item = (Array.isArray(history?.items) ? history.items : []).find((entry: any) =>
+      entry?.kind === 'learning' && String(entry.course_id || '') === String(courseId || ''),
+    );
+    if (item?.bundle_id) {
+      this.learningBundles.set(key, String(item.bundle_id));
+      if (this.cacheFreshness(item.fetched_at).stale) this.queueLearningRefresh(courseId);
+      return String(item.bundle_id);
+    }
+    const synced = await this.bootstrapLearning(signal, courseId);
+    return synced?.bundle_id ? String(synced.bundle_id) : undefined;
+  }
+
+  private queueLearningRefresh(courseId?: string) {
+    if (CAMPUS_AUTO_REFRESH_DISABLED) return;
+    const key = courseId || 'all';
+    if (this.learningInFlight.has(key)) return;
+    queueMicrotask(() => {
+      if (this.learningInFlight.has(key)) return;
+      const controller = new AbortController();
+      void this.bootstrapLearning(controller.signal, courseId).catch(() => undefined);
+    });
   }
 
   private async bootstrapCalendar(signal: AbortSignal, academicYear: string, refresh = false) {
@@ -1556,6 +1602,20 @@ export class ZjuAdapter {
         };
     }
     let learningBundle: string | undefined;
+    if (args.domain === 'learning_courses') {
+      learningBundle = args.refresh
+        ? (await this.bootstrapLearning(signal))?.bundle_id
+        : await this.resolveLearningBundle(signal);
+      if (learningBundle) this.learningBundles.set('all', String(learningBundle));
+      if (!learningBundle)
+        return {
+          domain: args.domain,
+          label: DOMAIN_LABEL[args.domain],
+          cached: !args.refresh,
+          connector: this.describe(),
+          data: { status: 'partial', reason: '还没有找到学在浙大的课程资料。', origin: 'zju_account' },
+        };
+    }
     if (args.domain === 'activities') {
       if (!args.courseId || !/^\d{1,32}$/.test(args.courseId))
         return {
@@ -1632,7 +1692,6 @@ export class ZjuAdapter {
     }
     const cli = ['quick', resource];
     if (academicBundle) cli.push('--bundle', academicBundle);
-    if (args.domain === 'learning_courses') cli.push('--endpoint', 'courses.list');
     if (learningBundle) cli.push('--bundle', learningBundle);
     if (args.window) cli.push('--window', args.window);
     if (args.from) cli.push('--from', args.from);
@@ -1658,10 +1717,12 @@ export class ZjuAdapter {
     if (
       result?.status === 'error' &&
       result?.error?.code === 'DATASET_REQUIRED' &&
-      ACADEMIC_RESOURCES.has(args.domain) &&
+      (ACADEMIC_RESOURCES.has(args.domain) || args.domain === 'learning_courses') &&
       !args.refresh
     ) {
-      const bootstrap = await this.bootstrapAcademic(signal, academicYear, term);
+      const bootstrap = args.domain === 'learning_courses'
+        ? await this.bootstrapLearning(signal)
+        : await this.bootstrapAcademic(signal, academicYear, term);
       if (bootstrap?.status === 'ok' || bootstrap?.status === 'partial') result = await this.run(cli, signal, 35_000);
     }
     const compact = compactResult(result, args.domain);
