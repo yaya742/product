@@ -260,15 +260,16 @@ def _learning(course_id: str = "", include_activities: bool = False, refresh: bo
             age_ms = max(0, (now - datetime.fromisoformat(fetched_at.replace("Z", "+00:00"))).total_seconds() * 1000)
         except ValueError:
             age_ms = 49 * 60 * 60 * 1000
-        return {
-            "status": "ok" if normalized.get("coverage", {}).get("complete") else "partial",
-            "bundle_id": bundle_id,
-            "scope": scope,
-            "fetched_at": fetched_at,
-            "normalized": normalized,
-            "stale": age_ms >= 48 * 60 * 60 * 1000,
-            "source": {"service": "Xue Zai ZJU learning platform", "evidence": "encrypted normalized cache"},
-        }
+        if age_ms < 48 * 60 * 60 * 1000:
+            return {
+                "status": "ok" if normalized.get("coverage", {}).get("complete") else "partial",
+                "bundle_id": bundle_id,
+                "scope": scope,
+                "fetched_at": fetched_at,
+                "normalized": normalized,
+                "stale": False,
+                "source": {"service": "Xue Zai ZJU learning platform", "evidence": "encrypted normalized cache"},
+            }
     try:
         credentials = load_credentials()
         normalized = fetch_learning(authenticate(credentials), course_id or None, include_activities)

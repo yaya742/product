@@ -64,6 +64,18 @@ class ConnectorTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             fetch_course_activities(AuthenticatedSession(FakeClient()), "../private")
 
+    def test_learning_cache_older_than_48_hours_refreshes(self):
+        old = "2020-01-01T00:00:00+00:00"
+        normalized = {"courses": [{"id": "1", "name": "旧课程"}], "activities": [], "coverage": {"complete": True}}
+        with patch.object(cli, "_previous_learning_bundle", return_value=("a" * 32, normalized, old)), \
+             patch.object(cli, "load_credentials", return_value=object()), \
+             patch.object(cli, "authenticate", return_value=object()), \
+             patch.object(cli, "fetch_learning", return_value=normalized) as fetch, \
+             patch.object(cli, "save_learning_bundle", return_value="b" * 32):
+            result = cli._learning()
+        self.assertEqual(result["bundle_id"], "b" * 32)
+        fetch.assert_called_once()
+
     def test_password_rsa_operation_is_deterministic_without_logging_plaintext(self):
         encrypted = _encrypt_password("password", "ffffffffffffffffffffffffffffffff", "1")
         self.assertTrue(encrypted.endswith("70617373776f7264"))

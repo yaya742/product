@@ -312,6 +312,11 @@ function termForArgs(args) {
   return month >= 7 || month === 0 ? '1' : '2';
 }
 
+function cacheIsFresh(fetchedAt, maxAgeMs = 48 * 60 * 60 * 1000) {
+  const timestamp = Date.parse(String(fetchedAt || ''));
+  return Number.isFinite(timestamp) && Date.now() - timestamp < maxAgeMs;
+}
+
 async function connectorStatusRead(context) {
   try {
     const result = await runConnector(['status'], context?.signal, 15_000);
@@ -358,7 +363,7 @@ async function resolveLearningBundle(args, context) {
     const item = Array.isArray(history?.items)
       ? history.items.find((entry) => entry?.kind === 'learning' && String(entry.scope || 'all') === scope)
       : undefined;
-    if (item?.bundle_id) return { bundleId: String(item.bundle_id), cached: true, scope };
+    if (item?.bundle_id && cacheIsFresh(item.fetched_at)) return { bundleId: String(item.bundle_id), cached: true, scope };
   }
   const syncArgs = ['learning'];
   addOption(args, syncArgs, '--course-id', courseId);
