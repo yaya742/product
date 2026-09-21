@@ -1,6 +1,15 @@
 export type MobileMessageRole = 'user' | 'assistant';
 export type MobileLanguage = 'zh-CN' | 'zh-TW' | 'en';
 export type MobileTheme = 'light' | 'dark';
+export type MobileMemoryMode = 'relevant' | 'current_sources_only' | 'none';
+export type MobileRetention = 'purpose_scoped' | 'history_no_inference' | 'session_only';
+export type MobileAudience = 'self' | 'group' | 'public';
+
+export interface MobileTurnControls {
+  memoryMode: MobileMemoryMode;
+  retention: MobileRetention;
+  audience: MobileAudience;
+}
 
 export type MobileAttachment =
   | {
@@ -25,6 +34,19 @@ export interface MobileReminder {
   createdAt: string;
   completed: boolean;
   notificationId: number;
+}
+
+export type MobileAgendaStatus = 'saved' | 'done' | 'cancelled';
+
+export interface MobileAgendaItem {
+  id: string;
+  title: string;
+  detail: string;
+  startsAt?: string;
+  durationMinutes?: number;
+  createdAt: string;
+  status: MobileAgendaStatus;
+  source: 'assistant' | 'user';
 }
 
 export interface CampusCourse {
@@ -116,6 +138,7 @@ export interface MobileMessage {
   content: string;
   attachment?: MobileAttachment;
   translations?: Partial<Record<MobileLanguage, string>>;
+  ephemeral?: boolean;
   createdAt: string;
   status: 'running' | 'done' | 'error';
 }
@@ -141,6 +164,7 @@ export interface MobileState {
   conversations: MobileConversation[];
   activeConversationId: string;
   memories: string[];
+  agenda: MobileAgendaItem[];
   reminders: MobileReminder[];
   campus: MobileCampusData | null;
   profile: MobileProfile;
@@ -170,6 +194,7 @@ export function createInitialState(): MobileState {
     conversations: [conversation],
     activeConversationId: conversation.id,
     memories: [],
+    agenda: [],
     reminders: [],
     campus: null,
     profile: { ...DEFAULT_PROFILE },

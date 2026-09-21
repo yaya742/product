@@ -9,16 +9,22 @@ import {
 import { findWalkingRoute, loadMapData } from './map';
 import { readPublicNotices } from './campus';
 import { CAMPUS_COORDINATE, fetchWeather, readDeviceLocation } from './weather';
-import type { MobileAttachment, MobileCampusData, MobileConversation, MobileLanguage, MobileMessage, MobileReminder } from './types';
+import type { MobileAgendaItem, MobileAttachment, MobileCampusData, MobileConversation, MobileLanguage, MobileMessage, MobileReminder, MobileTurnControls } from './types';
 
-export type AgentStatus = '联系 DeepSeek' | '读取手机时间' | '请求手机定位' | '查询天气' | '查询校园地图' | '规划路线' | '读取校园信息' | '搜索校园公告' | '保存本地提醒' | '读取本地提醒' | '搜索历史记录' | '保存长期记忆' | '整理回复';
+export type AgentStatus = '联系 DeepSeek' | '读取手机时间' | '请求手机定位' | '查询天气' | '查询校园地图' | '规划路线' | '读取校园信息' | '搜索校园公告' | '保存本地提醒' | '读取本地提醒' | '保存本地安排' | '读取本地安排' | '完成本地安排' | '撤销本地安排' | '搜索历史记录' | '保存长期记忆' | '整理回复';
 
 export interface MobileAgentContext {
   conversations: MobileConversation[];
+  agenda: MobileAgendaItem[];
   reminders: MobileReminder[];
+  controls?: MobileTurnControls;
+  allowMemoryWrite: boolean;
+  allowLocalWrites: boolean;
   campus: MobileCampusData | null;
   currentAttachment?: MobileAttachment;
   createReminder: (input: { title: string; dueAt: string; notes: string }) => Promise<Record<string, unknown>>;
+  prepareAction: (input: { title: string; detail: string; startsAt?: string; durationMinutes?: number }) => Promise<Record<string, unknown>>;
+  updateAction: (id: string, status: 'done' | 'cancelled') => Promise<Record<string, unknown>>;
   saveMemory: (text: string) => Promise<Record<string, unknown>>;
 }
 
@@ -188,6 +194,7 @@ async function runLocalTool(call: DeepSeekToolCall, signal: AbortSignal, context
   }
   if (call.function.name === 'create_local_reminder') {
     if (!context) return { status: 'unavailable', reason: '手机端提醒存储暂不可用。' };
+    if (!context.allowLocalWrites) return { status: 'draft_only', reason: '本轮设置为不保存，提醒没有创建。' };
     const args = toolArguments(call);
     const title = typeof args.title === 'string' ? args.title.trim().slice(0, 120) : '';
     const dueAt = typeof args.due_at === 'string' ? args.due_at.trim() : '';
@@ -204,8 +211,41 @@ async function runLocalTool(call: DeepSeekToolCall, signal: AbortSignal, context
         .filter((reminder) => !reminder.completed && Date.parse(reminder.dueAt) >= Date.now() - 60_000)
         .sort((a, b) => a.dueAt.localeCompare(b.dueAt))
         .slice(0, 30)
-        .map(({ id, title, notes, dueAt }) => ({ id, title, notes, due_at: dueAt })),
+      .map(({ id, title, notes, dueAt }) => ({ id, title, notes, due_at: dueAt })),
     };
+  }
+  if (call.function.name === 'prepare_action') {
+    if (!context) return { status: 'unavailable', reason: '手机端本地安排存储暂不可用。' };
+    if (!context.allowLocalWrites) return { status: 'draft_only', reason: '本轮设置为不保存，本地安排没有登记。' };
+    const args = toolArguments(call);
+    const title = typeof args.title === 'string' ? args.title.trim().slice(0, 160) : '';
+    const detail = typeof args.detail === 'string' ? args.detail.trim().slice(0, 500) : '';
+    const startsAt = typeof args.starts_at === 'string' && !Number.isNaN(Date.parse(args.starts_at))
+      ? new Date(args.starts_at).toISOString()
+      : undefined;
+    const durationMinutes = typeof args.duration_minutes === 'number' && Number.isFinite(args.duration_minutes)
+      ? Math.max(1, Math.min(24 * 60, Math.round(args.duration_minutes)))
+      : undefined;
+    if (!title) return { status: 'invalid', reason: '本地安排需要标题。' };
+    return context.prepareAction({ title, detail, ...(startsAt ? { startsAt } : {}), ...(durationMinutes ? { durationMinutes } : {}) });
+  }
+  if (call.function.name === 'list_local_actions') {
+    if (!context) return { status: 'unavailable', reason: '手机端本地安排存储暂不可用。' };
+    const includeDone = toolArguments(call).include_done === true;
+    const actions = context.agenda
+      .filter((item) => item.status !== 'cancelled' && (includeDone || item.status !== 'done'))
+      .slice(-30)
+      .map(({ id, title, detail, startsAt, durationMinutes, status }) => ({ id, title, detail, starts_at: startsAt, duration_minutes: durationMinutes, status }));
+    return { status: 'ok', actions };
+  }
+  if (call.function.name === 'complete_local_action' || call.function.name === 'cancel_local_action') {
+    if (!context) return { status: 'unavailable', reason: '手机端本地安排存储暂不可用。' };
+    if (!context.allowLocalWrites) return { status: 'draft_only', reason: '本轮设置为不保存，本地安排没有修改。' };
+    const id = typeof toolArguments(call).action_id === 'string' ? String(toolArguments(call).action_id).trim() : '';
+    if (!id) return { status: 'invalid', reason: '没有提供本地安排 ID。' };
+    const action = context.agenda.find((item) => item.id === id);
+    if (!action) return { status: 'known_absent', reason: '没有找到这项本地安排。' };
+    return context.updateAction(id, call.function.name === 'complete_local_action' ? 'done' : 'cancelled');
   }
   if (call.function.name === 'search_local_history') {
     if (!context) return { status: 'unavailable', reason: '手机端历史记录暂不可用。' };
@@ -223,6 +263,7 @@ async function runLocalTool(call: DeepSeekToolCall, signal: AbortSignal, context
   }
   if (call.function.name === 'save_memory') {
     if (!context) return { status: 'unavailable', reason: '手机端记忆存储暂不可用。' };
+    if (!context.allowMemoryWrite) return { status: 'draft_only', reason: '本轮设置为不形成长期记忆，这条内容没有保存。' };
     const text = typeof toolArguments(call).text === 'string' ? String(toolArguments(call).text).trim().slice(0, 300) : '';
     if (!text) return { status: 'invalid', reason: '没有提供要保存的内容。' };
     return context.saveMemory(text);
@@ -253,10 +294,11 @@ export async function runMobileAgent(
   onText: (text: string) => void,
   onStatus: (status: AgentStatus) => void,
   context?: MobileAgentContext,
+  controls: MobileTurnControls = { memoryMode: 'relevant', retention: 'purpose_scoped', audience: 'self' },
 ): Promise<string> {
   const wire: DeepSeekMessage[] = [
-    { role: 'system', content: buildSystemPrompt(memories, language) },
-    ...modelHistory(messages),
+    { role: 'system', content: buildSystemPrompt(memories, language, controls) },
+    ...(controls.memoryMode === 'relevant' ? modelHistory(messages) : []),
     { role: 'user', content: context?.currentAttachment ? messageContent({
       id: 'current-user',
       role: 'user',
@@ -299,7 +341,15 @@ export async function runMobileAgent(
                   ? '保存本地提醒'
                   : call.function.name === 'list_local_reminders'
                     ? '读取本地提醒'
-                    : call.function.name === 'search_local_history'
+                    : call.function.name === 'prepare_action'
+                      ? '保存本地安排'
+                      : call.function.name === 'list_local_actions'
+                        ? '读取本地安排'
+                        : call.function.name === 'complete_local_action'
+                          ? '完成本地安排'
+                          : call.function.name === 'cancel_local_action'
+                            ? '撤销本地安排'
+                            : call.function.name === 'search_local_history'
                       ? '搜索历史记录'
                       : call.function.name === 'save_memory'
                         ? '保存长期记忆'

@@ -7,11 +7,13 @@ import { completeDeepSeek, DeepSeekError, testDeepSeekConnection, translateText 
 import { CampusError, readCampusInfo, readPublicNotices } from './runtime/campus';
 import { getUiCopy } from './runtime/i18n';
 import { cancelLocalReminder, scheduleLocalReminder, withNotificationId } from './runtime/reminders';
-import { loadMobileState, saveMobileState } from './runtime/storage';
+import { clearMobileState, hydrateMobileSecrets, loadMobileState, saveMobileState } from './runtime/storage';
 import {
   createConversation,
+  createInitialState,
   newId,
   type CampusNotice,
+  type MobileAgendaItem,
   type MobileAttachment,
   type MobileConversation,
   type MobileLanguage,
@@ -19,8 +21,15 @@ import {
   type MobileProfile,
   type MobileReminder,
   type MobileState,
+  type MobileTurnControls,
   type MobileTheme,
 } from './runtime/types';
+
+const DEFAULT_TURN_CONTROLS: MobileTurnControls = {
+  memoryMode: 'relevant',
+  retention: 'purpose_scoped',
+  audience: 'self',
+};
 
 function friendlyError(error: unknown): string {
   if (error instanceof DeepSeekError) return error.message;
@@ -226,6 +235,15 @@ function BellIcon() {
   );
 }
 
+function CalendarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="4" y="5.5" width="16" height="14" rx="2" />
+      <path d="M8 3.5v4M16 3.5v4M4 10h16M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01" />
+    </svg>
+  );
+}
+
 function ShieldIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -238,14 +256,19 @@ function ShieldIcon() {
 export function App() {
   const initial = useMemo(() => loadMobileState(), []);
   const [state, setState] = useState<MobileState>(initial);
+  const [secretsHydrated, setSecretsHydrated] = useState(false);
   const [draft, setDraft] = useState('');
   const [attachmentDraft, setAttachmentDraft] = useState<MobileAttachment | null>(null);
   const [attachmentMessage, setAttachmentMessage] = useState('');
   const [memoryDraft, setMemoryDraft] = useState('');
   const [busy, setBusy] = useState(false);
+  const [turnControls, setTurnControls] = useState<MobileTurnControls>(DEFAULT_TURN_CONTROLS);
+  const [scopeOpen, setScopeOpen] = useState(false);
   const [, setStatus] = useState<AgentStatus | '空闲'>('空闲');
   const [connectionMessage, setConnectionMessage] = useState('');
   const [testing, setTesting] = useState(false);
+  const [clearConfirm, setClearConfirm] = useState(false);
+  const [dataMessage, setDataMessage] = useState('');
   const [translationMessage, setTranslationMessage] = useState('');
   const [translating, setTranslating] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -256,6 +279,7 @@ export function App() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [campusOpen, setCampusOpen] = useState(false);
   const [remindersOpen, setRemindersOpen] = useState(false);
+  const [agendaOpen, setAgendaOpen] = useState(false);
   const [reminderTitleDraft, setReminderTitleDraft] = useState('');
   const [reminderNotesDraft, setReminderNotesDraft] = useState('');
   const [reminderTimeDraft, setReminderTimeDraft] = useState(() => localDateTimeValue());
@@ -291,8 +315,15 @@ export function App() {
     : sortedConversations;
 
   useEffect(() => {
-    saveMobileState(state);
-  }, [state]);
+    void hydrateMobileSecrets(initial).then((next) => {
+      setState(next);
+      setSecretsHydrated(true);
+    });
+  }, [initial]);
+
+  useEffect(() => {
+    if (secretsHydrated) saveMobileState(state);
+  }, [secretsHydrated, state]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -603,13 +634,16 @@ export function App() {
     const conversationId = activeConversation.id;
     const history = messages;
     const conversationLanguage = state.profile.language;
-    const shouldGenerateTitle = history.length === 0;
+    const controls = turnControls;
+    const ephemeral = controls.retention === 'session_only';
+    const shouldGenerateTitle = history.length === 0 && !ephemeral;
     const userMessage: MobileMessage = {
       id: newId('user'),
       role: 'user',
       content: text || (attachment?.kind === 'image' ? copy.imageReady : copy.textAttachmentReady),
       ...(attachment ? { attachment } : {}),
       translations: { [conversationLanguage]: text || (attachment?.kind === 'image' ? copy.imageReady : copy.textAttachmentReady) },
+      ...(ephemeral ? { ephemeral: true } : {}),
       createdAt: new Date().toISOString(),
       status: 'done',
     };
@@ -619,6 +653,7 @@ export function App() {
       role: 'assistant',
       content: '',
       translations: {},
+      ...(ephemeral ? { ephemeral: true } : {}),
       createdAt: new Date().toISOString(),
       status: 'running',
     };
@@ -646,15 +681,22 @@ export function App() {
         setStatus,
         {
           conversations: state.conversations,
+          agenda: state.agenda,
           reminders: state.reminders,
+          controls,
+          allowMemoryWrite: controls.retention === 'purpose_scoped' && controls.memoryMode === 'relevant',
+          allowLocalWrites: controls.retention !== 'session_only',
           campus: state.campus,
           currentAttachment: attachment || undefined,
           createReminder: createReminderRecord,
+          prepareAction: createAgendaRecord,
+          updateAction: updateAgendaRecord,
           saveMemory: async (memory) => {
             setState((current) => ({ ...current, memories: [...current.memories.filter((item) => item !== memory), memory].slice(-16) }));
             return { status: 'ok', saved: memory };
           },
         },
+        controls,
       );
       updateActiveMessages((current) => current.map((message) =>
         message.id === assistantId ? {
@@ -685,6 +727,8 @@ export function App() {
       abortRef.current = undefined;
       setBusy(false);
       setStatus('空闲');
+      setTurnControls(DEFAULT_TURN_CONTROLS);
+      setScopeOpen(false);
     }
   }
 
@@ -741,6 +785,29 @@ export function App() {
     updateState({ memories: state.memories.filter((item) => item !== text) });
   }
 
+  function exportLocalData() {
+    const payload = JSON.stringify({ ...state, apiKey: undefined, profile: { ...state.profile, studentPassword: undefined } }, null, 2);
+    const url = URL.createObjectURL(new Blob([payload], { type: 'application/json' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `zaichang-mobile-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setDataMessage('已导出本机资料（已排除 API Key 和校园密码）。');
+  }
+
+  function clearLocalData() {
+    if (!clearConfirm) {
+      setClearConfirm(true);
+      return;
+    }
+    clearMobileState();
+    setState(createInitialState());
+    setClearConfirm(false);
+    setDataMessage('本机对话、记忆、安排和校园缓存已清空。');
+    setConnectionMessage('');
+  }
+
   async function createReminderRecord(input: { title: string; dueAt: string; notes: string }): Promise<Record<string, unknown>> {
     const reminder = withNotificationId({
       id: newId('reminder'),
@@ -757,6 +824,28 @@ export function App() {
     } catch (error) {
       return { status: 'ok', reminder: { title: reminder.title, due_at: reminder.dueAt }, notification: 'not-scheduled', reason: error instanceof Error ? error.message : '系统通知未安排。' };
     }
+  }
+
+  async function createAgendaRecord(input: { title: string; detail: string; startsAt?: string; durationMinutes?: number }): Promise<Record<string, unknown>> {
+    const item: MobileAgendaItem = {
+      id: newId('action'),
+      title: input.title.trim().slice(0, 160),
+      detail: input.detail.trim().slice(0, 500),
+      ...(input.startsAt ? { startsAt: input.startsAt } : {}),
+      ...(input.durationMinutes ? { durationMinutes: input.durationMinutes } : {}),
+      createdAt: new Date().toISOString(),
+      status: 'saved',
+      source: 'assistant',
+    };
+    setState((current) => ({ ...current, agenda: [...current.agenda.filter((entry) => entry.id !== item.id), item].slice(-100) }));
+    return { status: 'saved', action: { id: item.id, title: item.title, detail: item.detail, starts_at: item.startsAt, duration_minutes: item.durationMinutes }, undo: '可在本地安排页面撤销' };
+  }
+
+  async function updateAgendaRecord(id: string, status: 'done' | 'cancelled'): Promise<Record<string, unknown>> {
+    const existing = state.agenda.find((item) => item.id === id);
+    if (!existing) return { status: 'known_absent', reason: '没有找到这项本地安排。' };
+    setState((current) => ({ ...current, agenda: current.agenda.map((item) => item.id === id ? { ...item, status } : item) }));
+    return { status: 'confirmed_success', action_id: id, action_status: status };
   }
 
   async function addReminder() {
@@ -783,11 +872,21 @@ export function App() {
     updateState({ reminders: state.reminders.filter((item) => item.id !== reminder.id) });
   }
 
+  function completeAgenda(item: MobileAgendaItem) {
+    if (item.status !== 'saved') return;
+    updateState({ agenda: state.agenda.map((entry) => entry.id === item.id ? { ...entry, status: 'done' } : entry) });
+  }
+
+  function deleteAgenda(item: MobileAgendaItem) {
+    updateState({ agenda: state.agenda.map((entry) => entry.id === item.id ? { ...entry, status: 'cancelled' } : entry) });
+  }
+
   function openHistory() {
     setHistoryOpen(true);
     setProfileOpen(false);
     setCampusOpen(false);
     setRemindersOpen(false);
+    setAgendaOpen(false);
   }
 
   function closeOverlays() {
@@ -795,6 +894,7 @@ export function App() {
     setProfileOpen(false);
     setCampusOpen(false);
     setRemindersOpen(false);
+    setAgendaOpen(false);
     setHistoryMenuId(null);
     setRenamingId(null);
   }
@@ -858,12 +958,22 @@ export function App() {
     setProfileOpen(true);
     setCampusOpen(false);
     setRemindersOpen(false);
+    setAgendaOpen(false);
   }
 
   function openReminders() {
     setCampusOpen(false);
     setRemindersOpen(true);
+    setAgendaOpen(false);
     setReminderMessage('');
+  }
+
+  function openAgenda() {
+    setHistoryOpen(false);
+    setProfileOpen(true);
+    setCampusOpen(false);
+    setRemindersOpen(false);
+    setAgendaOpen(true);
   }
 
   function openMap() {
@@ -883,6 +993,13 @@ export function App() {
   const upcomingExams = campus?.exams.filter((exam) => exam.status === 'upcoming') || [];
   const finishedExams = campus?.exams.filter((exam) => exam.status === 'finished') || [];
   const unknownExams = campus?.exams.filter((exam) => exam.status === 'unknown') || [];
+  const scopeLabel = turnControls.retention === 'session_only'
+    ? '本轮不保存'
+    : turnControls.memoryMode === 'current_sources_only'
+      ? '只看本条与附件'
+      : turnControls.memoryMode === 'none'
+        ? '不参考历史与记忆'
+        : '按需参考本机资料';
 
   return (
     <main className={`app-shell ${themeClass}`}>
@@ -894,6 +1011,7 @@ export function App() {
         <div className="topbar-actions">
           <button className="header-icon-button" aria-label={state.profile.language === 'en' ? 'Map' : '地图'} onClick={openMap}><MapIcon /></button>
           <button className="header-icon-button" aria-label={state.profile.language === 'en' ? 'Weather' : '天气'} onClick={openWeather}><WeatherIcon /></button>
+          <button className="header-icon-button" aria-label={copy.agendaTitle} onClick={openAgenda}><CalendarIcon /></button>
           <button className="header-icon-button" aria-label={copy.newConversation} onClick={createNewConversation}><PlusIcon /></button>
         </div>
       </header>
@@ -957,6 +1075,9 @@ export function App() {
             accept="image/*,.txt,.md,.json,.csv,.log"
             onChange={(event) => { const file = event.target.files?.[0]; if (file) void handleAttachmentFile(file); event.currentTarget.value = ''; }}
           />
+          <button className={`scope-button ${scopeOpen ? 'selected' : ''}`} type="button" onClick={() => setScopeOpen((open) => !open)} aria-label="设置本轮资料范围">
+            {scopeLabel}
+          </button>
           <textarea
             value={draft}
             disabled={busy}
@@ -980,6 +1101,26 @@ export function App() {
             </button>
           )}
         </div>
+        {scopeOpen && (
+          <section className="scope-popover" aria-label="本轮资料范围">
+            <label><span>可以参考什么</span><select value={turnControls.memoryMode} onChange={(event) => setTurnControls((current) => ({ ...current, memoryMode: event.target.value as MobileTurnControls['memoryMode'] }))}>
+              <option value="relevant">按需参考相关本机资料</option>
+              <option value="current_sources_only">只看本条消息与附件</option>
+              <option value="none">不参考历史与长期记忆</option>
+            </select></label>
+            <label><span>这条消息怎样保留</span><select value={turnControls.retention} onChange={(event) => setTurnControls((current) => ({ ...current, retention: event.target.value as MobileTurnControls['retention'] }))}>
+              <option value="purpose_scoped">保留对话，按需整理记忆</option>
+              <option value="history_no_inference">保留对话，不形成长期记忆</option>
+              <option value="session_only">本轮不保存</option>
+            </select></label>
+            <label><span>回复受众</span><select value={turnControls.audience} onChange={(event) => setTurnControls((current) => ({ ...current, audience: event.target.value as MobileTurnControls['audience'] }))}>
+              <option value="self">只给我看</option>
+              <option value="group">准备给群里看的草稿</option>
+              <option value="public">准备公开的草稿</option>
+            </select></label>
+            {turnControls.audience !== 'self' && <p>只生成草稿，不会自动发送。</p>}
+          </section>
+        )}
       </footer>
 
       {historyOpen && (
@@ -1032,7 +1173,7 @@ export function App() {
         </>
       )}
 
-      {profileOpen && !campusOpen && !remindersOpen && (
+      {profileOpen && !campusOpen && !remindersOpen && !agendaOpen && (
         <section className="full-screen-panel" aria-label={copy.profileTitle}>
           <header className="secondary-topbar">
             <button className="back-button" onClick={() => { setProfileOpen(false); setHistoryOpen(true); }}><BackIcon /><span>{copy.back}</span></button>
@@ -1091,6 +1232,9 @@ export function App() {
             <button className="profile-link" onClick={openReminders}>
               <span><strong>{copy.reminders}</strong><small>{copy.remindersHint}</small></span><BellIcon />
             </button>
+            <button className="profile-link" onClick={openAgenda}>
+              <span><strong>{copy.agenda}</strong><small>{copy.agendaHint}</small></span><CalendarIcon />
+            </button>
             <button className="profile-link" onClick={() => { setCampusOpen(true); setCampusSaved(false); }}>
               <span><strong>{copy.campus}</strong><small>{copy.campusHint}</small></span><ArrowIcon />
             </button>
@@ -1111,11 +1255,48 @@ export function App() {
               </div>
               {connectionMessage && <p className="connection-message">{connectionMessage}</p>}
             </section>
+            <section className="profile-section data-section">
+              <div className="setting-label"><strong>本机资料</strong><span>导出的 JSON 不包含 API Key 和校园密码；清空后无法恢复。</span></div>
+              <div className="campus-account-actions">
+                <button className="secondary-button" onClick={exportLocalData}>导出资料</button>
+                <button className="danger-button" onClick={clearLocalData}>{clearConfirm ? '确认清空' : '清空本机资料'}</button>
+              </div>
+              {clearConfirm && <p className="connection-message">再次点击将删除本机对话、记忆、安排、提醒和校园缓存。</p>}
+              {dataMessage && <p className="connection-message">{dataMessage}</p>}
+            </section>
           </div>
         </section>
       )}
 
-      {profileOpen && remindersOpen && !campusOpen && (
+      {profileOpen && agendaOpen && !campusOpen && !remindersOpen && (
+        <section className="full-screen-panel" aria-label={copy.agendaTitle}>
+          <header className="secondary-topbar">
+            <button className="back-button" onClick={() => setAgendaOpen(false)}><BackIcon /><span>{copy.back}</span></button>
+            <h2>{copy.agendaTitle}</h2>
+            <span className="topbar-spacer" />
+          </header>
+          <div className="settings-scroll reminders-screen">
+            <section className="profile-section reminder-list-section">
+              <div className="setting-label"><strong>{copy.agendaTitle}</strong><span>{state.agenda.filter((item) => item.status !== 'cancelled').length || copy.agendaEmpty}</span></div>
+              {state.agenda.filter((item) => item.status !== 'cancelled').length > 0 ? state.agenda.filter((item) => item.status !== 'cancelled').map((item) => (
+                <div className={`reminder-item ${item.status === 'done' ? 'completed' : ''}`} key={item.id}>
+                  <div>
+                    <strong>{item.title}</strong>
+                    <small>{item.startsAt ? `${copy.agendaTime} · ${formatReminderDate(item.startsAt, state.profile.language)}` : copy.agendaSaved}{item.detail ? ` · ${item.detail}` : ''}</small>
+                  </div>
+                  <div className="reminder-actions">
+                    {item.status === 'saved' && <button type="button" onClick={() => completeAgenda(item)}>{copy.complete}</button>}
+                    <button type="button" aria-label={copy.delete} onClick={() => deleteAgenda(item)}><CloseIcon /></button>
+                  </div>
+                </div>
+              )) : <p className="empty-history">{copy.agendaEmpty}</p>}
+            </section>
+            <p className="campus-privacy-note">{copy.agendaHint}</p>
+          </div>
+        </section>
+      )}
+
+      {profileOpen && remindersOpen && !campusOpen && !agendaOpen && (
         <section className="full-screen-panel" aria-label={copy.remindersTitle}>
           <header className="secondary-topbar">
             <button className="back-button" onClick={() => setRemindersOpen(false)}><BackIcon /><span>{copy.back}</span></button>

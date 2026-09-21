@@ -4,6 +4,7 @@ import {
   DEFAULT_PROFILE,
   type MobileConversation,
   type MobileAttachment,
+  type MobileAgendaItem,
   type MobileCampusData,
   type CampusCourse,
   type CampusExam,
@@ -18,8 +19,12 @@ import {
   type MobileState,
   type MobileTheme,
 } from './types';
+import { Capacitor } from '@capacitor/core';
+import { Preferences } from '@capacitor/preferences';
 
 const STORAGE_KEY = 'zaichang.mobile.local.v2';
+const SECURE_API_KEY = 'zaichang.mobile.deepseek.api-key';
+const SECURE_STUDENT_PASSWORD = 'zaichang.mobile.campus.password';
 const LEGACY_DUPLICATE_HISTORY_TITLES = new Set(['查看课表请求', '查询课表', '查看课表', '数学学院转专业名额咨询']);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -53,6 +58,7 @@ function parseMessages(value: unknown): MobileMessage[] {
       ...item,
       ...(attachment ? { attachment } : {}),
       translations: parseTranslations(raw.translations),
+      ...(raw.ephemeral === true ? { ephemeral: true } : {}),
     };
   });
 }
@@ -105,6 +111,29 @@ function parseReminders(value: unknown): MobileReminder[] {
       notificationId: Math.max(1, notificationId),
     }];
   }).sort((a, b) => a.dueAt.localeCompare(b.dueAt)).slice(0, 100);
+}
+
+function parseAgenda(value: unknown): MobileAgendaItem[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!isRecord(item) || typeof item.id !== 'string' || typeof item.title !== 'string') return [];
+    const startsAt = typeof item.startsAt === 'string' && !Number.isNaN(Date.parse(item.startsAt))
+      ? item.startsAt
+      : undefined;
+    const durationMinutes = typeof item.durationMinutes === 'number' && Number.isFinite(item.durationMinutes)
+      ? Math.max(1, Math.min(24 * 60, Math.round(item.durationMinutes)))
+      : undefined;
+    return [{
+      id: item.id.slice(0, 160),
+      title: item.title.trim().slice(0, 160) || '本地安排',
+      detail: typeof item.detail === 'string' ? item.detail.trim().slice(0, 500) : '',
+      ...(startsAt ? { startsAt } : {}),
+      ...(durationMinutes ? { durationMinutes } : {}),
+      createdAt: typeof item.createdAt === 'string' ? item.createdAt : new Date().toISOString(),
+      status: item.status === 'done' || item.status === 'cancelled' ? item.status : 'saved',
+      source: item.source === 'user' ? 'user' : 'assistant',
+    } satisfies MobileAgendaItem];
+  }).slice(-100);
 }
 
 function parseCampusData(value: unknown): MobileCampusData | null {
@@ -248,6 +277,7 @@ export function loadMobileState(): MobileState {
       conversations,
       activeConversationId: activeId,
       memories,
+      agenda: parseAgenda(value.agenda),
       reminders: parseReminders(value.reminders),
       campus: parseCampusData(value.campus),
       profile: parseProfile(value.profile),
@@ -259,9 +289,43 @@ export function loadMobileState(): MobileState {
 
 export function saveMobileState(state: MobileState): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const persisted: MobileState = {
+      ...state,
+      apiKey: Capacitor.isNativePlatform() ? '' : state.apiKey,
+      profile: Capacitor.isNativePlatform() ? { ...state.profile, studentPassword: '' } : state.profile,
+      conversations: state.conversations.map((conversation) => ({
+        ...conversation,
+        messages: conversation.messages.filter((message) => !message.ephemeral),
+      })),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
+    if (Capacitor.isNativePlatform()) {
+      void Preferences.set({ key: SECURE_API_KEY, value: state.apiKey }).catch(() => {});
+      void Preferences.set({ key: SECURE_STUDENT_PASSWORD, value: state.profile.studentPassword }).catch(() => {});
+    }
   } catch {
     // Storage is best effort. The app remains usable for the current session.
+  }
+}
+
+export async function hydrateMobileSecrets(state: MobileState): Promise<MobileState> {
+  if (!Capacitor.isNativePlatform()) return state;
+  try {
+    const [apiKey, password] = await Promise.all([
+      Preferences.get({ key: SECURE_API_KEY }),
+      Preferences.get({ key: SECURE_STUDENT_PASSWORD }),
+    ]);
+    const nextApiKey = apiKey.value || state.apiKey;
+    const nextPassword = password.value || state.profile.studentPassword;
+    if (!apiKey.value && state.apiKey) await Preferences.set({ key: SECURE_API_KEY, value: state.apiKey });
+    if (!password.value && state.profile.studentPassword) await Preferences.set({ key: SECURE_STUDENT_PASSWORD, value: state.profile.studentPassword });
+    return {
+      ...state,
+      apiKey: nextApiKey,
+      profile: { ...state.profile, studentPassword: nextPassword },
+    };
+  } catch {
+    return state;
   }
 }
 
@@ -269,6 +333,10 @@ export function clearMobileState(): void {
   try {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem('zaichang.mobile.local.v1');
+    if (Capacitor.isNativePlatform()) {
+      void Preferences.remove({ key: SECURE_API_KEY }).catch(() => {});
+      void Preferences.remove({ key: SECURE_STUDENT_PASSWORD }).catch(() => {});
+    }
   } catch {
     // Best effort only.
   }

@@ -109,6 +109,14 @@ export interface UiCopy {
   textAttachmentReady: string;
   reminders: string;
   remindersHint: string;
+  agenda: string;
+  agendaHint: string;
+  agendaTitle: string;
+  agendaEmpty: string;
+  agendaDetail: string;
+  agendaTime: string;
+  agendaSaved: string;
+  agendaCancelled: string;
   remindersTitle: string;
   reminderEmpty: string;
   reminderTitle: string;
@@ -232,6 +240,14 @@ const SIMPLIFIED: UiCopy = {
   textAttachmentReady: '请阅读这个文字附件',
   reminders: '日程提醒',
   remindersHint: '只保存在本机，到时间提醒你',
+  agenda: '本地安排',
+  agendaHint: '只保存在本机，可随时完成或撤销',
+  agendaTitle: '我的安排',
+  agendaEmpty: '还没有本地安排',
+  agendaDetail: '安排说明',
+  agendaTime: '开始时间',
+  agendaSaved: '已登记在本机',
+  agendaCancelled: '已撤销',
   remindersTitle: '日程提醒',
   reminderEmpty: '还没有安排提醒',
   reminderTitle: '提醒内容',

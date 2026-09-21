@@ -172,6 +172,12 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .attachment-button { width: 38px; height: 42px; display: grid; place-items: center; flex: 0 0 auto; color: var(--text-faint); border-radius: 12px; cursor: pointer; }
 .attachment-button:hover { color: var(--accent-strong); background: var(--surface-muted); }
 .attachment-button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.scope-button { min-width: 0; max-width: 118px; height: 36px; padding: 0 8px; overflow: hidden; color: var(--text-faint); border: 0; border-radius: 10px; background: transparent; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.scope-button:hover, .scope-button.selected { color: var(--accent-strong); background: var(--surface-muted); }
+.scope-popover { display: grid; gap: 9px; max-width: 760px; margin: 8px auto 0; padding: 13px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface); box-shadow: var(--shadow); }
+.scope-popover label { display: grid; grid-template-columns: minmax(0, 1fr) minmax(150px, 1.2fr); align-items: center; gap: 10px; color: var(--text-soft); font-size: 11px; }
+.scope-popover select { min-width: 0; padding: 8px 9px; font-size: 11px; }
+.scope-popover p { margin: 0; color: var(--text-faint); font-size: 10px; line-height: 1.5; }
 
 .drawer-backdrop { position: fixed; inset: 0; z-index: 19; width: 100%; height: 100%; border: 0; background: rgba(0, 0, 0, .3); backdrop-filter: blur(4px); animation: fade-in .18s ease-out; }
 .history-drawer { position: fixed; top: 0; bottom: 0; left: max(0px, calc(50% - 380px)); z-index: 20; width: min(88vw, 360px); display: flex; flex-direction: column; padding: calc(18px + env(safe-area-inset-top)) 14px calc(16px + env(safe-area-inset-bottom)); color: var(--text); border-right: 1px solid var(--line); background: var(--surface); box-shadow: 18px 0 50px rgba(0, 0, 0, .14); animation: drawer-right .22s ease-out; }

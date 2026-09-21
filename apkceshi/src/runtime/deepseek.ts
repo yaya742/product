@@ -153,6 +153,58 @@ export const LOCAL_TOOL_SPECS: DeepSeekToolSpec[] = [
   {
     type: 'function',
     function: {
+      name: 'prepare_action',
+      description: '登记一项仅保存在手机上的本地安排。只有用户明确委托创建安排、标题和时间足够清楚时使用；不发送、不联系第三方，用户可以在安排页完成或撤销。',
+      parameters: {
+        type: 'object',
+        properties: {
+          title: { type: 'string', description: '安排标题' },
+          detail: { type: 'string', description: '可选的安排说明' },
+          starts_at: { type: 'string', description: '可选的带时区 ISO 8601 开始时间' },
+          duration_minutes: { type: 'integer', description: '可选的持续分钟数' },
+        },
+        required: ['title'],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_local_actions',
+      description: '读取手机端已经登记的本地安排。用户询问安排、计划或本机待办时使用。',
+      parameters: { type: 'object', properties: { include_done: { type: 'boolean' } }, additionalProperties: false },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'complete_local_action',
+      description: '将一项手机本地安排标记为完成。只有用户明确表示已经完成某项安排时使用。',
+      parameters: {
+        type: 'object',
+        properties: { action_id: { type: 'string', description: '本地安排 ID' } },
+        required: ['action_id'],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'cancel_local_action',
+      description: '撤销一项手机本地安排。只有用户明确要求删除、取消或撤销该安排时使用。',
+      parameters: {
+        type: 'object',
+        properties: { action_id: { type: 'string', description: '本地安排 ID' } },
+        required: ['action_id'],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'search_local_history',
       description: '搜索当前手机保存的历史对话。只在用户明确要求查找以前聊过的内容时使用。',
       parameters: {
