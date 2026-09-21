@@ -83,6 +83,37 @@ function inlineMarkdown(value: string): ReactNode {
   });
 }
 
+function messageLinkLabel(url: string): string {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    if (hostname === 'person.zju.edu.cn') return '打开教师主页';
+    if (hostname === 'www.zju.edu.cn' || hostname.endsWith('.zju.edu.cn')) return '打开官方页面';
+    return '打开链接';
+  } catch {
+    return '打开链接';
+  }
+}
+
+function messageTableCell(value: string): ReactNode {
+  const candidate = value.trim();
+  if (/^https:\/\/[^\s|]+$/i.test(candidate)) {
+    return (
+      <a
+        className="message-link"
+        href={candidate}
+        title={candidate}
+        onClick={(event) => {
+          event.preventDefault();
+          void Browser.open({ url: candidate }).catch(() => window.open(candidate, '_blank', 'noopener,noreferrer'));
+        }}
+      >
+        {messageLinkLabel(candidate)}
+      </a>
+    );
+  }
+  return inlineMarkdown(value);
+}
+
 function tableCells(line: string): string[] {
   return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((cell) => cell.trim());
 }
@@ -107,7 +138,7 @@ function MessageContent({ content }: { content: string }) {
         <div className="message-table-wrap" key={`table-${index}`}>
           <table className="message-table">
             <thead><tr>{headers.map((header, cellIndex) => <th key={cellIndex}>{inlineMarkdown(header)}</th>)}</tr></thead>
-            <tbody>{rows.map((row, rowIndex) => <tr key={rowIndex}>{headers.map((_, cellIndex) => <td key={cellIndex}>{inlineMarkdown(row[cellIndex] || '')}</td>)}</tr>)}</tbody>
+            <tbody>{rows.map((row, rowIndex) => <tr key={rowIndex}>{headers.map((_, cellIndex) => <td key={cellIndex}>{messageTableCell(row[cellIndex] || '')}</td>)}</tr>)}</tbody>
           </table>
         </div>,
       );
@@ -313,6 +344,7 @@ export function App() {
   const composerRef = useRef<HTMLElement>(null);
   const online = typeof navigator === 'undefined' ? true : navigator.onLine;
   const copy = getUiCopy(state.profile.language);
+  const campusTermLabel = (term: string) => term === '1' ? copy.campusAutumnTerm : copy.campusSpringTerm;
   const activeConversation = state.conversations.find((item) => item.id === state.activeConversationId) || state.conversations[0];
   const messages = activeConversation?.messages || [];
   // Empty drafts are not history items, so repeated new-chat taps stay out of history.
@@ -1406,7 +1438,7 @@ export function App() {
             {campus && (
               <>
                 <section className="campus-status-row">
-                  <div><strong>{copy.campusUpdated}</strong><small>{formatCampusUpdated(campus.fetchedAt, state.profile.language)} · {campus.academicYear}–{Number(campus.academicYear) + 1}{campus.yearLevel ? ` · ${campus.yearLevel}` : ''}</small></div>
+                  <div><strong>{copy.campusUpdated}</strong><small>{formatCampusUpdated(campus.fetchedAt, state.profile.language)} · {campus.academicYear}–{Number(campus.academicYear) + 1} · {campusTermLabel(campus.term)} · {campus.yearLevel || '年级未识别'}</small></div>
                   <button className="icon-refresh-button" disabled={campusLoading} onClick={() => void refreshCampusInfo()} aria-label={copy.campusRefresh}>↻</button>
                 </section>
                 {campus.warnings.length > 0 && (
@@ -1459,7 +1491,7 @@ export function App() {
 
                 {campusTab === 'schedule' && (
                   <section className="profile-section campus-data-card">
-                    <div className="setting-label"><strong>{copy.campusSchedule}</strong><span>{campus.courses.length ? `${campus.courses.length} · ${campus.academicYear}–${Number(campus.academicYear) + 1}${campus.yearLevel ? ` · ${campus.yearLevel}` : ''}` : copy.campusEmpty}</span></div>
+                    <div className="setting-label"><strong>{copy.campusSchedule}</strong><span>{campus.courses.length ? `${campus.courses.length} · ${campus.academicYear}–${Number(campus.academicYear) + 1} · ${campusTermLabel(campus.term)} · ${campus.yearLevel || '年级未识别'} · ${copy.campusCompletedCredit} ${campus.completedCredit.toFixed(1)}` : copy.campusEmpty}</span></div>
                     {campus.courses.length ? campus.courses.map((course) => (
                       <div className="campus-record" key={course.id}>
                         <strong>{course.name}</strong><span>{course.time} · {course.location || copy.campusNoLocation}</span><small>{course.teacher} · {course.weeks}</small><small>{copy.campusCourseCredit}：{course.credit || '—'}{course.completed ? ` · ${copy.campusCourseCompleted}` : ''}{course.score && course.score !== '—' ? ` · ${course.score}` : ''}</small>

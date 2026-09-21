@@ -548,9 +548,12 @@ function termValue(value: string | undefined): string {
 }
 
 function inferYearLevel(studentId: string, academicYear: string): string {
-  const match = studentId.trim().match(/^(20\d{2})/);
-  if (!match) return '';
-  const entryYear = Number(match[1]);
+  const cleanId = studentId.trim();
+  const fullYear = cleanId.match(/^(20\d{2})/)?.[1];
+  // ZJU student IDs commonly use either a four-digit admission year or a
+  // compact 3xx prefix such as 323/324 for 2023/2024 cohorts.
+  const compactYear = cleanId.match(/^3(2\d)/)?.[1];
+  const entryYear = fullYear ? Number(fullYear) : compactYear ? 2000 + Number(compactYear) : NaN;
   const startYear = Number(academicYear);
   if (!Number.isFinite(startYear) || startYear < entryYear - 1 || startYear > entryYear + 7) return '';
   return `大${Math.max(1, Math.min(8, startYear - entryYear + 1))}`;

@@ -346,12 +346,13 @@ export async function runMobileAgent(
     let streamedText = '';
     const completion = await completeDeepSeek(apiKey, wire, signal, undefined, (text) => {
       streamedText += text;
-      onText(text);
     });
     wire.push(completion.message);
     if (!completion.message.tool_calls?.length) {
       const finalText = typeof completion.message.content === 'string' ? completion.message.content : '';
-      return streamedText || finalText || '这次没有返回可显示的内容。';
+      const visibleText = streamedText || finalText;
+      if (visibleText) onText(visibleText);
+      return visibleText || '这次没有返回可显示的内容。';
     }
 
     for (const call of completion.message.tool_calls) {
