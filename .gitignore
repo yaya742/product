@@ -3,3 +3,14 @@ __pycache__/
 .pytest_cache/
 .venv/
 .env
+
+# Desktop project local state and generated output
+zaichang/node_modules/
+zaichang/dist/
+zaichang/dist-electron/
+zaichang/release/
+zaichang/artifacts/
+zaichang/.dev-data/
+zaichang/.runtime/
+zaichang/.test-data/
+zaichang/build/runtime-staging-*/
