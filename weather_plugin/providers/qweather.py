@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import math
 from typing import Any
 
 import httpx
@@ -127,9 +128,13 @@ class QWeatherProvider:
 
     @staticmethod
     def _number(value: Any) -> float:
-        if value is None:
-            raise WeatherProviderError("INVALID_RESPONSE", "和风天气返回了缺失的数值。", retryable=False)
-        return float(value)
+        try:
+            number = float(value)
+        except (TypeError, ValueError) as error:
+            raise WeatherProviderError("INVALID_RESPONSE", "和风天气返回了无效的数值。", retryable=False) from error
+        if not math.isfinite(number):
+            raise WeatherProviderError("INVALID_RESPONSE", "和风天气返回了无效的数值。", retryable=False)
+        return number
 
     @staticmethod
     def _fraction_to_percent(value: Any) -> float:

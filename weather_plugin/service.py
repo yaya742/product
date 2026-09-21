@@ -60,7 +60,9 @@ class FallbackProvider:
         except WeatherProviderError as error:
             if not error.retryable:
                 raise
-            return await self.fallback.get_current(location)
+            response = await self.fallback.get_current(location)
+            warning = f"主天气来源暂时不可用，已切换到备用来源：{error.message}"
+            return response.model_copy(update={"warnings": [*response.warnings, warning]})
 
     async def get_forecast(
         self,
@@ -72,7 +74,9 @@ class FallbackProvider:
         except WeatherProviderError as error:
             if not error.retryable:
                 raise
-            return await self.fallback.get_forecast(location, hours)
+            response = await self.fallback.get_forecast(location, hours)
+            warning = f"主天气来源暂时不可用，已切换到备用来源：{error.message}"
+            return response.model_copy(update={"warnings": [*response.warnings, warning]})
 
 
 class WeatherService:
@@ -97,7 +101,7 @@ class WeatherService:
         if isinstance(cached, CurrentWeatherResponse):
             return self._attach_location_metadata(cached, location)
         response = await self.provider.get_current(location)
-        cacheable_response = response.model_copy(update={"warnings": []})
+        cacheable_response = response.model_copy(update={"warnings": list(response.warnings)})
         await self.cache.set(key, cacheable_response, self.current_cache_ttl_seconds)
         return self._attach_location_metadata(response, location)
 
@@ -107,7 +111,7 @@ class WeatherService:
         if isinstance(cached, WeatherForecastResponse):
             return self._attach_location_metadata(cached, location)
         response = await self.provider.get_forecast(location, hours)
-        cacheable_response = response.model_copy(update={"warnings": []})
+        cacheable_response = response.model_copy(update={"warnings": list(response.warnings)})
         await self.cache.set(key, cacheable_response, self.forecast_cache_ttl_seconds)
         return self._attach_location_metadata(response, location)
 
@@ -126,6 +130,8 @@ class WeatherService:
             raise ValueError("活动评估时间范围不能超过 24 小时。")
 
         now = datetime.now(start.tzinfo or timezone.utc)
+        if end <= now:
+            raise ValueError("活动时间已经结束，无法评估未来天气。")
         hours_until_end = int((end - now).total_seconds() / 3600) + 2
         forecast_hours = max(1, min(240, hours_until_end))
         forecast = await self.get_forecast(location, forecast_hours)
