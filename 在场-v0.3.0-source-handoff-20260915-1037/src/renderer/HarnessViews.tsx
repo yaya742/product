@@ -25,10 +25,9 @@ const localTime = (v?: string) => {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 };
 const names: Record<string, string> = {
-  schedule: '课程安排',
+  schedule: '安排',
   exams: '考试',
-  sports: '体育记录',
-  weather: '天气',
+  sports: '运动记录',
   origin: '出发地点',
   precise_origin: '精确起点',
   financial_coverage: '可用资金',
@@ -46,9 +45,7 @@ export const needName = (key: string) =>
     ? '可用设备'
     : /origin|location|route/.test(key)
       ? '地点与路线'
-      : /weather/.test(key)
-        ? '对应时段的天气'
-        : /time|deadline/.test(key)
+      : /time|deadline/.test(key)
           ? '时间限制'
           : /permission|grant/.test(key)
             ? '使用授权'
@@ -73,8 +70,6 @@ const sourceName = (e: EvidenceEvent) =>
     'history:self': '对话原文',
     'profile:self': '你在记忆页的修改',
     'work:self': '你的反馈',
-    'campus:zju-account': '浙大本人账号',
-    'campus:local': '导入的校园资料',
     'local-agenda': '本地安排',
   }[e.sourceId] ||
   '资料原文';
@@ -1020,47 +1015,6 @@ function localActionItem(action: EffectAction): Action {
     approvalDigest: action.digest,
     coverage: 'verified',
   };
-}
-
-export function SourcePermissions({ onState }: { onState: (s: State) => void }) {
-  const [revoked, setRevoked] = useState<string[]>(),
-    [pending, setPending] = useState(false),
-    [error, setError] = useState('');
-  useEffect(() => {
-    api
-      .runtimeOverview()
-      .then((v) => setRevoked(v.revoked))
-      .catch((e) => setError(failureText(e)));
-  }, []);
-  async function change(enabled: boolean) {
-    setPending(true);
-    setError('');
-    try {
-      const next = await api.permission({ scope: 'campus:read', enabled });
-      setRevoked(next.revoked);
-      onState(await api.state());
-    } catch (e) {
-      setError(failureText(e));
-    } finally {
-      setPending(false);
-    }
-  }
-  return (
-    <section className="source-permissions">
-      <Switch
-        checked={revoked ? !revoked.includes('campus:read') : false}
-        onChange={(v) => void change(v)}
-        label="允许按需读取校园资料"
-        detail="关闭会立即停止本轮校园读取；本机加密保存的登录信息和学校快照不会发送给模型"
-        disabled={pending || !revoked}
-      />
-      {error && (
-        <p role="alert" className="harness-inline-error">
-          {error}
-        </p>
-      )}
-    </section>
-  );
 }
 
 /** User-facing memory view. Internal lifecycle/verification labels stay behind

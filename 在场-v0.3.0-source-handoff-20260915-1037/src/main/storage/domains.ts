@@ -1,4 +1,4 @@
-import { randomUUID, createHash } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import {
   domainDeltaSchema,
   HarnessError,
@@ -7,11 +7,9 @@ import {
   type DomainRecord,
   type ScopeHandle,
 } from '../../shared/harness';
-import type { CampusSnapshot } from '../../shared/types';
 import type { KernelRepository } from './repository';
 import type { PolicyKernel } from '../runtime/policy';
 import { canonical } from '../runtime/semantics';
-import { hasCredentials } from '../runtime/redaction';
 import { expandAgenda } from '../actions/calendar';
 import type { Action } from '../../shared/types';
 
@@ -27,7 +25,7 @@ export class DomainService {
     if (!scope.sources.includes(delta.sourceId))
       throw new HarnessError('source_forbidden', '这个来源未获授权。');
     if (scope.retention === 'session_only')
-      throw new HarnessError('retention_forbidden', '这次读取不保存到校园资料。');
+      throw new HarnessError('retention_forbidden', '这次读取不保存到本地资料。');
     if (delta.completeness === 'complete' && delta.errors.length)
       throw new HarnessError('incomplete_sync', '含错误的抓取不能声明完整覆盖。');
     for (const record of delta.upserts) {
@@ -260,142 +258,12 @@ export class DomainService {
       conflicts,
     };
   }
-  importSnapshot(
-    snapshot: CampusSnapshot,
-    providedKeys = Object.keys(snapshot),
-    sourceId = 'campus:local',
-    institutionId = 'zju',
-    termId = 'unspecified',
-  ) {
-    if (hasCredentials(JSON.stringify(snapshot)))
-      throw new HarnessError('credential_in_import', '资料中包含疑似凭据，请移除后再导入。');
-    this.policy.registerSource(sourceId);
-    const scope = this.policy.hostScope(),
-      prefix = 'import:' + randomUUID();
-    this.repo.write(() => {
-      for (const domain of ['schedule', 'exams', 'sports', 'places', 'rules'] as const) {
-        if (!providedKeys.includes(domain) || snapshot[domain] === undefined) continue;
-        const records = Array.isArray(snapshot[domain])
-          ? (snapshot[domain] as unknown[])
-          : [snapshot[domain]];
-        const upserts: DomainDelta['upserts'][number][] = [];
-        for (let start = 0; start < Math.max(records.length, 1); start += 40) {
-          const chunk = records.slice(start, start + 40),
-            eventId = prefix + ':' + domain + ':' + start;
-          const event = this.repo.ingest(scope, {
-            id: eventId,
-            ownerId: this.repo.identity.principalId,
-            workspaceId: this.repo.identity.workspaceId,
-            subjectId: this.repo.identity.principalId,
-            worldId: 'real',
-            sourceId,
-            contentVersion: 1,
-            text: JSON.stringify({
-              source: snapshot.source,
-              updatedAt: snapshot.updatedAt,
-              domain,
-              offset: start,
-              records: chunk,
-            }),
-            speaker: 'external',
-            kind: 'file_import',
-            authority: 'quotation',
-            roots: [prefix + ':' + domain],
-            label: { ...personalLabel, infer: false },
-            receivedAt: this.repo.clock.now(),
-            status: 'active',
-            locator: {
-              kind: 'structured',
-              snapshotId: prefix,
-              jsonPointer: '/' + domain + '/' + start,
-              sourceRecordId: domain + ':' + start,
-            },
-          });
-          upserts.push(
-            ...chunk.map((value: any, index) => ({
-              recordId: String(
-                value.id ||
-                  (domain === 'sports' && 'sports-term') ||
-                  value.name ||
-                  value.title ||
-                  start + index,
-              ),
-              value: { ...value, source: snapshot.source, scopeKey: 'all' },
-              evidenceId: event.id,
-            })),
-          );
-          this.repo.indexEvidence(scope, eventId);
-        }
-        this.apply(scope, {
-          sourceId,
-          domain,
-          institutionId,
-          termId,
-          scopeKeys: ['all'],
-          completeness: 'complete',
-          upserts,
-          tombstones: [],
-          fetchedAt: snapshot.updatedAt,
-          errors: [],
-        });
-      }
-      this.repo.setMeta('campus_import_metadata', {
-        source: snapshot.source,
-        updatedAt: snapshot.updatedAt,
-        institutionId,
-        termId,
-        sourceId,
-      });
-    });
-  }
-  campusSnapshot(): CampusSnapshot | null {
-    const meta = this.repo.getMeta<{
-      source: string;
-      updatedAt: string;
-      institutionId: string;
-      termId: string;
-    }>('campus_import_metadata');
-    if (!meta) return null;
-    const scope = this.policy.hostScope(),
-      read = (domain: string) =>
-        this.read(scope, domain, { institutionId: meta.institutionId, termId: meta.termId, limit: 6000 }).map(
-          (r) => r.value,
-        );
-    return {
-      source: meta.source,
-      updatedAt: meta.updatedAt,
-      schedule: read('schedule') as any,
-      exams: read('exams') as any,
-      sports: read('sports')[0] as any,
-      places: read('places') as any,
-      rules: read('rules') as any,
-    };
-  }
-  disconnect(sourceId = 'campus:local') {
-    const ids = this.repo.db
-      .prepare('SELECT id FROM h_evidence WHERE source=?')
-      .all(sourceId)
-      .map((r) => String(r.id));
-    const fence = this.repo.establishFence({ kind: 'delete', objectIds: [], sourceIds: ids });
-    this.policy.signalBarrier();
-    this.repo.cleanupFence(fence);
-    this.repo.write(() => {
-      this.repo.db.prepare('DELETE FROM h_domain WHERE source=?').run(sourceId);
-      this.repo.db.prepare('DELETE FROM h_sync WHERE source=?').run(sourceId);
-      this.repo.db.prepare("DELETE FROM h_meta WHERE key='campus_import_metadata'").run();
-    });
-  }
   /** Select only busy interval columns in SQLite, before any model receives calendar data. Private titles never enter this projection. */
   availability(handle: ScopeHandle, from?: string, to?: string) {
     const s = this.policy.validate(handle);
     if (!s.grants.includes('availability:share')) throw new HarnessError('projection_forbidden', '尚未允许共享忙闲时段。');
     const windowFrom = from || this.repo.clock.now(), windowTo = to || new Date(Date.parse(windowFrom) + 7 * 86400000).toISOString();
-    const rows = this.repo.db.prepare(`SELECT source,status,json_extract(payload,'$.value.status') AS event_status,json_extract(payload,'$.value.startsAt') AS start,json_extract(payload,'$.value.endsAt') AS end
-      FROM h_domain WHERE owner=? AND workspace=? AND subject=? AND world='real' AND domain IN ('schedule','exams') AND status!='known_absent'
-      AND source IN (${s.sources.map(() => '?').join(',') || 'NULL'}) AND sensitivity!='restricted'`)
-      .all(s.principalId, s.workspaceId, s.subjectId, ...s.sources);
-    const intervals = rows.filter(row => !['cancelled', 'canceled'].includes(String(row.event_status)) && typeof row.start === 'string' && typeof row.end === 'string' && Date.parse(String(row.end)) > Date.parse(windowFrom) && Date.parse(String(row.start)) < Date.parse(windowTo))
-      .map(row => ({ start: String(row.start), end: String(row.end) }));
+    const intervals: { start: string; end: string }[] = [];
     const issues: unknown[] = [];
     if (s.sources.includes('local-agenda')) {
       const local = this.repo.db.prepare(`SELECT json_extract(g.payload,'$.startsAt') AS start,json_extract(g.payload,'$.durationMinutes') AS duration,
@@ -419,9 +287,9 @@ export class DomainService {
       this.repo.access.push({ principalId: s.principalId, scopeId: handle.id, purposes: s.purposes, source: 'local-agenda', objectId: 'busy-window', kind: 'availability_projection' });
     }
     const unique = [...new Map(intervals.map(interval => [interval.start + ':' + interval.end, interval])).values()];
-    const uncertain = issues.length > 0 || rows.some(row => row.status !== 'fresh');
-    return { participant: '本人', sourceIds: s.sources.filter(source => ['local-agenda', 'campus:local', 'campus:zju-account'].includes(source)), busyIntervals: unique, issues, status: uncertain ? 'partial' : unique.length ? 'fresh' : 'known_absent',
-      meaning: '这些是忙碌区间，不是有空区间；范围为当前保留的本地与校园记录，不保证尚未同步或未登记的外部安排。',
+    const uncertain = issues.length > 0;
+    return { participant: '本人', sourceIds: s.sources.filter(source => source === 'local-agenda'), busyIntervals: unique, issues, status: uncertain ? 'partial' : unique.length ? 'fresh' : 'known_absent',
+      meaning: '这些是忙碌区间，不是有空区间；范围仅为当前保留的本地安排。',
       coverage: { completeForRetainedRecords: !uncertain, externalCoverageConfirmed: false }, window: { from: windowFrom, to: windowTo } };
   }
 }

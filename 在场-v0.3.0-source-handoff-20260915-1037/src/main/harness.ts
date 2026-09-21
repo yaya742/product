@@ -24,8 +24,6 @@ import {
 } from './provider';
 import { Store } from './store';
 import { ToolRegistry, type ToolContext } from './tools';
-import type { ZjuAdapter } from './zjuAdapter';
-import type { CampusMapAdapter } from './mapService';
 import { runDemo } from './demo';
 import type { RunSession } from './runtime/coordinator';
 import { splitUserInput, type InputControls } from './runtime/policy';
@@ -115,11 +113,8 @@ export class Harness {
     private key: () => string,
     private emit: (event: RunEvent) => void,
     private clientFactory: (key: string, model: string) => ModelClient = createModelClient,
-    private zju?: ZjuAdapter,
-    private map?: CampusMapAdapter,
     private keyStatus?: () => Settings['keyStatus'],
   ) {
-    store.runtime.connect({ campus: zju, map });
     store.runtime.policy.onBarrier(() => {
       this.conversationChains.clear();
       this.boundaryChanged = true;
@@ -131,9 +126,6 @@ export class Harness {
   get running() {
     return !!this.controller;
   }
-  invalidateCampusCache(_sessionId?: string) {
-    this.store.runtime.policy.signalBarrier();
-  }
   stateChanged() {
     const snapshot = this.store.state(!!this.key());
     this.emit({
@@ -144,7 +136,6 @@ export class Harness {
           ...snapshot.settings,
           keyStatus: this.keyStatus?.() || (this.key() ? 'available' : 'missing'),
         },
-        campusConnector: this.zju?.describe() || null,
       },
     });
   }
@@ -515,7 +506,6 @@ export class Harness {
           delete message.responseText;
           delete message.releaseArtifacts;
           delete message.image;
-          delete message.mapCards;
           delete message.scopeSummary;
           delete message.contextReceipt;
         }
@@ -554,11 +544,6 @@ export class Harness {
             signal,
             step,
             () => publish(true),
-            this.map,
-            (card) => {
-              message.mapCards = [...(message.mapCards || []), card];
-              publish(true);
-            },
           );
         if (run.ephemeral || contract.actionMode === 'respond') message.actions = [];
       } else {
@@ -706,7 +691,7 @@ export class Harness {
             if (brief.useAvailability) {
               if (!request.from || !request.to) return { status: 'needs_information', required: ['from', 'to'], reason: '请按用户给出的时间窗提供from/to，再读取忙闲；不要猜时间。' };
               const parent = runtime.policy.validate(contract.scope);
-              const projectionSources = [...new Set([...(run.ingress.projectionSources || []), ...parent.sources.filter(source => ['local-agenda', 'campus:local', 'campus:zju-account'].includes(source))])];
+              const projectionSources = [...new Set([...(run.ingress.projectionSources || []), ...parent.sources.filter(source => source === 'local-agenda')])];
               availability = await runtime.executeTool({ ...run, ingress: { ...run.ingress, projectionSources, requiresReadPurpose: true } }, 'availability_projection', { from: request.from, to: request.to }, context);
               (run.observations ||= []).push({ tool: 'availability_projection', result: availability });
               if (!['fresh', 'partial', 'known_absent'].includes(String((availability as any)?.status))) return { status: 'not_ready', reason: '忙闲资料尚未取得，不能据此生成可约时段。', availability };
@@ -734,8 +719,6 @@ export class Harness {
           userText: run.ingress.authoredText,
           currentUserId: user.id,
           child: false,
-          campus: this.zju,
-          map: this.map,
           step,
           plan: (items) => {
             message.obligations = items;
@@ -748,10 +731,6 @@ export class Harness {
             publish(true);
           },
           changed: () => this.stateChanged(),
-          mapCard: (card) => {
-            message.mapCards = [...(message.mapCards || []), card];
-            publish(true);
-          },
           delegate: async tasks => {
             if (childCount + tasks.length > 3) throw new HarnessError('child_budget', '本轮独立调查达到上限，请先整合已有结果。');
             childCount += tasks.length;
@@ -848,7 +827,7 @@ export class Harness {
               const childSources = runtime.policy.validate(scope).sources;
               const childRun: RunSession = { ...run, methodNotes: [], image: undefined, controlUsages: undefined, dependencyNotices: undefined, privacyResult: undefined, releaseArtifacts: undefined, episodeId: undefined, budgetOwner: run, events: [], observations: [], pack: undefined, sessionId: id, toolCalls: 0, modelCalls: 0,
                 ingress: { ...run.ingress, text: task.instruction, authoredText: task.instruction, attachment: undefined, controlProposal: undefined, releaseBrief: undefined, priorReleaseArtifacts: undefined, priorReleasedDraft: undefined,
-                  projectionSources: childSources.filter(source => ['local-agenda', 'campus:local', 'campus:zju-account'].includes(source)), threadContextAllowed: false, requiresReadPurpose: true, contract: { ...contract, id, scope, actionMode: 'read' } },
+                  projectionSources: childSources.filter(source => source === 'local-agenda'), threadContextAllowed: false, requiresReadPurpose: true, contract: { ...contract, id, scope, actionMode: 'read' } },
               };
               childRun.pack = await runtime.context.compile(childRun.ingress, [], signal, [], false, id);
               const childRegistry = new ToolRegistry({ ...context, runtimeSession: childRun, child: true, userText: task.instruction,

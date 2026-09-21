@@ -30,14 +30,11 @@ import {
   Bell,
   Paperclip,
   Image as ImageIcon,
-  MapPinned,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Action, Draft, Memory, Message, State } from '../shared/types';
 import { LIMITS } from '../shared/limits';
-import { emptyRoute, type MapCard, type MapRouteResult } from '../shared/map-v2';
-import { MapRouteCard, MapSheet } from './map/CampusMap';
 import {
   ReplyEvidence,
   ScopeSettings,
@@ -93,7 +90,6 @@ export function App() {
   const [navigating, setNavigating] = useState(false),
     navigationPending = useRef(false);
   const [away, setAway] = useState(false);
-  const [mapSheet, setMapSheet] = useState<MapRouteResult | null>(null);
   const [previewImage, setPreviewImage] = useState<Message['image']>();
   const scrollRef = useRef<HTMLDivElement>(null),
     inputRef = useRef<HTMLTextAreaElement>(null),
@@ -222,7 +218,6 @@ export function App() {
   }, [input]);
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
-      if (mapSheet) return;
       if (e.isComposing || e.keyCode === 229) return;
       if ((e.ctrlKey || e.metaKey) && e.key === 'k' && (!panel || panel === 'history')) {
         e.preventDefault();
@@ -241,7 +236,7 @@ export function App() {
     };
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
-  }, [busy, panel, attachmentMenu, mapSheet]);
+  }, [busy, panel, attachmentMenu]);
   async function newChat() {
     if (busy || navigationPending.current) return;
     navigationPending.current = true;
@@ -504,7 +499,6 @@ export function App() {
           onSave={(item) => void saveAction(item)}
           onRevoke={(item) => saveAction(item, 'delete')}
           onViewAgenda={() => setPanel('agenda')}
-          onOpenMap={(route) => setMapSheet(route)}
           onPreviewImage={setPreviewImage}
           onCopy={() =>
             void attempt(async () => {
@@ -596,9 +590,6 @@ export function App() {
             <CalendarDays size={18} />
             {!!openAgendaCount && <i className="notification-dot" aria-hidden="true" />}
           </IconButton>
-          <IconButton label="打开校园地图" onClick={() => setMapSheet(emptyRoute())}>
-            <MapPinned size={19} />
-          </IconButton>
           <IconButton label="连接与偏好" onClick={() => setPanel('settings')}>
             <SlidersHorizontal size={18} />
           </IconButton>
@@ -634,9 +625,9 @@ export function App() {
                 安排一下今天
                 <ArrowUpRight className="suggestion-arrow" size={13} />
               </button>
-              <button onClick={() => useSuggestion('从主图书馆到紫金港食堂（东区）怎么走？')}>
-                <MapPinned size={15} aria-hidden="true" />
-                去东区食堂怎么走
+              <button onClick={() => useSuggestion('帮我整理一个今天的专注时段')}>
+                <Dumbbell size={15} aria-hidden="true" />
+                留出一个专注时段
                 <ArrowUpRight className="suggestion-arrow" size={13} />
               </button>
               <button onClick={() => useSuggestion('最近有点累，想缓一缓')}>
@@ -797,7 +788,6 @@ export function App() {
           </div>
         </Modal>
       )}
-      {mapSheet && <MapSheet initialRoute={mapSheet} onClose={() => setMapSheet(null)} />}
       {scopeOpen && (
         <ScopeSettings
           value={turnControls}
@@ -829,7 +819,6 @@ function MessageView({
   onCopy,
   onRetry,
   onViewAgenda,
-  onOpenMap,
   onPreviewImage,
   busy,
   boundary,
@@ -841,7 +830,6 @@ function MessageView({
   onCopy: () => void;
   onRetry: () => void;
   onViewAgenda: () => void;
-  onOpenMap: (route: MapRouteResult) => void;
   onPreviewImage: (image: NonNullable<Message['image']>) => void;
   busy: boolean;
   boundary: string;
@@ -981,9 +969,6 @@ function MessageView({
         </div>
       )}
       <ReplyEvidence message={m} />
-      {m.mapCards?.map((card, cardIndex) => (
-        <MapRouteCard key={cardIndex} card={card} onOpen={() => onOpenMap(card.route)} />
-      ))}
       {m.actions.map((a) => (
         <ActionCard
           key={a.id}

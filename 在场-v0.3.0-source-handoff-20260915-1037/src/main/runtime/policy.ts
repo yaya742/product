@@ -69,9 +69,6 @@ const baseSources = [
   'profile:self',
   'work:self',
   'local-agenda',
-  'campus:local',
-  'campus:zju-account',
-  'map:local',
 ];
 
 export class PolicyKernel {
@@ -96,8 +93,6 @@ export class PolicyKernel {
       'evidence:read',
       'memory:write',
       'work:write',
-      'campus:read',
-      'map:read',
     ]);
   }
   /** Called only by trusted host UI/configuration, never a tool argument or provider response. */
@@ -217,14 +212,6 @@ export class PolicyKernel {
       grants: current.grants.filter(grant => ['local:write', 'evidence:read'].includes(grant)),
       retention: 'purpose_scoped', infer: false });
   }
-  /** Host-only, temporary purpose grant under an existing campus connection. */
-  campusPurposeScope(handle: ScopeHandle, grant: string) {
-    const current = this.require(handle, 'campus:read');
-    const allowed = ['campus:grades:read', 'campus:gpa:read', 'campus:reservations:read', 'campus:card:read', 'campus:transactions:read', 'campus:profile:read'];
-    if (!allowed.includes(grant) || this.revoked().includes(grant) || current.subjectId !== current.principalId || current.worldId !== 'real' || current.audience !== 'self')
-      throw new HarnessError('forbidden', '这项资料不在当前可授权范围内。');
-    return this.mint({ ...current, grants: [...new Set([...current.grants, grant])] });
-  }
   registerSource(id: string) {
     this.repo.write(() =>
       this.repo.setMeta('registered_sources', [
@@ -235,7 +222,7 @@ export class PolicyKernel {
   ingress(
     text: string,
     eventId: string,
-    settings: { memoryEnabled: boolean; weatherEnabled: boolean; timeZone?: string },
+    settings: { memoryEnabled: boolean; timeZone?: string },
     controls: InputControls = {},
   ): IngressDecision {
     // Existing renderer embeds text attachments. The typed field takes precedence; the legacy boundary is conservative.
@@ -261,9 +248,7 @@ export class PolicyKernel {
       : controls.memoryMode || (!settings.memoryEnabled ? 'none' : 'relevant');
     let sources = memoryMode === 'current_sources_only' || sourceOnly ? ['current'] : [...baseSources];
     if (memoryMode === 'none') sources = sources.filter(source => !['profile:self', 'history:self'].includes(source));
-    // Plugin sources are added through registered_sources. The Agent must not
-    // reserve a built-in weather source; optional features become visible only
-    // after their provider is installed and registered by PluginManager.
+    // Optional plugin sources are added only after their provider is installed.
     if (!sourceOnly && memoryMode !== 'current_sources_only') sources.push(...this.repo.getMeta<string[]>('registered_sources', []));
     if (control?.sourceAllowlist) sources = sources.filter(source => source === 'current' || control.sourceAllowlist!.includes(source));
     if (control?.sourceExclusions.length) sources = sources.filter(source => source === 'current' || !control.sourceExclusions.includes(source));
@@ -300,7 +285,7 @@ export class PolicyKernel {
     };
     const projectionSources = subjectId === this.repo.identity.principalId && worldId === 'real' && control?.release?.useAvailability && control.sources !== 'current_only' &&
       controls.memoryMode !== 'current_sources_only' && !control.uncertainControls.some(c => c.dimension === 'sources')
-      ? ['campus:local', 'campus:zju-account', 'local-agenda'].filter(source => (!controls.sources || controls.sources.includes(source)) && !control.sourceExclusions.includes(source) && (!control.sourceAllowlist || control.sourceAllowlist.includes(source))) : [];
+      ? ['local-agenda'].filter(source => (!controls.sources || controls.sources.includes(source)) && !control.sourceExclusions.includes(source) && (!control.sourceAllowlist || control.sourceAllowlist.includes(source))) : [];
     return { text, authoredText, attachment, contract, restriction: false, scenario, localOnly, threadContextAllowed, replyToOwner: controls.replyToOwner, controlFallback: controls.controlFallback, controlProposal: control, priorReleaseArtifacts: controls.priorReleaseArtifacts, releaseBrief: control?.release, priorReleasedDraft: controls.priorReleasedDraft, projectionSources, requiresReadPurpose: control?.subject === 'mixed' || control?.world === 'mixed',
       speechActs: [], interpretation, requestFragments: [], corrections: [] };
 

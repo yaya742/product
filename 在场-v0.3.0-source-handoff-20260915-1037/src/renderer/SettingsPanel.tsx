@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState, type MutableRefObject } from 'react';
-import { ArrowLeft, Check, ChevronRight, Download, LoaderCircle, Pencil, Trash2, X } from 'lucide-react';
+import { Check, Download, LoaderCircle, Pencil, Trash2, X } from 'lucide-react';
 import { IconButton, Modal, Switch } from './ui';
-import { MemoryPanelSimple, SourcePermissions } from './HarnessViews';
+import { MemoryPanelSimple } from './HarnessViews';
 import type { Settings, State } from '../shared/types';
 import type { InstalledPlugin } from '../shared/plugins';
-import { campusAccountFeedback } from './campus-account-feedback';
 
 const api = window.zaichang;
 export interface SettingsDraft {
@@ -22,14 +21,6 @@ interface Props {
 }
 type Feedback = { action: string; text: string; error?: boolean } | null;
 const tabs = ['连接', '接口', '记忆', '偏好'];
-const date = (v: string) =>
-  new Date(v).toLocaleString('zh-CN', {
-    month: 'numeric',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
 const errorText = (e: unknown) =>
   String(e instanceof Error ? e.message : e)
     .replace(/^Error invoking remote method '[^']+': (Error: )?/, '')
@@ -50,7 +41,6 @@ export function SettingsPanel({ state, busy, onState, onClose, notify, onClear, 
   const testCancelled = useRef(false),
     pendingRef = useRef('');
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const sourceBackRef = useRef<HTMLButtonElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const disabled = busy || !!pending;
   useEffect(
@@ -59,11 +49,6 @@ export function SettingsPanel({ state, busy, onState, onClose, notify, onClear, 
     },
     [],
   );
-  useEffect(() => {
-    if (tab !== '资料') return;
-    const frame = requestAnimationFrame(() => sourceBackRef.current?.focus({ preventScroll: true }));
-    return () => cancelAnimationFrame(frame);
-  }, [tab]);
   function changeTab(value: string) {
     if (pendingRef.current === 'test') {
       testCancelled.current = true;
@@ -127,29 +112,9 @@ export function SettingsPanel({ state, busy, onState, onClose, notify, onClear, 
     if (plugin.lifecycle === 'invalid') return '加载失败';
     return plugin.enabled ? '已启用' : '已停用';
   };
-  const connector = state.campusConnector;
-  const connectorReady =
-    !!connector?.configured && !!connector.available && connector.authStatus === 'verified';
-  const connectorStatus = !connector?.configured
-    ? '未找到技能'
-    : !connector.available
-      ? '暂时无法连接'
-      : connector.credentialsConfigured === false
-        ? '需要登录'
-        : connector.authStatus === 'verified'
-          ? '已登录'
-          : connector.authStatus === 'failed'
-            ? '需要重试'
-            : '待验证';
   return (
-    <Modal title={tab === '资料' ? '校园资料' : tab === '接口' ? '接口管理' : '连接与偏好'} onClose={onClose} className="settings-panel">
-      {tab === '资料' ? (
-        <button ref={sourceBackRef} className="source-back text-button" onClick={() => changeTab('连接')}>
-          <ArrowLeft size={14} />
-          返回连接
-        </button>
-      ) : (
-        <div className="panel-tabs" role="tablist" aria-label="在场设置">
+    <Modal title={tab === '接口' ? '接口管理' : '连接与偏好'} onClose={onClose} className="settings-panel">
+      <div className="panel-tabs" role="tablist" aria-label="在场设置">
           {tabs.map((t, i) => (
             <button
               key={t}
@@ -179,16 +144,14 @@ export function SettingsPanel({ state, busy, onState, onClose, notify, onClear, 
             </button>
           ))}
         </div>
-      )}
       <div
         className="panel-body"
         ref={bodyRef}
-        role={tab === '资料' ? 'region' : 'tabpanel'}
-        id={tab === '资料' ? 'settings-source-panel' : `settings-panel-${tabs.indexOf(tab)}`}
-        aria-label={tab === '资料' ? '资料来源设置' : undefined}
-        aria-labelledby={tab === '资料' ? undefined : `settings-tab-${tabs.indexOf(tab)}`}
+        role="tabpanel"
+        id={`settings-panel-${tabs.indexOf(tab)}`}
+        aria-labelledby={`settings-tab-${tabs.indexOf(tab)}`}
       >
-        {busy && <p className="busy-note">连接设置需等本轮结束；停用记忆或资料权限会立即生效。</p>}
+        {busy && <p className="busy-note">连接设置需等本轮结束；停用记忆权限会立即生效。</p>}
         {tab === '连接' && (
           <>
             <div className="section-heading">
@@ -305,13 +268,6 @@ export function SettingsPanel({ state, busy, onState, onClose, notify, onClear, 
                 使用本地示例
               </button>
             )}
-            <button className="settings-navigation" onClick={() => changeTab('资料')}>
-              <span>
-                <strong>校园资料与天气</strong>
-                <small>{connectorReady ? '浙大账号已登录' : '需要时登录'}</small>
-              </span>
-              <ChevronRight size={16} />
-            </button>
           </>
         )}
         {tab === '接口' && (
@@ -323,7 +279,7 @@ export function SettingsPanel({ state, busy, onState, onClose, notify, onClear, 
               {state.interfaces.map((item) => {
                 const scopes = [...new Set(item.capabilities.flatMap((capability) => capability.requiredScopes))];
                 return (
-                  <details key={item.id} className="interface-item" open={item.id === 'weather'}>
+                  <details key={item.id} className="interface-item" open>
                     <summary className="interface-summary">
                       <span>
                         <strong>{item.displayName}</strong>
@@ -348,27 +304,12 @@ export function SettingsPanel({ state, busy, onState, onClose, notify, onClear, 
                         detail={item.enabled ? 'Agent 可以在获得本轮范围许可后调用' : 'Agent 不会调用此接口'}
                         disabled={busy || !!interfacePending}
                       />
-                      {item.id === 'weather' && (
-                        <Switch
-                          checked={state.settings.weatherUseLocation}
-                          onChange={(enabled) => void update('weather-location', { weatherUseLocation: enabled })}
-                          label="使用本机位置"
-                          detail={
-                            item.enabled
-                              ? state.settings.weatherUseLocation
-                                ? '按 Windows 定位查询；本轮使用后不会保存坐标'
-                                : '关闭时使用杭州城市参考坐标'
-                              : '天气接口未启用，开启天气后可选择定位方式'
-                          }
-                          disabled={busy || !!interfacePending || !item.enabled}
-                        />
-                      )}
                     </div>
                   </details>
                 );
               })}
             </section>
-            {result(['interface', 'weather-location'])}
+            {result(['interface'])}
             <section className="plugin-manager" aria-label="第三方插件管理">
               <div className="plugin-manager-heading">
                 <div>
@@ -474,161 +415,6 @@ export function SettingsPanel({ state, busy, onState, onClose, notify, onClear, 
             {result(['plugin-install', 'plugin-upgrade', 'plugin-uninstall'])}
           </>
         )}
-        {tab === '资料' && (
-          <>
-            <SourcePermissions onState={onState} />
-            <section className="campus-source-block">
-              <div className="connector connector-primary">
-                <div>
-                  <div className="connector-title-line">
-                    <strong>浙大校园资料</strong>
-                    <span
-                      className={`source-status ${connectorReady ? 'connected' : connector?.credentialsConfigured === false ? 'needs-login' : 'unavailable'}`}
-                    >
-                      {connectorStatus}
-                    </span>
-                  </div>
-                  <p>
-                    {connectorReady
-                      ? '已用浙大账号连接，提问时会按需读取'
-                      : connector?.credentialsConfigured
-                        ? '登录信息已安全保存，再验证一次即可使用'
-                        : '使用浙大统一身份认证，不需要导入资料文件'}
-                  </p>
-                </div>
-                <button
-                  className="subtle-button"
-                  disabled={disabled}
-                  onClick={() =>
-                    void perform('account-connect', async () => {
-                      const next = await api.connectCampusAccount();
-                      onState(next);
-                      setFeedback(campusAccountFeedback(next));
-                    })
-                  }
-                >
-                  {pending === 'account-connect' ? (
-                    <LoaderCircle size={14} className="spin" />
-                  ) : connectorReady ? (
-                    '重新验证'
-                  ) : connector?.credentialsConfigured ? (
-                    '验证登录'
-                  ) : (
-                    '登录浙大'
-                  )}
-                </button>
-              </div>
-              {connector?.configured && (
-                <details className="connector-more">
-                  <summary>登录与来源详情</summary>
-                  <div className="connector-actions" role="group" aria-label="校园资料连接设置">
-                    <button
-                      className="connector-action"
-                      disabled={disabled}
-                      onClick={() =>
-                        void perform('credentials', async () => {
-                          onState(await api.configureCampusCredentials());
-                          setFeedback({ action: 'credentials', text: '登录信息已更新并通过验证' });
-                        })
-                      }
-                    >
-                      {connector.credentialsConfigured === false ? '输入登录信息' : '更新登录信息'}
-                    </button>
-                    {connector.credentialsConfigured && (
-                      <button
-                        className="connector-action connector-action-danger"
-                        disabled={disabled}
-                        onClick={() =>
-                          void perform('credentials-forget', async () => {
-                            onState(await api.forgetCampusCredentials());
-                            setFeedback({ action: 'credentials-forget', text: '本机保存的浙大登录信息已移除' });
-                          })
-                        }
-                      >
-                        移除登录信息
-                      </button>
-                    )}
-                    <button
-                      className="connector-action connector-action-danger"
-                      disabled={disabled}
-                      onClick={() =>
-                        void perform('connector-disconnect', async () => {
-                          onState(await api.disconnectCampusConnector());
-                          setFeedback({ action: 'connector-disconnect', text: '校园资料已断开；登录信息仍安全保存在本机' });
-                        })
-                      }
-                    >
-                      断开连接
-                    </button>
-                  </div>
-                  <small>
-                    登录信息由 Windows 当前用户加密保存；DeepSeek 只会收到回答当前问题所需的资料，不会收到账号或密码。
-                    {connector.lastVerifiedAt ? ` 上次验证：${date(connector.lastVerifiedAt)}。` : ''}
-                  </small>
-                </details>
-              )}
-            </section>
-            {result(['account-connect', 'connector-disconnect', 'credentials', 'credentials-forget', 'import', 'template', 'disconnect'])}
-            {!connectorReady && (
-              <section className="campus-import-block">
-                <div className="connector">
-                  <div>
-                    <strong>备用：导入旧快照</strong>
-                    <p>只用于迁移或离线查看，不会冒充浙大账号资料</p>
-                  </div>
-                  <button
-                    className="subtle-button"
-                    disabled={disabled}
-                    onClick={() =>
-                      void perform('import', async () => {
-                        const next = await api.importCampus();
-                        if (next) {
-                          onState(next);
-                          setFeedback({ action: 'import', text: '离线快照已导入；登录浙大账号后才会用于账号查询' });
-                        }
-                      })
-                    }
-                  >
-                    {pending === 'import' ? <LoaderCircle size={14} className="spin" /> : state.campus ? '更新' : '导入'}
-                  </button>
-                </div>
-                {state.campus && (
-                  <small className="campus-import-state">离线快照 · 更新于 {date(state.campus.updatedAt)}</small>
-                )}
-                <details className="campus-more">
-                  <summary>更多离线资料操作</summary>
-                  <div className="field-buttons">
-                    <button
-                      className="text-button"
-                      disabled={disabled}
-                      onClick={() =>
-                        void perform('template', async () => {
-                          if (await api.campusTemplate()) setFeedback({ action: 'template', text: '模板已保存' });
-                        })
-                      }
-                    >
-                      <Download size={14} />下载导入模板
-                    </button>
-                    {state.campus && (
-                      <button
-                        className="text-button"
-                        disabled={disabled}
-                        onClick={() =>
-                          void perform('disconnect', async () => {
-                            onState(await api.disconnectCampus());
-                            setFeedback({ action: 'disconnect', text: '离线快照已移除' });
-                          })
-                        }
-                      >
-                        移除快照
-                      </button>
-                    )}
-                  </div>
-                </details>
-              </section>
-            )}
-          </>
-        )}
         {tab === '记忆' && <MemoryPanelSimple state={state} onState={onState} busy={busy} />}
         {tab === '偏好' && (
           <>
@@ -699,7 +485,7 @@ export function SettingsPanel({ state, busy, onState, onClose, notify, onClear, 
                 {result(['export'])}
                 {clearConfirm ? (
                   <div className="clear-confirm">
-                    <p>确定清空本机资料？这会删除对话、记忆、安排、校园资料和连接密钥，且无法撤销</p>
+                    <p>确定清空本机资料？这会删除对话、记忆、安排和连接密钥，且无法撤销</p>
                     <button
                       className="danger-button"
                       disabled={disabled}

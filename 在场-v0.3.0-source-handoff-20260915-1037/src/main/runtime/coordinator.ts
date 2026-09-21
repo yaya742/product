@@ -27,16 +27,13 @@ import { WorkService } from './work';
 import { MemoryService } from '../memory/service';
 import { DomainService } from '../storage/domains';
 import { CapabilityBroker, type CapabilityResult } from '../capabilities/broker';
-import { registerBuiltins, localActionInput, type BuiltinConnections } from '../capabilities/builtin';
-import { prepareWeatherPluginInput } from '../plugins/weather-adapter';
+import { registerBuiltins, localActionInput } from '../capabilities/builtin';
 import { InterfaceManager } from '../interfaces/manager';
 import { PluginManager, type PluginManagerOptions } from '../plugins/manager';
 import { ActionRuntime } from '../actions/runtime';
 import { normalizeCalendarInput } from '../actions/calendar';
 import { LocalCalendarService } from '../actions/local-calendar';
 import { localCalendarChangeSchema } from '../../shared/calendar';
-import campusMethod from '../../../prompts/campus-tools.md';
-import mapMethod from '../../../prompts/map-tools.md';
 import { availableIntervals } from '../actions/availability';
 import { ReminderRuntime } from '../actions/reminders';
 import { releaseRequestSchema, type ReleaseRequest } from './release-composer';
@@ -79,66 +76,16 @@ export interface RuntimeCallbacks {
   plan: (items: Obligation[]) => void;
   action: (item: Action) => void;
   changed: () => void;
-  mapCard?: (card: import('../../shared/map-v2').MapCard) => void;
   delegate: (tasks: DelegatedTask[]) => Promise<unknown>;
 }
-const campusDomains = [
-  'schedule',
-  'courses',
-  'learning_courses',
-  'exams',
-  'assignments',
-  'grades',
-  'gpa',
-  'gpa_semesters',
-  'gpa_cumulative',
-  'retakes',
-  'practice',
-  'sports',
-  'projects',
-  'activities',
-  'reservations',
-  'reservation_violations',
-  'card',
-  'transactions',
-  'profile',
-  'roles',
-  'calendar_pending',
-  'cancelled_classes',
-  'holidays',
-  'source_status',
-] as const;
-const campusOverviewRequest = (text: string) =>
-  /(?:全部|所有|完整).{0,10}(?:校园|浙大|学校|学生|个人).{0,6}(?:资料|信息)|(?:校园|浙大|学校|学生).{0,10}(?:资料|信息).{0,6}(?:总览|全部|所有|完整)|我的.{0,4}(?:全部|所有|完整).{0,4}个人信息/.test(
-    text,
-  );
 const lookUpSchema = z
   .object({
-    source: z.enum(['campus', 'history', 'weather', 'map', 'local', 'capability']),
-    mode: z.enum(['overview', 'detail', 'refresh']).optional(),
-    domain: z.enum(campusDomains).optional(),
-    courseId: z.string().regex(/^\d{1,32}$/).optional(),
+    source: z.enum(['history', 'local', 'capability']),
+    mode: z.enum(['detail', 'refresh']).optional(),
     query: z.string().max(100).optional(),
-    days: z.number().int().min(1).max(7).optional(),
-    location: z.enum(['current', 'Hangzhou']).optional(),
     from: z.string().datetime({ offset: true }).optional(),
     to: z.string().datetime({ offset: true }).optional(),
-    at: z.string().datetime({ offset: true }).optional(),
-    window: z.string().max(40).optional(),
-    timeMode: z.enum(['overlap', 'starts', 'contained']).optional(),
-    fields: z
-      .array(z.string().regex(/^[A-Za-z0-9_.-]{1,80}$/))
-      .max(24)
-      .optional(),
-    filters: z.array(z.string().max(160)).max(6).optional(),
-    sort: z.string().max(100).optional(),
     offset: z.number().int().min(0).max(10000).optional(),
-    academicYear: z
-      .string()
-      .regex(/^20\d{2}-20\d{2}$/)
-      .optional(),
-    term: z.enum(['1', '2']).optional(),
-    includeSensitiveDomains: z.boolean().optional(),
     limit: z.number().int().min(1).max(50).optional(),
     capability: z.string().max(100).optional(),
     describeOnly: z.boolean().optional(),
@@ -292,7 +239,7 @@ const specs: SpecDefinition[] = [
   {
     name: 'look_up',
     description:
-      '在本轮范围内查资料。source=capability且不填capability时搜索/分页能力目录，支持query、offset、limit；填写capability+describeOnly=true读取schema，填写arguments执行只读能力。campus具体查询须选domain，overview为明确的总览；未连接、无权限、部分覆盖均有实际状态。local读本地安排，history回查原文。不能指定他人身份或任意文件路径。',
+      '在本轮范围内查资料。source=capability且不填capability时搜索/分页能力目录，支持query、offset、limit；填写capability+describeOnly=true读取schema，填写arguments执行只读能力。local读本地安排，history回查原文。不能指定他人身份或任意文件路径。',
     schema: lookUpSchema,
   },
   {
@@ -425,22 +372,10 @@ const modelMemoryChangeParameters: Record<string, unknown> = {
   required: ['operation', 'eventId', 'sourceQuote', 'predicate', 'value', 'text', 'kind', 'strength', 'conditions', 'idempotencyKey'],
   additionalProperties: false,
 };
-const modelMapRouteParameters: Record<string, unknown> = {
-  type: 'object',
-  properties: {
-    from: { type: 'object', additionalProperties: true },
-    to: { type: 'object', additionalProperties: true },
-    avoidStairs: { type: 'boolean' },
-    version: { type: 'string' },
-  },
-  required: [],
-  additionalProperties: false,
-};
 const modelParameterOverrides: Record<string, Record<string, unknown>> = {
   delegate: { type: 'object', properties: { tasks: { type: 'array', minItems: 1, maxItems: 3, items: { type: 'object', properties: { title: { type: 'string' }, instruction: { type: 'string', minLength: 10, maxLength: 1200 }, sources: { type: 'array', items: { type: 'string' }, description: '实际需要的sourceId；不读取任何来源时传空数组。' }, currentEvidenceIds: { type: 'array', items: { type: 'string' }, description: '确需读取的本轮原话/附件ID；不默认共享整条用户消息。' } }, required: ['title', 'instruction', 'sources'], additionalProperties: false } } }, required: ['tasks'], additionalProperties: false },
   update_work_state: modelWorkChangeParameters,
   propose_memory_change: modelMemoryChangeParameters,
-  map_route: modelMapRouteParameters,
 };
 export class RuntimeCoordinator {
   readonly policy: PolicyKernel;
@@ -455,7 +390,6 @@ export class RuntimeCoordinator {
   readonly calendar: LocalCalendarService;
   readonly collaboration: CollaborationService;
   readonly reminders: ReminderRuntime;
-  readonly connections: BuiltinConnections;
   readonly observations: ObservationPort;
   readonly sync: SyncPort;
   readonly rulePacks: RulePackPort;
@@ -476,8 +410,7 @@ export class RuntimeCoordinator {
     this.work = new WorkService(repo, this.policy);
     this.broker = new CapabilityBroker(this.policy);
     this.domains.onChanged = () => this.work.staleWorlds();
-    this.connections = {};
-    registerBuiltins(this.broker, this.policy, repo, this.domains, this.connections);
+    registerBuiltins(this.broker, this.policy, repo);
     this.plugins = new PluginManager(this.broker, pluginOptions);
     this.interfaces = new InterfaceManager(
       this.broker,
@@ -500,8 +433,6 @@ export class RuntimeCoordinator {
     this.watches = new WatchPort(repo, this.policy, this.reminders);
     this.entities = new EntityPort(repo, this.policy);
     this.memory.migrateLegacy();
-    const legacyCampus = store.meta<import('../../shared/types').CampusSnapshot | null>('campus', null);
-    if (legacyCampus && !repo.getMeta('campus_import_metadata')) this.domains.importSnapshot(legacyCampus);
     this.policy.onBarrier(() => {
       this.ephemeralEvents.clear();
       this.modelBoundary?.client.invalidateBoundary?.();
@@ -619,9 +550,6 @@ export class RuntimeCoordinator {
     }
     this.context.setProviderMetadata(client.providerMetadata?.());
     this.modelBoundary = { client, fingerprint };
-  }
-  connect(value: Partial<BuiltinConnections>) {
-    Object.assign(this.connections, value);
   }
   begin(
     content: string,
@@ -812,44 +740,6 @@ export class RuntimeCoordinator {
     const contract = session.ingress.contract,
       s = this.policy.validate(contract.scope);
     const available: SpecDefinition[] = [...specs];
-    if (this.connections.map && s.sources.includes('map:local')) {
-      const place = z.object({ kind: z.enum(['place', 'node']), id: z.string().min(1).max(100) }).strict();
-      available.push(
-        {
-          name: 'map_overview',
-          description: '查看已装配地图的范围与数据说明。',
-          schema: z.object({}).strict(),
-          grant: 'map:read',
-        },
-        {
-          name: 'map_search',
-          description: '在现有地图检索地点，使用返回的稳定地点 ID。',
-          schema: z
-            .object({ query: z.string().min(1).max(100), limit: z.number().int().min(1).max(10).optional() })
-            .strict(),
-          grant: 'map:read',
-        },
-        {
-          name: 'map_route',
-          description: '计算现有步行网络上的路线并展示地图卡；未知入口、起点和不可达会明确返回。',
-          schema: z
-            .object({
-              from: z.union([place, z.object({ kind: z.literal('current') }).strict()]).optional(),
-              to: place.optional(),
-              avoidStairs: z.boolean().optional(),
-              version: z.string().optional(),
-            })
-            .strict(),
-          grant: 'map:read',
-        },
-        {
-          name: 'map_location_status',
-          description: '读取定位能力状态，不启动定位。',
-          schema: z.object({}).strict(),
-          grant: 'map:read',
-        },
-      );
-    }
     return available
       .filter(
         (d) =>
@@ -883,45 +773,14 @@ export class RuntimeCoordinator {
     if (budgetOwner !== session) session.toolCalls++;
     const aliases: Record<string, string> = {
       search_history: 'look_up',
-      query_campus: 'look_up',
-      get_weather: 'look_up',
       propose_action: 'prepare_action',
     };
     if (name in aliases) {
       raw =
         name === 'search_history'
           ? { source: 'history', ...(raw as object) }
-          : name === 'query_campus'
-            ? {
-                source: 'campus',
-                domain: (raw as any).kind,
-                from: (raw as any).from,
-                to: (raw as any).to,
-                query: (raw as any).query,
-              }
-            : name === 'get_weather'
-              ? { source: 'weather', ...(raw as object) }
-              : raw;
+          : raw;
       name = aliases[name];
-    }
-    if (name.startsWith('map_')) {
-      if (session.ingress.requiresReadPurpose && name === 'map_route' && (raw as any)?.from?.kind === 'current') {
-        const verdict = await callbacks.verifyReadPurpose?.({ data: 'current_user_location', arguments: raw });
-        if (!verdict?.allowed) return { status: 'forbidden', reason: verdict?.reason || '当前问题尚未允许使用本人的位置。' };
-      }
-      const mapping: Record<string, string> = {
-          map_overview: 'map.overview',
-          map_search: 'map.search',
-          map_route: 'map.route',
-          map_location_status: 'map.location_status',
-        },
-        capability = mapping[name];
-      if (!capability) throw new HarnessError('tool_unavailable', '地图工具不可用。');
-      const result = await this.broker.invoke(handle, capability, raw, session.signal);
-      if (session.pack) this.context.recordTool(session.pack, result, capability);
-      if (capability === 'map.route' && result.data)
-        callbacks.mapCard?.({ kind: 'route', route: result.data as any });
-      return this.withMethodNotes(session, capability, result);
     }
     const allowed = this.toolSpecs(session, child).some((s) => s.function.name === name);
     if (!allowed) throw new HarnessError('tool_forbidden', '该工具当前不可用或未授权。');
@@ -968,21 +827,12 @@ export class RuntimeCoordinator {
     if (name === 'resolve_time') return { ...resolveLocalTime(args.local.length === 16 ? args.local + ':00' : args.local, args.timeZone || contract.timeZone), local: args.local, timeZone: args.timeZone || contract.timeZone };
     if (name === 'calculate_available_time') return availableIntervals(args);
     if (name === 'availability_projection') {
-      const parent = this.policy.validate(handle), sources = (session.ingress.projectionSources || []).filter(source => (!parent.child || parent.sources.includes(source)) && (source === 'local-agenda' ? this.policy.grants().includes('evidence:read') : this.policy.grants().includes('campus:read')));
+      const parent = this.policy.validate(handle), sources = (session.ingress.projectionSources || []).filter(source => (!parent.child || parent.sources.includes(source)) && source === 'local-agenda' && this.policy.grants().includes('evidence:read'));
       if (parent.subjectId !== parent.principalId || parent.worldId !== 'real' || !sources.length) return { status: 'forbidden', reason: '本轮没有允许读取本人忙闲用于这次沟通。' };
       if (Date.parse(args.to) <= Date.parse(args.from) || Date.parse(args.to) - Date.parse(args.from) > 31 * 86400000) throw new HarnessError('time_window', '忙闲查询需明确时间窗，单次最多31天。');
       if (session.ingress.requiresReadPurpose) { const verdict = await callbacks.verifyReadPurpose?.({ data: 'own_availability_only', ...args }); if (!verdict?.allowed) return { status: 'forbidden', reason: verdict?.reason || '没有核清使用本人忙闲的目的。' }; }
       const scope = this.policy.hostScope({ sources, grants: ['availability:share'], purposes: ['personal_assistance'], infer: false });
-      const account = this.connections.campus;
-      if (account?.describe().configured && !account.describe().available && sources.includes('campus:zju-account')) return { status: 'not_connected', reason: '校园连接当前不可用，不能确认其忙闲。' };
-      let result: Record<string, any>;
-      if (account?.describe().configured && sources.includes('campus:zju-account')) {
-        const remote = await account.availability(args.from, args.to, session.signal);
-        const localScope = this.policy.hostScope({ sources: sources.filter(source => source === 'local-agenda'), grants: ['availability:share'], purposes: ['personal_assistance'], infer: false });
-        const local = this.domains.availability(localScope, args.from, args.to);
-        result = { ...remote, sourceIds: ['campus:zju-account', ...local.sourceIds], busyIntervals: [...(remote.busyIntervals || []), ...local.busyIntervals], localIssues: local.issues,
-          status: remote.status === 'fresh' && !local.issues.length ? 'fresh' : 'partial', meaning: '仅含当前校园与本地记录中的忙碌区间，不含任何私人标题或原因。' };
-      } else result = this.domains.availability(scope, args.from, args.to);
+      let result: Record<string, any> = this.domains.availability(scope, args.from, args.to);
       const unknown = [...(result.issues || []), ...(result.localIssues || [])].filter(issue => issue?.status === 'unknown_end' && typeof issue.start === 'string');
       const gaps = availableIntervals({ from: args.from, to: args.to, busy: [...(result.busyIntervals || []), ...unknown.map(issue => ({ start: issue.start, end: null }))], transitionMinutes: { min: 0, max: 0 }, minimumBlockMinutes: 0 });
       result = { ...result, availableWindows: gaps.windows.map(window => ({ start: window.start, end: window.end })), unknownEnds: gaps.unknownEnds, timeZone: contract.timeZone,
@@ -1422,17 +1272,12 @@ export class RuntimeCoordinator {
     throw new HarnessError('tool_unavailable', '工具尚未实现。');
   }
   private async lookUp(session: RunSession, args: z.infer<typeof lookUpSchema>, callbacks: RuntimeCallbacks) {
-    const sensitive: Record<string, string> = { grades: 'grades', retakes: 'grades', gpa: 'gpa', gpa_semesters: 'gpa', gpa_cumulative: 'gpa', reservations: 'reservations', reservation_violations: 'reservations', card: 'card', transactions: 'transactions', profile: 'profile', roles: 'profile' };
     const handle = session.ingress.contract.scope,
       call = async (capability: string, input: unknown) => {
-        const domain = (input as { domain?: string } | undefined)?.domain;
-        const purposeGrant = ['campus.lookup', 'campus.imported_lookup'].includes(capability) && domain && sensitive[domain]
-          ? 'campus:' + sensitive[domain] + ':read' : undefined;
         let readHandle = handle;
-        if (purposeGrant || session.ingress.requiresReadPurpose) {
+        if (session.ingress.requiresReadPurpose) {
           const verdict = await callbacks.verifyReadPurpose?.({ capability: this.broker.describe(capability), arguments: input });
           if (!verdict?.allowed) return { status: 'forbidden' as const, sourceId: this.broker.describe(capability)?.sourceId || 'unknown', simulated: false, reason: verdict?.reason || '本轮尚未核清这些资料的用途。' };
-          if (purposeGrant) readHandle = this.policy.campusPurposeScope(handle, purposeGrant);
         }
 
         const result = await this.broker.invoke(readHandle, capability, input, session.signal, {
@@ -1453,40 +1298,7 @@ export class RuntimeCoordinator {
         }
         return this.withMethodNotes(session, capability, result);
       };
-    const accountConfigured = this.connections.campus?.describe().configured === true;
-    const campusReadCapability = accountConfigured
-      ? 'campus.lookup'
-      : this.broker.describe('campus.imported_lookup')
-        ? 'campus.imported_lookup'
-        : 'campus.lookup';
     if (args.source === 'history') return call('evidence.search', { query: args.query || '' });
-    if (args.source === 'weather') {
-      const capability = 'weather.lookup';
-      if (!this.broker.describe(capability))
-        return {
-          status: 'unsupported' as const,
-          sourceId: 'plugin:weather',
-          reason: '天气插件尚未安装或未提供 weather.lookup 能力。请在接口管理器中安装并启用天气插件。',
-          simulated: false,
-        };
-      const input: Record<string, unknown> = {
-        days: args.days || 3,
-        location: args.location || (this.store.settings().weatherUseLocation ? 'current' : 'Hangzhou'),
-      };
-      if (input.location === 'current') {
-        const prepared = await prepareWeatherPluginInput(input as any, {
-          policy: this.policy,
-          scope: handle,
-          connections: this.connections,
-          signal: session.signal,
-          sourceId: this.broker.describe(capability)?.sourceId,
-        });
-        if ('result' in prepared) return prepared.result;
-        return call(capability, prepared.input);
-      }
-      return call(capability, input);
-    }
-    if (args.source === 'map') return call('map.search', { query: args.query || '' });
     if (args.source === 'local') return call('local.agenda.read', { query: args.query, from: args.from, to: args.to, timeZone: session.ingress.contract.timeZone });
     if (args.source === 'capability') {
       if (!args.capability) return this.broker.catalog(handle, args.query, args.offset, args.limit);
@@ -1496,25 +1308,11 @@ export class RuntimeCoordinator {
         throw new HarnessError('effect_forbidden', '查找入口只能调用只读能力。');
       return call(args.capability, args.arguments || {});
     }
-    if (args.mode === 'overview')
-      return call('campus.overview', {
-        refresh: !!args.refresh, includeSensitiveDomains: args.includeSensitiveDomains === true,
-        academicYear: args.academicYear, term: args.term,
-      });
-    if (!args.domain) return { status: 'needs_parameters', reason: '请选择所需资料领域；可先读取source_status了解覆盖。', domains: campusDomains };
-    return call(campusReadCapability, {
-      domain: args.domain, courseId: args.courseId, academicYear: args.academicYear, term: args.term,
-      query: args.query, from: args.from, to: args.to, at: args.at, timeMode: args.timeMode,
-      fields: args.fields, filters: args.filters, sort: args.sort, offset: args.offset,
-      window: args.window, limit: args.limit || 12, refresh: args.mode === 'refresh' || !!args.refresh,
-    });
+    return { status: 'unsupported', reason: '该查询来源未在 PC Agent 核心分支中提供。' };
   }
 
   private withMethodNotes(session: RunSession, capability: string, result: unknown) {
-    const method = capability.startsWith('campus.') ? 'campus' : capability.startsWith('map.') ? 'map' : undefined;
-    if (!method || session.methodNotes?.includes(method)) return result;
-    (session.methodNotes ||= []).push(method);
-    return { ...(result as object), hostUsageGuidance: method === 'campus' ? campusMethod : mapMethod, guidanceMeaning: '宿主提供的使用方法，不是本次用户事实，也不扩大权限。' };
+    return result;
   }
   refreshDependencies(session: RunSession) {
     const pack = session.pack;

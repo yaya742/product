@@ -4,7 +4,6 @@ import {
   DEFAULT_SETTINGS,
   DEEPSEEK_MODEL,
   type Action,
-  type CampusSnapshot,
   type Conversation,
   type Memory,
   type Message,
@@ -70,10 +69,6 @@ export class Store {
     return row ? (JSON.parse(String(row.value)) as T) : fallback;
   }
   putMeta(key: string, value: unknown) {
-    if (key === 'campus' && this.runtime) {
-      if (value) this.runtime.domains.importSnapshot(value as CampusSnapshot);
-      else this.runtime.domains.disconnect();
-    }
     this.db
       .prepare('INSERT INTO meta VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value')
       .run(key, JSON.stringify(value));
@@ -89,30 +84,6 @@ export class Store {
   saveSettings(value: Partial<Settings>) {
     if (this.runtime) {
       const previous = this.settings();
-      const nextWeatherEnabled = value.weatherEnabled ?? previous.weatherEnabled;
-      const nextWeatherUseLocation = value.weatherUseLocation ?? previous.weatherUseLocation;
-      if (value.weatherEnabled !== undefined && value.weatherEnabled !== previous.weatherEnabled) {
-        // Weather is an optional plugin now. Settings migrations may run before
-        // that plugin is installed, so changing the preference must not make
-        // the whole Store unavailable.
-        if (this.runtime.broker.providerSnapshots().some((item) => item.id === 'weather'))
-          this.runtime.interfaces.setEnabled('weather', value.weatherEnabled);
-        if (value.weatherEnabled) this.runtime.policy.grant('weather:read');
-        else {
-          this.runtime.policy.revoke('weather:read');
-          this.runtime.policy.revoke('location:read');
-        }
-      }
-      if (
-        value.weatherUseLocation !== undefined &&
-        value.weatherUseLocation !== previous.weatherUseLocation
-      ) {
-        if (nextWeatherEnabled && nextWeatherUseLocation) this.runtime.policy.grant('location:read');
-        else this.runtime.policy.revoke('location:read');
-      } else if (value.weatherEnabled !== undefined && value.weatherEnabled !== previous.weatherEnabled) {
-        if (nextWeatherEnabled && nextWeatherUseLocation) this.runtime.policy.grant('location:read');
-        else this.runtime.policy.revoke('location:read');
-      }
       if (value.memoryEnabled === false && previous.memoryEnabled) this.runtime.policy.signalBarrier();
       if (value.remindersEnabled !== undefined)
         this.runtime.reminders.configure({ enabled: value.remindersEnabled });
@@ -214,9 +185,6 @@ export class Store {
   }
   deleteMemory(id: string) {
     this.runtime.memory.forget([id]);
-  }
-  campus(): CampusSnapshot | null {
-    return this.runtime.domains.campusSnapshot() || this.meta('campus', null);
   }
   agenda(): Action[] {
     return this.db
@@ -337,7 +305,6 @@ export class Store {
     this.runtime.interfaces.restore();
   }
   state(hasKey: boolean): State {
-    const campus = this.campus();
     return {
       privacyEpoch: this.kernel.epoch,
       policyRevision: this.kernel.policyRevision,
@@ -347,14 +314,6 @@ export class Store {
       agenda: this.agenda(),
       interfaces: this.runtime.interfaces.list(),
       plugins: this.runtime.plugins.list(),
-      campus: campus
-        ? {
-            source: campus.source,
-            updatedAt: campus.updatedAt,
-            count: campus.schedule.length + campus.exams.length,
-          }
-        : null,
-      campusConnector: null,
     };
   }
   export() {
@@ -384,7 +343,6 @@ export class Store {
       ),
       memories: this.memories(),
       agenda: this.agenda(),
-      campus: this.campus(),
       evidence: owned('h_evidence', labelFilter + " AND status!='deleted'"),
       assertions: owned('h_assertions', labelFilter),
       work: owned('h_work', labelFilter),

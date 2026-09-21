@@ -20,18 +20,10 @@ import { z } from 'zod';
 import { Store } from './store';
 import { DraftStore } from './storage/drafts';
 import { Harness } from './harness';
-import { ZjuAdapter } from './zjuAdapter';
-import { CampusMapAdapter } from './mapService';
-import { MapLocationProvider } from './mapLocation';
-const mapLocation = new MapLocationProvider();
-// Keep map and weather requests independent so a weather lookup cannot cancel
-// an in-progress map location request (or vice versa).
-const weatherLocation = new MapLocationProvider();
 import { friendlyError } from './provider';
 import { createModelClient, usingLunaTestTransport } from './model-selection';
-import { actionSchema, campusSchema, settingsSchema } from '../shared/schemas';
+import { actionSchema, settingsSchema } from '../shared/schemas';
 import { DEEPSEEK_MODEL, type Draft, type ImageAttachment, type Settings } from '../shared/types';
-import campusExample from '../../examples/campus.example.json';
 import { LIMITS } from '../shared/limits';
 import { assertTestDataDirectory } from './testBoundary';
 import { isEphemeral } from './runtime/policy';
@@ -78,8 +70,6 @@ app.setName('在场');
 let window: BrowserWindow | undefined,
   store: Store,
   harness: Harness,
-  zju: ZjuAdapter,
-  map: CampusMapAdapter,
   keyPath = '',
   invalidStoredKey = false;
 let closing = false;
@@ -156,7 +146,6 @@ function state() {
       ...snapshot.settings,
       keyStatus: invalidStoredKey ? 'invalid' : key ? 'available' : 'missing',
     },
-    campusConnector: zju.describe(),
   };
 }
 function pluginPreviewDetail(preview: PluginPackagePreview) {
@@ -287,8 +276,6 @@ app.whenReady().then(async () => {
   // project model rather than silently falling back to the demo responder.
   // No request is sent until the user starts a conversation.
   if (projectDeepSeekKey || usingLunaTestTransport()) store.saveSettings({ mode: 'deepseek' });
-  zju = new ZjuAdapter(store);
-  map = new CampusMapAdapter(path.join(app.getAppPath(), 'assets', 'map-v2'));
   harness = new Harness(
     store,
     getKey,
@@ -296,14 +283,11 @@ app.whenReady().then(async () => {
       if (window && !window.isDestroyed()) window.webContents.send('zaichang:event', event);
     },
     undefined,
-    zju,
-    map,
     () => {
       const key = getKey();
       return invalidStoredKey ? 'invalid' : key ? 'available' : 'missing';
     },
   );
-  store.runtime.connect({ location: weatherLocation });
   const controls = new NativeControls(store, harness);
   handle('runtime:overview', () => controls.overview());
   handle('runtime:adopt-world', (value) => controls.adoptWorld(value));
@@ -388,7 +372,7 @@ app.whenReady().then(async () => {
       !apiKey &&
       Object.entries(settings).every(
         ([key, val]) =>
-          ['memoryEnabled', 'weatherEnabled', 'weatherUseLocation', 'remindersEnabled'].includes(key) && val === false,
+          ['memoryEnabled', 'remindersEnabled'].includes(key) && val === false,
       );
     if (!disablingOnly) noRun();
     if (settings.mode === 'deepseek' && !(apiKey || getKey()) && !usingLunaTestTransport())
@@ -449,7 +433,6 @@ app.whenReady().then(async () => {
     noRun();
     const input = z.object({ id, enabled: z.boolean() }).strict().parse(value);
     store.runtime.interfaces.setEnabled(input.id, input.enabled);
-    if (input.id === 'weather') store.saveSettings({ weatherEnabled: input.enabled });
     return state();
   });
   handle('plugin:install', async () => {
@@ -511,138 +494,14 @@ app.whenReady().then(async () => {
     const sessionId = id.parse(value);
     drafts.clear(sessionId);
     store.deleteSession(sessionId);
-    harness.invalidateCampusCache(sessionId);
     return state();
   });
   handle('data:clear', async () => {
     noRun();
-    await zju.forgetCredentials(AbortSignal.timeout(20_000)).catch(() => {});
     store.clear();
     drafts.clear();
     deleteKey();
-    harness.invalidateCampusCache();
     return state();
-  });
-  handle('campus:import', async () => {
-    noRun();
-    const result = await dialog.showOpenDialog(window!, {
-      title: '导入校园资料',
-      filters: [{ name: '校园资料 JSON', extensions: ['json'] }],
-      properties: ['openFile'],
-    });
-    if (result.canceled) return null;
-    const file = result.filePaths[0];
-    if (statSync(file).size > 8_000_000) throw new Error('资料文件过大，请使用 8 MB 以内的 JSON 文件。');
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
-    } catch {
-      throw new Error('这不是有效的 JSON 文件。');
-    }
-    const data = campusSchema.safeParse(parsed);
-    if (!data.success)
-      throw new Error('资料格式不匹配：请包含来源、更新时间和含时区的逐次日程。项目 examples 中有模板。');
-    // Last occurrence wins when an exported event is rescheduled or cancelled.
-    data.data.schedule = [...new Map(data.data.schedule.map((e) => [e.id, e])).values()];
-    data.data.exams = [...new Map(data.data.exams.map((e) => [e.id, e])).values()];
-    store.runtime.domains.importSnapshot(data.data, Object.keys(parsed as object));
-    harness.invalidateCampusCache();
-    return state();
-  });
-  handle('campus:disconnect', () => {
-    noRun();
-    store.putMeta('campus', null);
-    harness.invalidateCampusCache();
-    return state();
-  });
-  handle('campus:template', async () => {
-    const result = await dialog.showSaveDialog(window!, {
-      title: '保存校园资料模板',
-      defaultPath: '校园资料-格式示例.json',
-      filters: [{ name: 'JSON', extensions: ['json'] }],
-    });
-    if (result.canceled || !result.filePath) return false;
-    writeFileSync(result.filePath, JSON.stringify(campusExample, null, 2), 'utf8');
-    return true;
-  });
-  handle('campus:connector:configure', async () => {
-    noRun();
-    const result = await dialog.showOpenDialog(window!, {
-      title: '选择浙大个人信息连接器目录',
-      properties: ['openDirectory'],
-    });
-    if (result.canceled || !result.filePaths[0]) return state();
-    zju.configure(result.filePaths[0]);
-    harness.invalidateCampusCache();
-    return state();
-  });
-  handle('campus:account:connect', async () => {
-    noRun();
-    try {
-      zju.connectInstalled();
-    } catch {
-      const result = await dialog.showOpenDialog(window!, {
-        title: '选择浙大个人信息技能目录',
-        properties: ['openDirectory'],
-      });
-      if (result.canceled || !result.filePaths[0]) return state();
-      zju.configure(result.filePaths[0]);
-    }
-    if (!zju.describe().credentialsConfigured) await zju.configureCredentials();
-    const verified = await zju.verifyAccount(AbortSignal.timeout(75_000));
-    if (verified.status !== 'ok')
-      throw new Error(
-        verified.error?.message || verified.reason || '没有完成浙大统一身份认证，请检查网络或登录信息。',
-      );
-    harness.invalidateCampusCache();
-    return state();
-  });
-  handle('campus:connector:disconnect', () => {
-    noRun();
-    zju.disconnect();
-    harness.invalidateCampusCache();
-    return state();
-  });
-  handle('campus:connector:credentials', async () => {
-    noRun();
-    await zju.configureCredentials();
-    const verified = await zju.verifyAccount(AbortSignal.timeout(75_000));
-    if (verified.status !== 'ok')
-      throw new Error(
-        verified.error?.message || verified.reason || '登录信息已加密保存，但浙大统一身份认证没有完成。',
-      );
-    harness.invalidateCampusCache();
-    return state();
-  });
-  handle('campus:connector:forget-credentials', async () => {
-    noRun();
-    const result = await zju.forgetCredentials(AbortSignal.timeout(20_000));
-    if (result.status !== 'ok')
-      throw new Error(result.error?.message || result.reason || '没有移除本机登录信息。');
-    harness.invalidateCampusCache();
-    return state();
-  });
-  handle('map:overview', () => map.overview());
-  handle('map:search', (value) => {
-    const input = z
-      .object({ query: z.string().trim().min(1).max(100), limit: z.number().int().min(1).max(50).optional() })
-      .parse(value);
-    return map.search(input.query, input.limit || 20);
-  });
-  handle('map:location-status', () => map.locationStatus());
-  handle('map:locate', () => mapLocation.read(map.overview()));
-  handle('map:location-stop', () => mapLocation.cancel());
-  handle('map:route', (value) => {
-    const place = z.object({ kind: z.enum(['place', 'node']), id: z.string().min(1).max(100) });
-    const input = z
-      .object({
-        from: z.union([place, z.object({ kind: z.literal('current') })]).optional(),
-        to: place.optional(),
-        avoidStairs: z.boolean().optional(),
-        version: z.string().max(100).optional(),
-      })
-      .parse(value);
-    return map.route(input);
   });
   handle('action', async (value) => {
     const input = z.object({ action: z.enum(['save', 'delete', 'done']), item: actionSchema }).parse(value);
@@ -810,6 +669,4 @@ app.whenReady().then(async () => {
 app.on('window-all-closed', () => app.quit());
 
 app.on('before-quit', () => {
-  mapLocation.cancel();
-  weatherLocation.cancel();
 });

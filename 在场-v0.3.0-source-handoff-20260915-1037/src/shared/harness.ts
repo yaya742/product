@@ -224,7 +224,7 @@ export interface RequestFragment {
   subjectId: string;
   worldId: string;
   intents: RequestIntent[];
-  readSources: ('campus' | 'history' | 'weather' | 'map' | 'local' | 'capability')[];
+  readSources: ('history' | 'local' | 'capability')[];
   /** Participation posture is independent from effects (e.g. listen + record_local). */
   participation?: 'listen' | 'reflect' | 'analyze' | 'act';
   audience: 'self' | 'group' | 'public';
@@ -252,7 +252,7 @@ export const requestFragmentSchema = z
     intents: z.array(
       z.enum(['listen', 'reflect', 'record_local', 'retrieve', 'plan', 'hypothesis', 'correction', 'quote', 'other']),
     ).max(9),
-    readSources: z.array(z.enum(['campus', 'history', 'weather', 'map', 'local', 'capability'])).max(6),
+    readSources: z.array(z.enum(['history', 'local', 'capability'])).max(3),
     participation: z.enum(['listen', 'reflect', 'analyze', 'act']).optional(),
     audience: z.enum(['self', 'group', 'public']),
     constraints: z.array(z.string().max(300)).max(12),

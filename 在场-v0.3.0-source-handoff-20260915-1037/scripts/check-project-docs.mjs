@@ -56,7 +56,7 @@ for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
   if (entry.isDirectory() && !sourceDirs.includes(entry.name) && !excludedDirs.has(entry.name))
     errors.push(`未归类的顶层目录：${entry.name}`);
 }
-const owned = [...rootFiles, ...sourceDirs.flatMap(walk)].sort();
+const owned = [...rootFiles, ...sourceDirs.filter((dir) => fs.existsSync(path.join(root, dir))).flatMap(walk)].sort();
 const skillFiles = ['project-foundations', 'project-navigation', 'product-design'].map(
   (n) => `.agents/skills/${n}/SKILL.md`,
 );
@@ -64,8 +64,6 @@ const docs = [
   'AGENTS.md',
   'PROJECT-NAVIGATION.md',
   'README.md',
-  'DESIGN.md',
-  'HARNESS-IMPLEMENTATION.md',
   'THIRD_PARTY_NOTICES.md',
   ...skillFiles,
 ];
@@ -173,7 +171,6 @@ const baselineRoots = [
   'package.json',
   'package-lock.json',
   'tsconfig.json',
-  'tsconfig.harness-tests.json',
   'vite.config.ts',
   'index.html',
   '.gitignore',
@@ -188,11 +185,9 @@ const baselineDirs = [
   'examples',
   'build',
   'licenses',
-  'assets/map-v2',
-  'public/map-v2',
   'runtime',
 ];
-const baselineFiles = [...baselineRoots, ...baselineDirs.flatMap(walk)]
+const baselineFiles = [...baselineRoots, ...baselineDirs.filter((dir) => fs.existsSync(path.join(root, dir))).flatMap(walk)]
   .filter((p) => p !== 'scripts/check-project-docs.mjs')
   .sort();
 const digest = createHash('sha256');

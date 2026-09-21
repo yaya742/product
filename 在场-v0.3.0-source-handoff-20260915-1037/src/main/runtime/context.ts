@@ -236,12 +236,7 @@ export class ContextCompiler {
         status: result.status,
         version: attempt.version,
       });
-    const key =
-      capability === 'campus.lookup'
-        ? (result.data as any)?.domain || 'campus'
-        : capability === 'weather.lookup'
-          ? 'weather'
-          : capability;
+    const key = capability;
     const existing = pack.needs.find((n) => n.key === key || n.capability === capability);
     if (existing) {
       existing.status = result.status;

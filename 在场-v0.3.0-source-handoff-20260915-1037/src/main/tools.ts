@@ -23,23 +23,10 @@ export interface ToolContext {
   changed: () => void;
   delegate: (tasks: DelegatedTask[]) => Promise<unknown>;
   runtimeSession?: RunSession;
-  campus?: import('./zjuAdapter').ZjuAdapter;
-  map?: import('./mapService').CampusMapAdapter;
-  mapCard?: (card: import('../shared/map-v2').MapCard) => void;
-  // Compatibility shape only. Cache eligibility belongs to CapabilityBroker.
-  campusMemo?: {
-    fullContextUsed: boolean;
-    domains: Set<string>;
-    results: Map<string, unknown>;
-    inFlight?: Map<string, Promise<unknown>>;
-  };
-  campusReady?: (result: unknown) => void;
-  campusInvalidate?: () => void;
 }
 export class ToolRegistry {
   private run: RunSession;
   constructor(private context: ToolContext) {
-    context.store.runtime.connect({ campus: context.campus, map: context.map });
     this.run =
       context.runtimeSession ||
       context.store.runtime.begin(

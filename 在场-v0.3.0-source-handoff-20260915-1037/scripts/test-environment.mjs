@@ -22,6 +22,5 @@ export function isolatedEnvironment(label, existing) {
   };
   delete env.ELECTRON_RUN_AS_NODE;
   delete env.ZAICHANG_CONNECTOR_ROOT;
-  delete env.ZAICHANG_ZJU_SOURCE;
   return env;
 }

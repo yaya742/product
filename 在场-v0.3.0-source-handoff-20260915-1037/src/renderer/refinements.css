@@ -907,24 +907,13 @@
 .settings-panel .connection-advanced { border-top: 0 !important; padding-top: 14px !important; }
 .settings-panel .settings-navigation { border: 0 !important; box-shadow: none !important; padding-top: 18px; }
 .settings-panel .panel-body { scrollbar-gutter: stable; }
-.settings-panel .campus-source-block,
-.settings-panel .campus-import-block { margin-top: 4px; }
-.settings-panel .campus-import-block { padding-top: 22px; border-top: 0; }
-.settings-panel .campus-import-state { display: block; margin: 8px 0 0; color: var(--text-tertiary); font-size: 12px; }
-.settings-panel .connector-more,
-.settings-panel .campus-more { margin-top: 10px; }
-.settings-panel .connector-more summary,
-.settings-panel .campus-more summary { color: var(--text-secondary); font-size: 12px; cursor: pointer; list-style: none; }
-.settings-panel .connector-more summary::-webkit-details-marker,
-.settings-panel .campus-more summary::-webkit-details-marker { display: none; }
-.settings-panel .connector-more summary::before,
-.settings-panel .campus-more summary::before { content: '›'; display: inline-block; margin-right: 7px; transition: transform 140ms ease; }
-.settings-panel .connector-more[open] summary::before,
-.settings-panel .campus-more[open] summary::before { transform: rotate(90deg); }
+.settings-panel .connector-more { margin-top: 10px; }
+.settings-panel .connector-more summary { color: var(--text-secondary); font-size: 12px; cursor: pointer; list-style: none; }
+.settings-panel .connector-more summary::-webkit-details-marker { display: none; }
+.settings-panel .connector-more summary::before { content: '›'; display: inline-block; margin-right: 7px; transition: transform 140ms ease; }
+.settings-panel .connector-more[open] summary::before { transform: rotate(90deg); }
 .settings-panel .connector-more .connector-actions { margin: 9px 0 0; padding-left: 0; }
-.settings-panel .campus-more .field-buttons { margin-top: 10px; }
-.settings-panel .connector-more,
-.settings-panel .campus-more { border: 0 !important; border-top: 0 !important; border-bottom: 0 !important; padding: 0 !important; }
+.settings-panel .connector-more { border: 0 !important; border-top: 0 !important; border-bottom: 0 !important; padding: 0 !important; }
 .settings-panel .inline-status { background: transparent !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; color: var(--text-secondary) !important; padding: 8px 0 !important; font-size: 13px; }
 .settings-panel .inline-status.error { background: transparent !important; color: var(--danger) !important; }
 .settings-panel .switch-row { border-top: 0 !important; padding: 18px 0 4px; }

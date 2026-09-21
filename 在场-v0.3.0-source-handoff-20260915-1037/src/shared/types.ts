@@ -92,7 +92,6 @@ export interface Message {
   obligations: Obligation[];
   actions: Action[];
   demo?: boolean;
-  mapCards?: import('./map-v2').MapCard[];
   retention?: import('./harness').ContextContract['retention'];
   scopeSummary?: {
     memoryMode: string;
@@ -130,31 +129,11 @@ export interface Settings {
   model: typeof DEEPSEEK_MODEL;
   mode: 'demo' | 'deepseek';
   memoryEnabled: boolean;
-  weatherEnabled: boolean;
-  weatherUseLocation: boolean;
   remindersEnabled: boolean;
   guidance: string;
   hasKey: boolean;
   keyStatus?: 'missing' | 'available' | 'invalid';
   timeZone?: string;
-}
-export interface CampusSnapshot {
-  source: string;
-  updatedAt: string;
-  schedule: CampusEvent[];
-  exams: CampusEvent[];
-  sports?: { completed: number; required: number; deadline: string; ruleSource: string };
-  places: { name: string; description: string; latitude?: number; longitude?: number }[];
-  rules: { title: string; content: string; source: string }[];
-}
-export interface CampusEvent {
-  id: string;
-  title: string;
-  startsAt: string;
-  endsAt: string;
-  location: string;
-  status: 'scheduled' | 'cancelled';
-  source: string;
 }
 export interface State {
   privacyEpoch?: number;
@@ -165,20 +144,6 @@ export interface State {
   agenda: Action[];
   interfaces: ManagedInterface[];
   plugins: InstalledPlugin[];
-  campus: { source: string; updatedAt: string; count: number } | null;
-  campusConnector: {
-    configured: boolean;
-    available: boolean;
-    label: string;
-    sourceKind?: 'zju_account';
-    authStatus?: 'needs_login' | 'credentials_saved' | 'verified' | 'failed';
-    lastVerifiedAt?: string;
-    catalogued?: number;
-    verified?: number;
-    blocked?: number;
-    credentialsConfigured?: boolean;
-    reason?: string;
-  } | null;
 }
 export type RunEvent =
   | { type: 'message'; message: Message }
@@ -281,25 +246,11 @@ export interface Bridge {
     receipts: import('./harness').EffectReceipt[];
   }>;
   permission(input: {
-    scope: 'campus:read' | 'map:read' | 'location:read';
+    scope: string;
     enabled: boolean;
   }): Promise<RuntimeOverview>;
   deleteConversation(id: string): Promise<State>;
   clearData(): Promise<State>;
-  importCampus(): Promise<State | null>;
-  campusTemplate(): Promise<boolean>;
-  connectCampusAccount(): Promise<State>;
-  configureCampusConnector(): Promise<State>;
-  disconnectCampusConnector(): Promise<State>;
-  configureCampusCredentials(): Promise<State>;
-  forgetCampusCredentials(): Promise<State>;
-  mapLocate(): Promise<import('./map-v2').LocationStatusResult>;
-  mapStopLocation(): Promise<void>;
-  mapOverview(): Promise<import('./map-v2').MapOverview>;
-  mapSearch(input: { query: string; limit?: number }): Promise<import('./map-v2').MapPoint[]>;
-  mapLocationStatus(): Promise<import('./map-v2').LocationStatusResult>;
-  mapRoute(input: import('./map-v2').MapRouteQuery): Promise<import('./map-v2').MapRouteResult>;
-  disconnectCampus(): Promise<State>;
   action(input: { action: 'save' | 'delete' | 'done'; item: Action }): Promise<State>;
   attachText(): Promise<TextAttachment | null>;
   attachImage(): Promise<ImageAttachment | null>;
@@ -313,8 +264,6 @@ export const DEFAULT_SETTINGS: Settings = {
   model: DEEPSEEK_MODEL,
   mode: 'demo',
   memoryEnabled: true,
-  weatherEnabled: false,
-  weatherUseLocation: false,
   remindersEnabled: false,
   guidance: '',
   hasKey: false,

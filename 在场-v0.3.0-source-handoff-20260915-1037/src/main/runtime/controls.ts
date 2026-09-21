@@ -202,7 +202,7 @@ export class NativeControls {
   }
   permission(raw: unknown) {
     const input = z
-      .object({ scope: z.enum(['campus:read', 'map:read', 'location:read']), enabled: z.boolean() })
+      .object({ scope: z.string().min(1).max(100), enabled: z.boolean() })
       .strict()
       .parse(raw);
     this.store.runtime.policy[input.enabled ? 'grant' : 'revoke'](input.scope);
