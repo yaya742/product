@@ -266,7 +266,7 @@ export function App() {
   const [campusSaved, setCampusSaved] = useState(false);
   const [campusLoading, setCampusLoading] = useState(false);
   const [campusMessage, setCampusMessage] = useState('');
-  const [campusTab, setCampusTab] = useState<'overview' | 'schedule' | 'exams' | 'grades' | 'todos' | 'notices'>('overview');
+  const [campusTab, setCampusTab] = useState<'overview' | 'schedule' | 'exams' | 'grades' | 'todos' | 'practice' | 'notices'>('overview');
   const [noticeQuery, setNoticeQuery] = useState('');
   const [notices, setNotices] = useState<CampusNotice[]>([]);
   const [noticesPage, setNoticesPage] = useState(1);
@@ -396,7 +396,7 @@ export function App() {
     }
   }
 
-  function selectCampusTab(tab: 'overview' | 'schedule' | 'exams' | 'grades' | 'todos' | 'notices') {
+  function selectCampusTab(tab: 'overview' | 'schedule' | 'exams' | 'grades' | 'todos' | 'practice' | 'notices') {
     setCampusTab(tab);
     if (tab === 'notices' && !notices.length && !noticesLoading) void refreshNotices('', 1);
   }
@@ -1193,6 +1193,7 @@ export function App() {
                 ['exams', copy.campusExams],
                 ['grades', copy.campusGrades],
                 ['todos', copy.campusTodos],
+                ['practice', copy.campusPractice],
                 ['notices', copy.campusNotices],
               ] as const).map(([tab, label]) => (
                 <button key={tab} className={campusTab === tab ? 'selected' : ''} role="tab" aria-selected={campusTab === tab} onClick={() => selectCampusTab(tab)}>{label}</button>
@@ -1207,11 +1208,13 @@ export function App() {
                       <div><strong>{campus.totalCredit.toFixed(1)}</strong><span>{copy.campusTotalCredit}</span></div>
                       <div><strong>{campus.courses.length}</strong><span>{copy.campusCoursesCount}</span></div>
                       <div><strong>{campus.todos.length}</strong><span>{copy.campusTodosCount}</span></div>
+                      <div><strong>{campus.practiceProjects?.length || 0}</strong><span>{copy.campusPracticeProjects}</span></div>
                     </div>
                     <div className="campus-overview-links">
                       <button onClick={() => setCampusTab('schedule')}><span>{copy.campusSchedule}</span><strong>{campus.courses.length}</strong><ArrowIcon /></button>
                       <button onClick={() => setCampusTab('exams')}><span>{copy.campusExams}</span><strong>{campus.exams.length}</strong><ArrowIcon /></button>
                       <button onClick={() => setCampusTab('grades')}><span>{copy.campusGrades}</span><strong>{campus.grades.length}</strong><ArrowIcon /></button>
+                      <button onClick={() => setCampusTab('practice')}><span>{copy.campusPractice}</span><strong>{campus.practiceProjects?.length || 0}</strong><ArrowIcon /></button>
                     </div>
                   </section>
                 )}
@@ -1262,6 +1265,26 @@ export function App() {
                         <strong>{todo.name}</strong><span>{todo.course}</span><small>{todo.deadline || copy.campusNoDeadline}</small>
                       </div>
                     )) : <p className="empty-history">{copy.campusEmpty}</p>}
+                  </section>
+                )}
+
+                {campusTab === 'practice' && (
+                  <section className="profile-section campus-data-card">
+                    <div className="setting-label"><strong>{copy.campusPractice}</strong><span>{campus.practiceProjects?.length ? `${campus.practiceProjects.length} · ${copy.campusPracticeProjects}` : copy.campusPracticeEmpty}</span></div>
+                    {campus.practiceSummary && (
+                      <div className="campus-grade-summary">
+                        <div><span>{copy.campusPracticePoints} · 二课</span><strong>{campus.practiceSummary.secondClassPoints ?? '—'}</strong></div>
+                        <div><span>{copy.campusPracticePoints} · 三课</span><strong>{campus.practiceSummary.thirdClassPoints ?? '—'}</strong></div>
+                        <div><span>{copy.campusPracticePoints} · 四课</span><strong>{campus.practiceSummary.fourthClassPoints ?? '—'}</strong></div>
+                      </div>
+                    )}
+                    {campus.practiceProjects?.length ? campus.practiceProjects.map((project) => (
+                      <div className="campus-record" key={project.id}>
+                        <strong>{project.name}</strong>
+                        <span>{[project.category, project.projectType, project.qualityType].filter(Boolean).join(' · ')}</span>
+                        <small>{project.score === null ? '—' : `${project.score} · `}{project.approved ? copy.campusPracticePassed : copy.campusPracticePending}{project.activityTime ? ` · ${project.activityTime}` : ''}</small>
+                      </div>
+                    )) : <p className="empty-history">{copy.campusPracticeEmpty}</p>}
                   </section>
                 )}
               </>

@@ -56,6 +56,12 @@ export interface UiCopy {
   campusExams: string;
   campusGrades: string;
   campusTodos: string;
+  campusPractice: string;
+  campusPracticeProjects: string;
+  campusPracticePoints: string;
+  campusPracticePassed: string;
+  campusPracticePending: string;
+  campusPracticeEmpty: string;
   campusCoursesCount: string;
   campusExamsCount: string;
   campusGradesCount: string;
@@ -160,7 +166,7 @@ const SIMPLIFIED: UiCopy = {
   light: '浅色',
   dark: '深色',
   campus: '校园信息',
-  campusHint: '读取课表、考试、成绩和待办，仅保存在本机',
+  campusHint: '读取课表、考试、成绩、待办和体育与素拓，仅保存在本机',
   campusTitle: '校园信息',
   campusReadOnly: '只读读取，账号和校园数据仅保存在本机。',
   campusRefresh: '读取校园信息',
@@ -173,6 +179,12 @@ const SIMPLIFIED: UiCopy = {
   campusExams: '考试',
   campusGrades: '成绩',
   campusTodos: '待办',
+  campusPractice: '体育与素拓',
+  campusPracticeProjects: '项目明细',
+  campusPracticePoints: '课堂记点',
+  campusPracticePassed: '通过',
+  campusPracticePending: '待审核',
+  campusPracticeEmpty: '暂无素拓项目记录',
   campusCoursesCount: '门课程',
   campusExamsCount: '场考试',
   campusGradesCount: '条成绩',
@@ -248,7 +260,7 @@ const TRADITIONAL: UiCopy = {
   historyTitle: '歷史對話', historyEmpty: '還沒有歷史對話', rename: '修改標題', delete: '刪除',
   renamePlaceholder: '輸入新的標題', cancel: '取消', done: '完成', profileEyebrow: '個人設定', avatar: '頭像',
   avatarHint: '從相簿選擇一張圖片作為頭像', language: '語言', appearance: '外觀', light: '淺色', dark: '深色',
-  campus: '校園資訊', campusHint: '讀取課表、考試、成績和待辦，僅保存在本機', campusTitle: '校園資訊',
+  campus: '校園資訊', campusHint: '讀取課表、考試、成績、待辦和體育與素拓，僅保存在本機', campusTitle: '校園資訊',
   campusReadOnly: '僅讀取，帳號和校園資料僅保存在本機。', campusRefresh: '讀取校園資訊', campusLoading: '正在讀取校園資訊…', campusUpdated: '校園資訊已更新。', campusPartial: '校園資訊已更新，但部分模組讀取失敗。', campusNeedCredentials: '請先填寫學號和校園密碼。', campusOverview: '概覽', campusSchedule: '課表', campusExams: '考試', campusGrades: '成績', campusTodos: '待辦', campusCoursesCount: '門課程', campusExamsCount: '場考試', campusGradesCount: '筆成績', campusTodosCount: '項待辦', campusGpa: '均績（近似）', campusTotalCredit: '總學分', campusUpcoming: '尚未開始的考試', campusFinished: '已結束的考試', campusUnknown: '時間待定', campusEmpty: '暫無資料', campusNoLocation: '地點未提供', campusNoDeadline: '截止時間未提供', campusNotices: '公告', campusNoticeHint: '公開通知，無需校園登入', campusNoticeSearchPlaceholder: '搜尋學院、選課、考試、開學等公告', campusNoticeSearch: '搜尋', campusNoticeLoading: '正在讀取官方公告…', campusNoticeEmpty: '暫無符合公告', campusNoticeOpen: '查看原文', campusNoticePrevious: '上一頁', campusNoticeNext: '下一頁', studentId: '學號',
   studentPassword: '密碼', passwordPlaceholder: '輸入校園密碼', saved: '已儲存',
   translatingConversation: '正在翻譯目前對話…', translatedConversation: '對話語言已切換。', translationNeedKey: '切換對話語言需要先設定 DeepSeek API Key。', translationFailed: '部分訊息翻譯失敗，已保留原文。', back: '返回',
@@ -271,8 +283,8 @@ const ENGLISH: UiCopy = {
   memoryEyebrow: 'Long-term memory', memoryTitle: 'Tell me something about you', memoryPlaceholder: 'For example: I like simple plans', save: 'Save',
   historyTitle: 'Chat history', historyEmpty: 'No conversations yet', rename: 'Rename', delete: 'Delete', renamePlaceholder: 'Enter a new title',
   cancel: 'Cancel', done: 'Done', profileEyebrow: 'Profile settings', avatar: 'Avatar', avatarHint: 'Choose an image from your gallery', language: 'Language',
-  appearance: 'Appearance', light: 'Light', dark: 'Dark', campus: 'Campus information', campusHint: 'Read schedule, exams, grades and to-dos; stored on this device', campusTitle: 'Campus information',
-  studentId: 'Student ID', studentPassword: 'Password', passwordPlaceholder: 'Enter campus password', saved: 'Saved', campusReadOnly: 'Read-only access. Your account and campus data stay on this device.', campusRefresh: 'Read campus information', campusLoading: 'Reading campus information…', campusUpdated: 'Campus information updated.', campusPartial: 'Campus information updated, but some modules failed.', campusNeedCredentials: 'Enter your student ID and campus password first.', campusOverview: 'Overview', campusSchedule: 'Schedule', campusExams: 'Exams', campusGrades: 'Grades', campusTodos: 'To-dos', campusCoursesCount: 'courses', campusExamsCount: 'exams', campusGradesCount: 'grades', campusTodosCount: 'to-dos', campusGpa: 'GPA (approx.)', campusTotalCredit: 'Total credits', campusUpcoming: 'Upcoming exams', campusFinished: 'Finished exams', campusUnknown: 'Time pending', campusEmpty: 'No data yet', campusNoLocation: 'Location unavailable', campusNoDeadline: 'No deadline', campusNotices: 'Notices', campusNoticeHint: 'Public notices; no campus login required', campusNoticeSearchPlaceholder: 'Search colleges, course selection, exams or term notices', campusNoticeSearch: 'Search', campusNoticeLoading: 'Reading official notices…', campusNoticeEmpty: 'No matching notices', campusNoticeOpen: 'Open original', campusNoticePrevious: 'Previous', campusNoticeNext: 'Next',
+  appearance: 'Appearance', light: 'Light', dark: 'Dark', campus: 'Campus information', campusHint: 'Read schedule, exams, grades, to-dos and sports/practice; stored on this device', campusTitle: 'Campus information',
+  studentId: 'Student ID', studentPassword: 'Password', passwordPlaceholder: 'Enter campus password', saved: 'Saved', campusReadOnly: 'Read-only access. Your account and campus data stay on this device.', campusRefresh: 'Read campus information', campusLoading: 'Reading campus information…', campusUpdated: 'Campus information updated.', campusPartial: 'Campus information updated, but some modules failed.', campusNeedCredentials: 'Enter your student ID and campus password first.', campusOverview: 'Overview', campusSchedule: 'Schedule', campusExams: 'Exams', campusGrades: 'Grades', campusTodos: 'To-dos', campusPractice: 'Sports & practice', campusPracticeProjects: 'Projects', campusPracticePoints: 'Class points', campusPracticePassed: 'Passed', campusPracticePending: 'Pending review', campusPracticeEmpty: 'No practice projects yet', campusCoursesCount: 'courses', campusExamsCount: 'exams', campusGradesCount: 'grades', campusTodosCount: 'to-dos', campusGpa: 'GPA (approx.)', campusTotalCredit: 'Total credits', campusUpcoming: 'Upcoming exams', campusFinished: 'Finished exams', campusUnknown: 'Time pending', campusEmpty: 'No data yet', campusNoLocation: 'Location unavailable', campusNoDeadline: 'No deadline', campusNotices: 'Notices', campusNoticeHint: 'Public notices; no campus login required', campusNoticeSearchPlaceholder: 'Search colleges, course selection, exams or term notices', campusNoticeSearch: 'Search', campusNoticeLoading: 'Reading official notices…', campusNoticeEmpty: 'No matching notices', campusNoticeOpen: 'Open original', campusNoticePrevious: 'Previous', campusNoticeNext: 'Next',
   translatingConversation: 'Translating this conversation…', translatedConversation: 'Conversation language switched.', translationNeedKey: 'Add a DeepSeek API key before translating this conversation.', translationFailed: 'Some messages could not be translated and were kept as-is.', back: 'Back', contacting: 'Contacting DeepSeek',
   readingTime: 'Reading phone time', locating: 'Requesting location', composing: 'Preparing reply', assistant: 'Zaichang', user: 'You', typing: 'Preparing…',
   draftPlaceholder: '', titleFallback: 'Untitled chat',

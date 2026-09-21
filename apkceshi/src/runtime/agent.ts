@@ -168,6 +168,8 @@ async function runLocalTool(call: DeepSeekToolCall, signal: AbortSignal, context
       exams: context.campus.exams,
       grades: context.campus.grades,
       todos: context.campus.todos,
+      practice_summary: context.campus.practiceSummary,
+      practice_projects: context.campus.practiceProjects,
     };
   }
   if (call.function.name === 'search_campus_notices') {

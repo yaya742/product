@@ -8,6 +8,8 @@ import {
   type CampusCourse,
   type CampusExam,
   type CampusGrade,
+  type CampusPracticeProject,
+  type CampusPracticeSummary,
   type CampusTodo,
   type MobileLanguage,
   type MobileMessage,
@@ -137,6 +139,36 @@ function parseCampusData(value: unknown): MobileCampusData | null {
   const gpa = typeof value.gpa === 'number' && Number.isFinite(value.gpa)
     ? value.gpa
     : counted.length ? counted.reduce((sum, item) => sum + item.credit * item.point, 0) / counted.reduce((sum, item) => sum + item.credit, 0) : null;
+  const rawPracticeSummary = isRecord(value.practiceSummary) ? value.practiceSummary : null;
+  const practiceNumber = (item: unknown): number | null => typeof item === 'number' && Number.isFinite(item) ? item : null;
+  const practiceSummary: CampusPracticeSummary | null = rawPracticeSummary
+    ? {
+        secondClassPoints: practiceNumber(rawPracticeSummary.secondClassPoints),
+        thirdClassPoints: practiceNumber(rawPracticeSummary.thirdClassPoints),
+        fourthClassPoints: practiceNumber(rawPracticeSummary.fourthClassPoints),
+        aestheticEducationPassed: typeof rawPracticeSummary.aestheticEducationPassed === 'boolean' ? rawPracticeSummary.aestheticEducationPassed : null,
+        laborEducationPassed: typeof rawPracticeSummary.laborEducationPassed === 'boolean' ? rawPracticeSummary.laborEducationPassed : null,
+        source: typeof rawPracticeSummary.source === 'string' ? rawPracticeSummary.source.slice(0, 120) : '素质拓展平台',
+      }
+    : null;
+  const practiceProjects: CampusPracticeProject[] = Array.isArray(value.practiceProjects)
+    ? value.practiceProjects.flatMap((item) => {
+        if (!isRecord(item) || typeof item.id !== 'string' || typeof item.name !== 'string') return [];
+        return [{
+          id: item.id.slice(0, 120),
+          name: item.name.slice(0, 240),
+          category: typeof item.category === 'string' ? item.category.slice(0, 80) : '未分类课堂',
+          projectType: typeof item.projectType === 'string' ? item.projectType.slice(0, 120) : '',
+          qualityType: typeof item.qualityType === 'string' ? item.qualityType.slice(0, 120) : '',
+          score: practiceNumber(item.score),
+          status: typeof item.status === 'string' ? item.status.slice(0, 80) : '状态未知',
+          approved: item.approved === true,
+          role: typeof item.role === 'string' ? item.role.slice(0, 160) : '',
+          remark: typeof item.remark === 'string' ? item.remark.slice(0, 240) : '',
+          activityTime: typeof item.activityTime === 'string' ? item.activityTime.slice(0, 100) : '',
+        } satisfies CampusPracticeProject];
+      }).slice(0, 200)
+    : [];
   return {
     fetchedAt: value.fetchedAt,
     academicYear: typeof value.academicYear === 'string' ? value.academicYear : '',
@@ -145,6 +177,8 @@ function parseCampusData(value: unknown): MobileCampusData | null {
     exams,
     grades,
     todos: parseList<CampusTodo>(value.todos, ['id', 'name', 'course', 'deadline', 'status']),
+    practiceSummary,
+    practiceProjects,
     gpa,
     totalCredit,
     warnings: Array.isArray(value.warnings)
