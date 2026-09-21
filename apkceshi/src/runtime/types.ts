@@ -61,6 +61,38 @@ export interface CampusCourse {
   completed: boolean;
 }
 
+export interface CampusCourseOffering {
+  id: string;
+  name: string;
+  semesterId: string;
+  credit: string;
+  teachers: string;
+  confirmed: boolean | null;
+  online: boolean | null;
+}
+
+export interface CampusLearningCourse {
+  id: string;
+  name: string;
+  code: string;
+  teachers: string;
+  term: string;
+  credit: string;
+  status: string;
+}
+
+export interface CampusActivity {
+  id: string;
+  courseId: string;
+  title: string;
+  type: string;
+  startTime: string;
+  endTime: string;
+  deadline: string;
+  status: string;
+  url: string;
+}
+
 export interface CampusExam {
   id: string;
   name: string;
@@ -77,6 +109,51 @@ export interface CampusGrade {
   score: string;
   credit: string;
   point: string;
+  semesterId?: string;
+  courseKey?: string;
+  gpaIncluded?: boolean;
+  gpaExclusionReason?: string;
+}
+
+export interface CampusGradeAlert {
+  id: string;
+  courseKey: string;
+  name: string;
+  credit: string;
+  score: string;
+  point: string;
+  level: 'failed' | 'attention';
+  note: string;
+}
+
+export interface CampusGpaSummary {
+  semesterId?: string;
+  throughSemester: string;
+  gpa: number | null;
+  creditDenominator: number;
+  eligibleAttempts: number;
+  countedAttempts: number;
+  excludedAttempts: number;
+  complete: boolean;
+  note: string;
+}
+
+export interface CampusHoliday {
+  id: string;
+  title: string;
+  startDate: string;
+  endDate: string;
+  kind: string;
+  note: string;
+  source: string;
+}
+
+export interface CampusSourceStatus {
+  available: boolean;
+  credentialsConfigured: boolean;
+  authStatus: string;
+  supportedDomains: string[];
+  note: string;
 }
 
 export interface CampusTodo {
@@ -118,6 +195,9 @@ export interface CampusNotice {
   summary: string;
   url: string;
   pinned: boolean;
+  category?: string;
+  detail?: string;
+  detailSource?: string;
 }
 
 export type CampusPublicCategory = 'all' | 'profile' | 'faculty' | 'program' | 'contact' | 'labs';
@@ -139,8 +219,14 @@ export interface MobileCampusData {
   academicYear: string;
   term: string;
   courses: CampusCourse[];
+  courseOfferings: CampusCourseOffering[];
+  learningCourses: CampusLearningCourse[];
+  activities: CampusActivity[];
   exams: CampusExam[];
   grades: CampusGrade[];
+  gradeAlerts: CampusGradeAlert[];
+  gpaSemesters: CampusGpaSummary[];
+  gpaCumulative: CampusGpaSummary | null;
   todos: CampusTodo[];
   practiceSummary: CampusPracticeSummary | null;
   practiceProjects: CampusPracticeProject[];
@@ -149,6 +235,8 @@ export interface MobileCampusData {
   completedCredit: number;
   earnedCredit: number;
   yearLevel: string;
+  holidays: CampusHoliday[];
+  sourceStatus: CampusSourceStatus;
   warnings: string[];
 }
 

@@ -7,8 +7,14 @@ import {
   type MobileAgendaItem,
   type MobileCampusData,
   type CampusCourse,
+  type CampusCourseOffering,
+  type CampusActivity,
   type CampusExam,
   type CampusGrade,
+  type CampusGradeAlert,
+  type CampusGpaSummary,
+  type CampusHoliday,
+  type CampusLearningCourse,
   type CampusPracticeProject,
   type CampusPracticeSummary,
   type CampusTodo,
@@ -168,6 +174,35 @@ function parseCampusData(value: unknown): MobileCampusData | null {
     status: exam.status === 'finished' || exam.status === 'upcoming' ? exam.status : 'unknown',
   } satisfies CampusExam));
   const grades = parseList<CampusGrade>(value.grades, ['id', 'name', 'score', 'credit', 'point']);
+  const courseOfferings = parseList<Record<string, unknown>>(value.courseOfferings, ['id', 'name', 'semesterId', 'credit', 'teachers']).map((item) => ({
+    id: String(item.id), name: String(item.name), semesterId: String(item.semesterId), credit: String(item.credit), teachers: String(item.teachers),
+    confirmed: typeof item.confirmed === 'boolean' ? item.confirmed : null,
+    online: typeof item.online === 'boolean' ? item.online : null,
+  } satisfies CampusCourseOffering));
+  const learningCourses = parseList<CampusLearningCourse>(value.learningCourses, ['id', 'name', 'code', 'teachers', 'term', 'credit', 'status']);
+  const activities = parseList<CampusActivity>(value.activities, ['id', 'courseId', 'title', 'type', 'startTime', 'endTime', 'deadline', 'status', 'url']);
+  const gradeAlerts = parseList<Record<string, unknown>>(value.gradeAlerts, ['id', 'courseKey', 'name', 'credit', 'score', 'point', 'level', 'note']).map((item) => ({
+    id: String(item.id), courseKey: String(item.courseKey), name: String(item.name), credit: String(item.credit), score: String(item.score), point: String(item.point),
+    level: item.level === 'failed' ? 'failed' : 'attention', note: String(item.note),
+  } satisfies CampusGradeAlert));
+  const parseGpa = (item: unknown): CampusGpaSummary | null => {
+    if (!isRecord(item) || typeof item.throughSemester !== 'string') return null;
+    return {
+      ...(typeof item.semesterId === 'string' ? { semesterId: item.semesterId } : {}),
+      throughSemester: item.throughSemester,
+      gpa: typeof item.gpa === 'number' && Number.isFinite(item.gpa) ? item.gpa : null,
+      creditDenominator: typeof item.creditDenominator === 'number' && Number.isFinite(item.creditDenominator) ? item.creditDenominator : 0,
+      eligibleAttempts: typeof item.eligibleAttempts === 'number' ? item.eligibleAttempts : 0,
+      countedAttempts: typeof item.countedAttempts === 'number' ? item.countedAttempts : 0,
+      excludedAttempts: typeof item.excludedAttempts === 'number' ? item.excludedAttempts : 0,
+      complete: item.complete === true,
+      note: typeof item.note === 'string' ? item.note : '',
+    };
+  };
+  const gpaSemesters = Array.isArray(value.gpaSemesters) ? value.gpaSemesters.flatMap((item) => { const parsed = parseGpa(item); return parsed ? [parsed] : []; }).slice(0, 100) : [];
+  const gpaCumulative = parseGpa(value.gpaCumulative);
+  const holidays = parseList<CampusHoliday>(value.holidays, ['id', 'title', 'startDate', 'endDate', 'kind', 'note', 'source']);
+  const rawSourceStatus = isRecord(value.sourceStatus) ? value.sourceStatus : {};
   const totalCredit = typeof value.totalCredit === 'number' && Number.isFinite(value.totalCredit)
     ? value.totalCredit
     : grades.reduce((sum, grade) => sum + (Number.isFinite(Number(grade.credit)) ? Number(grade.credit) : 0), 0);
@@ -214,8 +249,14 @@ function parseCampusData(value: unknown): MobileCampusData | null {
     academicYear: typeof value.academicYear === 'string' ? value.academicYear : '',
     term: typeof value.term === 'string' ? value.term : '',
     courses,
+    courseOfferings,
+    learningCourses,
+    activities,
     exams,
     grades,
+    gradeAlerts,
+    gpaSemesters,
+    gpaCumulative,
     todos: parseList<CampusTodo>(value.todos, ['id', 'name', 'course', 'deadline', 'status']),
     practiceSummary,
     practiceProjects,
@@ -224,6 +265,14 @@ function parseCampusData(value: unknown): MobileCampusData | null {
     completedCredit: typeof value.completedCredit === 'number' && Number.isFinite(value.completedCredit) ? value.completedCredit : totalCredit,
     earnedCredit: typeof value.earnedCredit === 'number' && Number.isFinite(value.earnedCredit) ? value.earnedCredit : totalCredit,
     yearLevel: typeof value.yearLevel === 'string' ? value.yearLevel.slice(0, 16) : '',
+    holidays,
+    sourceStatus: {
+      available: rawSourceStatus.available === true,
+      credentialsConfigured: rawSourceStatus.credentialsConfigured === true,
+      authStatus: typeof rawSourceStatus.authStatus === 'string' ? rawSourceStatus.authStatus : 'unknown',
+      supportedDomains: Array.isArray(rawSourceStatus.supportedDomains) ? rawSourceStatus.supportedDomains.filter((item): item is string => typeof item === 'string').slice(0, 40) : [],
+      note: typeof rawSourceStatus.note === 'string' ? rawSourceStatus.note.slice(0, 300) : '',
+    },
     warnings: Array.isArray(value.warnings)
       ? value.warnings.filter((item): item is string => typeof item === 'string').map((item) => item.trim()).filter(Boolean).slice(0, 12)
       : [],

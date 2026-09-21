@@ -106,7 +106,7 @@ export const LOCAL_TOOL_SPECS: DeepSeekToolSpec[] = [
     type: 'function',
     function: {
       name: 'get_campus_info',
-      description: '读取手机端已经同步的校园信息，包括课表、考试、成绩和待办。用户询问自己的校园安排时使用；如果还没有同步，明确提示用户先在校园信息页面读取。',
+      description: '读取手机端已经同步的校园信息，包括逐次课表、课程教学班、学在浙大课程、考试、成绩、成绩风险、绩点、待办、素质拓展、校历和数据连接状态。用户询问自己的校园安排时使用；如果还没有同步，明确提示用户先在校园信息页面读取。',
       parameters: { type: 'object', properties: {}, additionalProperties: false },
     },
   },
@@ -120,6 +120,9 @@ export const LOCAL_TOOL_SPECS: DeepSeekToolSpec[] = [
         properties: {
           query: { type: 'string', description: '公告关键词；没有特定主题时留空以读取最新公告' },
           page: { type: 'integer', description: '页码，从 1 开始，最多 50' },
+          college: { type: 'string', description: '可选学院关键词，例如数学、计算机' },
+          category: { type: 'string', enum: ['all', 'profile', 'faculty', 'program', 'contact', 'labs'], description: '可选资料类别' },
+          detail: { type: 'boolean', description: '是否读取最多三条公告的官方详情正文' },
         },
         additionalProperties: false,
       },
@@ -148,6 +151,19 @@ export const LOCAL_TOOL_SPECS: DeepSeekToolSpec[] = [
       name: 'list_local_reminders',
       description: '读取手机本地尚未完成的提醒。用户询问自己的待办或提醒时使用。',
       parameters: { type: 'object', properties: {}, additionalProperties: false },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_course_activities',
+      description: '读取用户指定的学在浙大课程活动、作业或截止时间。需要已同步校园信息中的课程 ID；只读，不执行提交或修改。',
+      parameters: {
+        type: 'object',
+        properties: { course_id: { type: 'string', description: '学在浙大课程 ID' } },
+        required: ['course_id'],
+        additionalProperties: false,
+      },
     },
   },
   {

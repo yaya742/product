@@ -1,8 +1,14 @@
 import { Capacitor, CapacitorCookies, CapacitorHttp } from '@capacitor/core';
 import type {
   CampusCourse,
+  CampusCourseOffering,
+  CampusActivity,
   CampusExam,
   CampusGrade,
+  CampusGradeAlert,
+  CampusGpaSummary,
+  CampusHoliday,
+  CampusLearningCourse,
   CampusNotice,
   CampusPracticeProject,
   CampusPracticeSummary,
@@ -21,6 +27,8 @@ const EXAMS_URL = 'https://zdbk.zju.edu.cn/jwglxt/xskscx/kscx_cxXsgrksIndex.html
 const GRADES_URL = 'https://zdbk.zju.edu.cn/jwglxt/cxdy/xscjcx_cxXscjIndex.html?doType=query&queryModel.showCount=5000';
 const COURSES_HOME = 'https://courses.zju.edu.cn/user/index';
 const TODOS_URL = 'https://courses.zju.edu.cn/api/todos';
+const MY_COURSES_URL = 'https://courses.zju.edu.cn/api/my-courses';
+const COURSE_ACTIVITIES_URL = 'https://courses.zju.edu.cn/api/courses/{courseId}/activities';
 const SZTZ_SERVICE = 'https://sztz.zju.edu.cn/dekt/';
 const SZTZ_CTX = 'https://sztz.zju.edu.cn/dekt/ctx';
 const SZTZ_PROJECTS = 'https://sztz.zju.edu.cn/dekt/student/home/getSqjl';
@@ -30,6 +38,8 @@ const NOTICE_DETAIL_PATH = '/jwglxt/xtgl/xwck_ckLoginNews.html';
 const PERSON_SERVER_URL = 'https://person.zju.edu.cn/server';
 const PERSON_PORTAL_URL = 'https://person.zju.edu.cn/';
 const ZJU_INSTITUTION_DIRECTORY_URL = 'https://www.zju.edu.cn/599/listm.htm';
+const CALENDAR_LIST_URL = 'https://ugrs.zju.edu.cn/28218/list1.htm';
+const CALENDAR_LIST_FALLBACK_URL = 'https://ugrs.zju.edu.cn/28218/list.htm';
 const PERSON_APP_KEY = '50634610756a4c0e82d5a13bb692e257';
 const PERSON_SIGN_SECRET = '1f11192bd9d14a09b29fc59d556e24e3';
 
@@ -41,6 +51,7 @@ const TRUSTED_HOSTS = new Set([
   'sztz.zju.edu.cn',
   'person.zju.edu.cn',
   'www.zju.edu.cn',
+  'ugrs.zju.edu.cn',
 ]);
 
 export type CampusErrorCode = 'native_required' | 'credentials' | 'network' | 'authentication' | 'captcha' | 'response';
@@ -684,12 +695,72 @@ function normalizeExams(item: Record<string, unknown>, index: number): CampusExa
 }
 
 function normalizeGrade(item: Record<string, unknown>, index: number): CampusGrade {
+  const score = field(item, ['cj', 'score', 'original_score', 'cjbj'], '—');
+  const point = field(item, ['jd', 'point', 'five_point', 'gpa'], '—');
   return {
     id: field(item, ['xkkh', 'kch', 'kcmc', 'grade_id'], `grade-${index}`),
     name: field(item, ['kcmc', 'course_name', 'courseName'], '未命名课程'),
-    score: field(item, ['cj', 'score', 'original_score', 'cjbj'], '—'),
+    score,
     credit: field(item, ['xf', 'credit', 'course_credit'], '—'),
-    point: field(item, ['jd', 'point', 'five_point', 'gpa'], '—'),
+    point,
+    semesterId: field(item, ['semester_id', 'semester', 'xq_id', 'xqmmc', 'xnm'], ''),
+    courseKey: field(item, ['xkkh', 'course_key', 'kch'], ''),
+    gpaIncluded: numberValue(field(item, ['xf', 'credit', 'course_credit'])) !== undefined && numberValue(point) !== undefined,
+    gpaExclusionReason: numberValue(field(item, ['xf', 'credit', 'course_credit'])) !== undefined && numberValue(point) !== undefined ? '' : '成绩接口未提供可纳入绩点计算的学分或绩点。',
+  };
+}
+
+function normalizeCourseOffering(item: CampusCourse, semesterId: string): CampusCourseOffering {
+  return {
+    id: item.id,
+    name: item.name,
+    semesterId,
+    credit: item.credit,
+    teachers: item.teacher,
+    confirmed: null,
+    online: null,
+  };
+}
+
+function normalizeLearningCourse(item: Record<string, unknown>): CampusLearningCourse | null {
+  const id = field(item, ['id', 'course_id', 'courseId', 'cid']);
+  const name = field(item, ['name', 'title', 'course_name', 'courseName']);
+  if (!id || !name) return null;
+  return {
+    id: id.slice(0, 100),
+    name: name.slice(0, 240),
+    code: field(item, ['code', 'course_code', 'courseCode']),
+    teachers: field(item, ['teachers', 'teacher', 'instructor', 'instructors']),
+    term: field(item, ['term', 'semester', 'semester_name', 'semesterName']),
+    credit: field(item, ['credit', 'credits']),
+    status: field(item, ['status', 'course_status', 'courseStatus']),
+  };
+}
+
+function normalizeActivity(item: Record<string, unknown>, courseId: string): CampusActivity | null {
+  const id = field(item, ['id', 'activity_id', 'activityId', 'aid']);
+  const title = field(item, ['title', 'name', 'activity_name', 'activityName']);
+  if (!id || !title) return null;
+  const rawUrl = field(item, ['url', 'href', 'link']);
+  let url = '';
+  if (rawUrl) {
+    try {
+      const parsed = new URL(rawUrl, COURSES_HOME);
+      if (parsed.protocol === 'https:' && (parsed.hostname === 'zju.edu.cn' || parsed.hostname.endsWith('.zju.edu.cn'))) url = parsed.toString();
+    } catch {
+      url = '';
+    }
+  }
+  return {
+    id: id.slice(0, 100),
+    courseId,
+    title: title.slice(0, 240),
+    type: field(item, ['type', 'activity_type', 'activityType']),
+    startTime: field(item, ['start_time', 'startTime', 'start_at', 'startAt']),
+    endTime: field(item, ['end_time', 'endTime', 'end_at', 'endAt']),
+    deadline: field(item, ['deadline', 'due_time', 'dueTime', 'due_at', 'dueAt']),
+    status: field(item, ['status', 'state']),
+    url,
   };
 }
 
@@ -933,7 +1004,7 @@ function metaRefresh(body: string, source: string): string | undefined {
   try { return trustedUrl(decodeHtml(match[1]), source); } catch { return undefined; }
 }
 
-async function readTodos(): Promise<CampusTodo[]> {
+async function ensureCoursesSession(): Promise<void> {
   let current = trustedUrl(COURSES_HOME);
   for (let index = 0; index < 8; index += 1) {
     const response = await request({ url: current, responseType: 'text', disableRedirects: true });
@@ -951,6 +1022,55 @@ async function readTodos(): Promise<CampusTodo[]> {
     break;
   }
   if (!activeCookieJar?.has('session', 'courses.zju.edu.cn')) throw new CampusError('学在浙大没有建立可用登录会话，请重新读取。', 'authentication');
+}
+
+async function readLearningCourses(): Promise<CampusLearningCourse[]> {
+  await ensureCoursesSession();
+  const response = await request({ url: MY_COURSES_URL, responseType: 'text', disableRedirects: true });
+  const body = responseText(response);
+  if (response.status === 401 || response.status === 403 || isAuthenticationPage(body)) throw new CampusError('学在浙大登录态已失效，请重新读取。', 'authentication');
+  const courses = listFromPayload(parseJson(response, '学在浙大课程'), ['courses', 'course_list', 'items', 'data', 'results'])
+    .map(normalizeLearningCourse)
+    .filter((item): item is CampusLearningCourse => item !== null);
+  const seen = new Set<string>();
+  return courses.filter((course) => {
+    if (seen.has(course.id)) return false;
+    seen.add(course.id);
+    return true;
+  }).slice(0, 500);
+}
+
+export async function readLearningActivities(studentId: string, password: string, courseId: string): Promise<CampusActivity[]> {
+  assertNative();
+  const cleanId = studentId.trim();
+  const cleanCourseId = courseId.trim();
+  if (!cleanId || !password) throw new CampusError('请先填写学号和校园密码。', 'credentials');
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(cleanCourseId)) throw new CampusError('学在浙大课程编号格式不正确。', 'response');
+  activeCookieJar = new CookieJar();
+  try {
+    await clearCampusCookies();
+    await authenticate(cleanId, password);
+    await ensureCoursesSession();
+    const response = await request({ url: COURSE_ACTIVITIES_URL.replace('{courseId}', encodeURIComponent(cleanCourseId)), responseType: 'text', disableRedirects: true });
+    const body = responseText(response);
+    if (response.status === 401 || response.status === 403 || isAuthenticationPage(body)) throw new CampusError('学在浙大登录态已失效，请重新读取。', 'authentication');
+    const activities = listFromPayload(parseJson(response, '学在浙大课程活动'), ['activities', 'activity_list', 'items', 'data', 'results'])
+      .map((item) => normalizeActivity(item, cleanCourseId))
+      .filter((item): item is CampusActivity => item !== null);
+    const seen = new Set<string>();
+    return activities.filter((activity) => {
+      if (seen.has(activity.id)) return false;
+      seen.add(activity.id);
+      return true;
+    }).slice(0, 500);
+  } finally {
+    activeCookieJar = null;
+    zdbkSessionReady = false;
+  }
+}
+
+async function readTodos(): Promise<CampusTodo[]> {
+  await ensureCoursesSession();
   const response = await request({ url: TODOS_URL, responseType: 'text', disableRedirects: true });
   const body = responseText(response);
   if (response.status === 401 || response.status === 403 || isAuthenticationPage(body)) throw new CampusError('学在浙大登录态已失效，请重新读取。', 'authentication');
@@ -967,14 +1087,17 @@ export interface CampusNoticeResult {
   totalAvailable: number;
 }
 
-export async function readPublicNotices(query = '', page = 1): Promise<CampusNoticeResult> {
+export async function readPublicNotices(query = '', page = 1, options: { college?: string; category?: CampusPublicCategory; detail?: boolean } = {}): Promise<CampusNoticeResult> {
   assertNative();
   const safeQuery = query.trim().slice(0, 100);
+  const safeCollege = (options.college || '').trim().slice(0, 80);
+  const category = options.category || 'all';
   const safePage = Math.max(1, Math.min(50, Math.trunc(page) || 1));
-  const searchTerms = [safeQuery];
+  const searchTerms = [safeQuery, safeCollege].filter(Boolean);
   const collegeCore = safeQuery.match(/([\u4e00-\u9fa5]{2,})(?=学院|系|书院)/)?.[1];
   const withoutCollege = safeQuery.replace(/学院|系|书院/g, '').trim();
-  for (const candidate of [collegeCore, withoutCollege, '转专业', '选课', '考试', '开学', '奖学金', '毕业']) {
+  const categoryHint = category === 'program' ? '培养' : category === 'faculty' ? '师资' : category === 'contact' ? '联系' : category === 'labs' ? '实验室' : '';
+  for (const candidate of [collegeCore, withoutCollege, categoryHint, '转专业', '选课', '考试', '开学', '奖学金', '毕业']) {
     if (candidate && candidate !== safeQuery && !searchTerms.includes(candidate) && (candidate === collegeCore || safeQuery.includes(candidate))) searchTerms.push(candidate);
   }
   let rawPayload: Record<string, unknown> = {};
@@ -999,7 +1122,7 @@ export async function readPublicNotices(query = '', page = 1): Promise<CampusNot
   if (!rawItems.length && !Array.isArray(rawPayload.items) && !Array.isArray(rawPayload.rows) && !Array.isArray(rawPayload.list)) {
     throw new CampusError('浙大官方公告没有返回可识别的列表。', 'response');
   }
-  const notices = rawItems.slice(0, 20).flatMap((item, index) => {
+  const notices: CampusNotice[] = rawItems.slice(0, 20).flatMap((item, index) => {
     const id = field(item, ['xwbh', 'id', 'noticeId'], `notice-${safePage}-${index}`);
     const title = field(item, ['xwbt', 'title', 'name']);
     if (!title) return [];
@@ -1011,10 +1134,113 @@ export async function readPublicNotices(query = '', page = 1): Promise<CampusNot
       summary: field(item, ['fbnr', 'summary', 'content', 'jj']).slice(0, 360),
       url: officialNoticeUrl(field(item, ['fbdz', 'url', 'link']), id),
       pinned: field(item, ['sfzd', 'pinned']) === '1' || field(item, ['sfzd', 'pinned']).toLowerCase() === 'true',
+      category,
     } satisfies CampusNotice];
   });
+  if (options.detail && notices.length) {
+    for (const notice of notices.slice(0, 3)) {
+      try {
+        const detailResponse = await followGet(notice.url);
+        if (detailResponse.status >= 200 && detailResponse.status < 300) {
+          notice.detail = cleanDisplayText(responseText(detailResponse)).slice(0, 6000);
+          notice.detailSource = '浙江大学本科教学管理信息服务平台官方详情页';
+        }
+      } catch {
+        // Keep the list result and official link when optional detail is unavailable.
+      }
+    }
+  }
   const totalCandidate = Number(rawPayload.totalCount ?? rawPayload.totalResult ?? rawPayload.total ?? notices.length);
   return { notices, page: safePage, totalAvailable: Number.isFinite(totalCandidate) && totalCandidate >= 0 ? totalCandidate : notices.length };
+}
+
+function academicDate(academicYear: string, month: number, day: number): string | null {
+  const startYear = Number(academicYear.slice(0, 4));
+  const year = month <= 7 ? startYear + 1 : startYear;
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return null;
+  return date.toISOString().slice(0, 10);
+}
+
+function readHolidayEvents(body: string, academicYear: string, source: string): CampusHoliday[] {
+  const text = cleanDisplayText(body).replace(/\s+/g, '');
+  const events: CampusHoliday[] = [];
+  for (const title of ['中秋节', '国庆节']) {
+    const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const match = text.match(new RegExp(`${escaped}.{0,100}?(\\d{1,2})月(\\d{1,2})日.{0,60}?(?:至|到|—|-)\\s*(?:(\\d{1,2})月)?(\\d{1,2})日`, 'i'));
+    if (!match) continue;
+    const startDate = academicDate(academicYear, Number(match[1]), Number(match[2]));
+    const endDate = academicDate(academicYear, Number(match[3] || match[1]), Number(match[4]));
+    if (!startDate || !endDate) continue;
+    events.push({
+      id: title === '中秋节' ? 'mid-autumn-festival' : 'national-day',
+      title,
+      startDate,
+      endDate,
+      kind: 'holiday',
+      note: '仅采用浙大官方教学安排页面明确写出的日期。',
+      source,
+    });
+  }
+  const studentDay = text.match(/浙江大学学生节.*?(\d{1,2})月(\d{1,2})日.*?停课.*?(20\d{2})年(\d{1,2})月(\d{1,2})日.*?补课/);
+  if (studentDay) {
+    const startDate = academicDate(academicYear, Number(studentDay[1]), Number(studentDay[2]));
+    const makeupDate = `${studentDay[3]}-${String(Number(studentDay[4])).padStart(2, '0')}-${String(Number(studentDay[5])).padStart(2, '0')}`;
+    if (startDate) events.push({ id: 'zju-student-day', title: '浙江大学学生节', startDate, endDate: startDate, kind: 'campus_event', note: `停课，${makeupDate}补课。`, source });
+  }
+  return events;
+}
+
+export async function readPublicHolidays(academicYear: string): Promise<CampusHoliday[]> {
+  assertNative();
+  const safeYear = /^20\d{2}-20\d{2}$/.test(academicYear) ? academicYear : currentAcademicTerm().year + '-' + (Number(currentAcademicTerm().year) + 1);
+  let index = await request({ url: CALENDAR_LIST_URL, responseType: 'text', disableRedirects: true });
+  if (index.status < 200 || index.status >= 300) index = await request({ url: CALENDAR_LIST_FALLBACK_URL, responseType: 'text', disableRedirects: true });
+  if (index.status < 200 || index.status >= 300) throw new CampusError(`浙大官方校历列表暂时无法访问（HTTP ${index.status}）。`, 'network');
+  const indexBody = responseText(index);
+  const links = [...indexBody.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)].flatMap((match) => {
+    const title = cleanDisplayText(match[2] || '');
+    if (!title.replace(/[—–]/g, '-').includes(`${safeYear}学年校历`) && !match[1].includes(safeYear)) return [];
+    try {
+      const url = trustedUrl(decodeHtml(match[1]), CALENDAR_LIST_URL);
+      return [{ title, url }];
+    } catch { return []; }
+  });
+  const page = links[0];
+  if (!page) return [];
+  const pageResponse = await followGet(page.url);
+  if (pageResponse.status < 200 || pageResponse.status >= 300) throw new CampusError(`浙大官方校历页面暂时无法访问（HTTP ${pageResponse.status}）。`, 'network');
+  return readHolidayEvents(responseText(pageResponse), safeYear, page.url);
+}
+
+function makeGradeAlerts(grades: CampusGrade[]): CampusGradeAlert[] {
+  return grades.flatMap((grade) => {
+    const numeric = numberValue(grade.score);
+    const failed = (numeric !== undefined && numeric < 60) || /不及格|不通过|挂科|未通过/.test(grade.score);
+    const attention = !failed && ((numeric !== undefined && numeric >= 60 && numeric < 70) || (numberValue(grade.point) !== undefined && Number(grade.point) < 3));
+    if (!failed && !attention) return [];
+    return [{ id: grade.id, courseKey: grade.courseKey || grade.id, name: grade.name, credit: grade.credit, score: grade.score, point: grade.point, level: failed ? 'failed' : 'attention', note: '按成绩原值/绩点做的提示，不代表学校最终的补考、重修或学籍认定。' } satisfies CampusGradeAlert];
+  });
+}
+
+function makeGpaSummary(grades: CampusGrade[], semesterId?: string): CampusGpaSummary | null {
+  const scoped = semesterId ? grades.filter((grade) => grade.semesterId === semesterId) : grades;
+  if (!scoped.length) return null;
+  const eligible = scoped.filter((grade) => numberValue(grade.credit) !== undefined);
+  const counted = eligible.filter((grade) => numberValue(grade.point) !== undefined);
+  const denominator = counted.reduce((sum, grade) => sum + (numberValue(grade.credit) || 0), 0);
+  const gpa = denominator ? counted.reduce((sum, grade) => sum + (numberValue(grade.credit) || 0) * (numberValue(grade.point) || 0), 0) / denominator : null;
+  return {
+    ...(semesterId ? { semesterId } : {}),
+    throughSemester: semesterId || 'all_available',
+    gpa: gpa === null ? null : Number(gpa.toFixed(3)),
+    creditDenominator: Number(denominator.toFixed(3)),
+    eligibleAttempts: eligible.length,
+    countedAttempts: counted.length,
+    excludedAttempts: eligible.length - counted.length,
+    complete: false,
+    note: '教务成绩接口未返回重修取舍和学期排除口径，仅按可用成绩、绩点和学分计算近似汇总。',
+  };
 }
 
 function errorText(error: unknown): string {
@@ -1037,16 +1263,31 @@ export async function readCampusInfo(studentId: string, password: string, option
     const term = termValue(options.term || academicTerm().term);
     const warnings: string[] = [];
     let courses: CampusCourse[] = [];
+    let courseOfferings: CampusCourseOffering[] = [];
+    let learningCourses: CampusLearningCourse[] = [];
+    let activities: CampusActivity[] = [];
     let exams: CampusExam[] = [];
     let grades: CampusGrade[] = [];
+    let gradeAlerts: CampusGradeAlert[] = [];
+    let gpaSemesters: CampusGpaSummary[] = [];
+    let gpaCumulative: CampusGpaSummary | null = null;
     let todos: CampusTodo[] = [];
     let practiceSummary: CampusPracticeSummary | null = null;
     let practiceProjects: CampusPracticeProject[] = [];
+    let holidays: CampusHoliday[] = [];
     let successfulModules = 0;
 
     try { courses = await readSchedule(year, term); successfulModules += 1; } catch (error) { if (isFatalModuleError(error)) throw error; warnings.push(`课表：${errorText(error)}`); }
+    courseOfferings = [...new Map(courses.map((course) => [course.id, normalizeCourseOffering(course, `${year}-${term}`)])).values()];
     try { exams = await readExams(); successfulModules += 1; } catch (error) { if (isFatalModuleError(error)) throw error; warnings.push(`考试：${errorText(error)}`); }
     try { grades = await readGrades(); successfulModules += 1; } catch (error) { if (isFatalModuleError(error)) throw error; warnings.push(`成绩：${errorText(error)}`); }
+    try {
+      learningCourses = await readLearningCourses();
+      successfulModules += 1;
+    } catch (error) {
+      if (isFatalModuleError(error)) throw error;
+      warnings.push(`学在浙大课程：${errorText(error)}`);
+    }
     try { todos = await readTodos(); successfulModules += 1; } catch (error) { if (isFatalModuleError(error)) throw error; warnings.push(`待办：${errorText(error)}`); }
     try {
       const practice = await readPractice();
@@ -1057,15 +1298,33 @@ export async function readCampusInfo(studentId: string, password: string, option
     } catch (error) {
       warnings.push(`体育与素质拓展：${errorText(error)}`);
     }
+    try {
+      holidays = await readPublicHolidays(`${year}-${Number(year) + 1}`);
+      successfulModules += 1;
+    } catch (error) {
+      warnings.push(`校历：${errorText(error)}`);
+    }
     if (!successfulModules && warnings.length) throw new CampusError(warnings.join('；'), 'response');
 
     courses = enrichCoursesWithGrades(courses, grades);
+    courseOfferings = [...new Map(courses.map((course) => [course.id, normalizeCourseOffering(course, `${year}-${term}`)])).values()];
+    gradeAlerts = makeGradeAlerts(grades);
+    gpaCumulative = makeGpaSummary(grades);
+    const semesterIds = [...new Set(grades.map((grade) => grade.semesterId).filter((item): item is string => Boolean(item)))];
+    gpaSemesters = semesterIds.flatMap((semesterId) => {
+      const summary = makeGpaSummary(grades, semesterId);
+      return summary ? [summary] : [];
+    });
     const countedGrades = grades.flatMap((grade) => {
       const credit = numberValue(grade.credit);
       const point = numberValue(grade.point);
       return credit !== undefined && credit > 0 ? [{ credit, point }] : [];
     });
     const totalCredit = countedGrades.reduce((sum, grade) => sum + grade.credit, 0);
+    const completedCredit = grades.reduce((sum, grade) => {
+      const credit = numberValue(grade.credit);
+      return credit !== undefined && credit > 0 && gradeRecorded(grade.score) ? sum + credit : sum;
+    }, 0);
     const earnedCredit = grades.reduce((sum, grade) => {
       const credit = numberValue(grade.credit);
       return credit !== undefined && credit > 0 && gradePassed(grade.score) ? sum + credit : sum;
@@ -1078,16 +1337,30 @@ export async function readCampusInfo(studentId: string, password: string, option
       academicYear: year,
       term,
       courses,
+      courseOfferings,
+      learningCourses,
+      activities,
       exams,
       grades,
+      gradeAlerts,
+      gpaSemesters,
+      gpaCumulative,
       todos,
       practiceSummary,
       practiceProjects,
       gpa,
       totalCredit,
-      completedCredit: totalCredit,
+      completedCredit,
       earnedCredit,
       yearLevel: inferYearLevel(cleanId, year),
+      holidays,
+      sourceStatus: {
+        available: true,
+        credentialsConfigured: true,
+        authStatus: 'credentials_saved',
+        supportedDomains: ['schedule', 'courses', 'learning_courses', 'activities', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'practice', 'sports', 'projects', 'holidays', 'notices', 'source_status'],
+        note: '手机端使用浙江大学官方只读来源；未执行任何教务写操作。',
+      },
       warnings,
     };
   } finally {

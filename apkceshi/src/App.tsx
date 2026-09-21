@@ -4,7 +4,7 @@ import { MapPanel } from './MapPanel';
 import { WeatherPanel } from './WeatherPanel';
 import { runMobileAgent, type AgentStatus } from './runtime/agent';
 import { completeDeepSeek, DeepSeekError, testDeepSeekConnection, translateText } from './runtime/deepseek';
-import { CampusError, currentAcademicTerm, readCampusInfo, readPublicCollegeInfo, readPublicNotices, type CampusPublicInfoResult } from './runtime/campus';
+import { CampusError, currentAcademicTerm, readCampusInfo, readLearningActivities, readPublicCollegeInfo, readPublicNotices, type CampusPublicInfoResult } from './runtime/campus';
 import { getUiCopy } from './runtime/i18n';
 import { cancelLocalReminder, scheduleLocalReminder, withNotificationId } from './runtime/reminders';
 import { clearMobileState, hydrateMobileSecrets, loadMobileState, saveMobileState } from './runtime/storage';
@@ -292,7 +292,7 @@ export function App() {
   const [campusLoading, setCampusLoading] = useState(false);
   const [campusMessage, setCampusMessage] = useState('');
   const initialAcademicTerm = currentAcademicTerm();
-  const [campusTab, setCampusTab] = useState<'overview' | 'schedule' | 'exams' | 'grades' | 'todos' | 'practice' | 'notices' | 'public'>('overview');
+  const [campusTab, setCampusTab] = useState<'overview' | 'schedule' | 'courses' | 'learning' | 'activities' | 'exams' | 'grades' | 'gpa' | 'todos' | 'practice' | 'holidays' | 'notices' | 'public'>('overview');
   const [campusAcademicYear, setCampusAcademicYear] = useState(initialAcademicTerm.year);
   const [campusTerm, setCampusTerm] = useState(initialAcademicTerm.term);
   const [noticeQuery, setNoticeQuery] = useState('');
@@ -463,7 +463,7 @@ export function App() {
     }
   }
 
-  function selectCampusTab(tab: 'overview' | 'schedule' | 'exams' | 'grades' | 'todos' | 'practice' | 'notices' | 'public') {
+  function selectCampusTab(tab: 'overview' | 'schedule' | 'courses' | 'learning' | 'activities' | 'exams' | 'grades' | 'gpa' | 'todos' | 'practice' | 'holidays' | 'notices' | 'public') {
     setCampusTab(tab);
     if (tab === 'notices' && !notices.length && !noticesLoading) void refreshNotices('', 1);
   }
@@ -723,6 +723,7 @@ export function App() {
           allowMemoryWrite: controls.retention === 'purpose_scoped' && controls.memoryMode === 'relevant',
           allowLocalWrites: controls.retention !== 'session_only',
           campus: state.campus,
+          readLearningActivities: async (courseId) => readLearningActivities(state.profile.studentId, state.profile.studentPassword, courseId),
           currentAttachment: attachment || undefined,
           createReminder: createReminderRecord,
           prepareAction: createAgendaRecord,
@@ -1420,10 +1421,15 @@ export function App() {
               {([
                 ['overview', copy.campusOverview],
                 ['schedule', copy.campusSchedule],
+                ['courses', '课程教学班'],
+                ['learning', '学在浙大'],
+                ['activities', '课程活动'],
                 ['exams', copy.campusExams],
                 ['grades', copy.campusGrades],
+                ['gpa', '绩点分析'],
                 ['todos', copy.campusTodos],
                 ['practice', copy.campusPractice],
+                ['holidays', '校历'],
                 ['notices', copy.campusNotices],
                 ['public', copy.campusPublic],
               ] as const).map(([tab, label]) => (
@@ -1462,6 +1468,44 @@ export function App() {
                   </section>
                 )}
 
+                {campusTab === 'courses' && (
+                  <section className="profile-section campus-data-card">
+                    <div className="setting-label"><strong>课程教学班</strong><span>{campus.courseOfferings.length ? `${campus.courseOfferings.length} 门` : copy.campusEmpty}</span></div>
+                    {campus.courseOfferings.length ? campus.courseOfferings.map((course) => (
+                      <div className="campus-record" key={course.id}>
+                        <strong>{course.name}</strong>
+                        <span>{course.credit && course.credit !== '—' ? `${course.credit} 学分` : '学分未提供'} · {course.semesterId}</span>
+                        <small>{course.teachers || '教师未提供'}{course.online === true ? ' · 线上' : ''}</small>
+                      </div>
+                    )) : <p className="empty-history">{copy.campusEmpty}</p>}
+                  </section>
+                )}
+
+                {campusTab === 'learning' && (
+                  <section className="profile-section campus-data-card">
+                    <div className="setting-label"><strong>学在浙大课程</strong><span>{campus.learningCourses.length ? `${campus.learningCourses.length} 门` : copy.campusEmpty}</span></div>
+                    {campus.learningCourses.length ? campus.learningCourses.map((course) => (
+                      <div className="campus-record" key={course.id}>
+                        <strong>{course.name}</strong>
+                        <span>{[course.code, course.term, course.credit && `${course.credit} 学分`].filter(Boolean).join(' · ') || '课程信息未提供'}</span>
+                        <small>{course.teachers || '教师未提供'} · ID {course.id}</small>
+                      </div>
+                    )) : <p className="empty-history">{copy.campusEmpty}</p>}
+                    <p className="connection-message">需要读取某门课程的活动时，可以在对话中询问课程作业或截止时间。</p>
+                  </section>
+                )}
+
+                {campusTab === 'activities' && (
+                  <section className="profile-section campus-data-card">
+                    <div className="setting-label"><strong>课程活动</strong><span>{campus.activities.length ? `${campus.activities.length} 项` : '默认同步只读取课程列表'}</span></div>
+                    {campus.activities.length ? campus.activities.map((activity) => (
+                      <div className="campus-record" key={activity.id}>
+                        <strong>{activity.title}</strong><span>{[activity.type, activity.deadline || activity.startTime].filter(Boolean).join(' · ')}</span><small>{activity.status || '状态未提供'}</small>
+                      </div>
+                    )) : <p className="empty-history">暂无已缓存活动；在对话中询问指定课程的作业或活动后会按课程读取。</p>}
+                  </section>
+                )}
+
                 {campusTab === 'exams' && (
                   <section className="profile-section campus-data-card">
                     <div className="setting-label"><strong>{copy.campusExams}</strong><span>{campus.exams.length ? `${campus.exams.length}` : copy.campusEmpty}</span></div>
@@ -1486,6 +1530,16 @@ export function App() {
                         <strong>{grade.name}</strong><span>{grade.score}</span><small>{grade.credit} · {grade.point}</small>
                       </div>
                     )) : <p className="empty-history">{copy.campusEmpty}</p>}
+                  </section>
+                )}
+
+                {campusTab === 'gpa' && (
+                  <section className="profile-section campus-data-card">
+                    <div className="setting-label"><strong>绩点分析</strong><span>{campus.gpaCumulative?.complete ? '学校完整口径' : '按已返回成绩近似计算'}</span></div>
+                    {campus.gpaCumulative && <div className="campus-grade-summary"><div><span>累计绩点</span><strong>{campus.gpaCumulative.gpa === null ? '—' : campus.gpaCumulative.gpa.toFixed(2)}</strong></div><div><span>绩点学分</span><strong>{campus.gpaCumulative.creditDenominator.toFixed(1)}</strong></div><div><span>排除记录</span><strong>{campus.gpaCumulative.excludedAttempts}</strong></div></div>}
+                    {campus.gradeAlerts.length > 0 && <><div className="campus-group-label"><strong>成绩风险提示</strong><span>{campus.gradeAlerts.length}</span></div>{campus.gradeAlerts.map((alert) => <div className="campus-record" key={alert.id}><strong>{alert.name}</strong><span>{alert.level === 'failed' ? '不及格/未通过' : '需要关注'} · {alert.score}</span><small>{alert.credit} 学分 · {alert.note}</small></div>)}</>}
+                    {campus.gpaSemesters.length > 0 && <><div className="campus-group-label"><strong>分学期绩点</strong><span>{campus.gpaSemesters.length}</span></div>{campus.gpaSemesters.map((item) => <div className="campus-record" key={item.semesterId || item.throughSemester}><strong>{item.semesterId || item.throughSemester}</strong><span>{item.gpa === null ? '—' : item.gpa.toFixed(2)} · {item.creditDenominator.toFixed(1)} 学分</span><small>{item.note}</small></div>)}</>}
+                    {!campus.gpaCumulative && !campus.gradeAlerts.length && !campus.gpaSemesters.length && <p className="empty-history">{copy.campusEmpty}</p>}
                   </section>
                 )}
 
@@ -1517,6 +1571,14 @@ export function App() {
                         <small>{project.score === null ? '—' : `${project.score} · `}{project.approved ? copy.campusPracticePassed : copy.campusPracticePending}{project.activityTime ? ` · ${project.activityTime}` : ''}</small>
                       </div>
                     )) : <p className="empty-history">{copy.campusPracticeEmpty}</p>}
+                  </section>
+                )}
+
+                {campusTab === 'holidays' && (
+                  <section className="profile-section campus-data-card">
+                    <div className="setting-label"><strong>校历与假期</strong><span>{campus.holidays.length ? `${campus.holidays.length} 项` : copy.campusEmpty}</span></div>
+                    {campus.holidays.length ? campus.holidays.map((holiday) => <div className="campus-record" key={holiday.id}><strong>{holiday.title}</strong><span>{holiday.startDate} — {holiday.endDate}</span><small>{holiday.note}</small></div>) : <p className="empty-history">{copy.campusEmpty}</p>}
+                    <small className="connection-message">{campus.sourceStatus.note}</small>
                   </section>
                 )}
               </>

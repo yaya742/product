@@ -11,7 +11,7 @@ import { readPublicCollegeInfo, readPublicNotices } from './campus';
 import { CAMPUS_COORDINATE, fetchWeather, readDeviceLocation } from './weather';
 import type { MobileAgendaItem, MobileAttachment, MobileCampusData, MobileConversation, MobileLanguage, MobileMessage, MobileReminder, MobileTurnControls } from './types';
 
-export type AgentStatus = '联系 DeepSeek' | '读取手机时间' | '请求手机定位' | '查询天气' | '查询校园地图' | '规划路线' | '读取校园信息' | '搜索校园公告' | '搜索院系公开资料' | '保存本地提醒' | '读取本地提醒' | '保存本地安排' | '读取本地安排' | '完成本地安排' | '撤销本地安排' | '搜索历史记录' | '保存长期记忆' | '整理回复';
+export type AgentStatus = '联系 DeepSeek' | '读取手机时间' | '请求手机定位' | '查询天气' | '查询校园地图' | '规划路线' | '读取校园信息' | '读取课程活动' | '搜索校园公告' | '搜索院系公开资料' | '保存本地提醒' | '读取本地提醒' | '保存本地安排' | '读取本地安排' | '完成本地安排' | '撤销本地安排' | '搜索历史记录' | '保存长期记忆' | '整理回复';
 
 export interface MobileAgentContext {
   conversations: MobileConversation[];
@@ -21,6 +21,7 @@ export interface MobileAgentContext {
   allowMemoryWrite: boolean;
   allowLocalWrites: boolean;
   campus: MobileCampusData | null;
+  readLearningActivities?: (courseId: string) => Promise<MobileCampusData['activities']>;
   currentAttachment?: MobileAttachment;
   createReminder: (input: { title: string; dueAt: string; notes: string }) => Promise<Record<string, unknown>>;
   prepareAction: (input: { title: string; detail: string; startsAt?: string; durationMinutes?: number }) => Promise<Record<string, unknown>>;
@@ -174,18 +175,36 @@ async function runLocalTool(call: DeepSeekToolCall, signal: AbortSignal, context
       completed_credit: context.campus.completedCredit,
       earned_credit: context.campus.earnedCredit,
       schedule: context.campus.courses,
+      courses: context.campus.courseOfferings,
+      learning_courses: context.campus.learningCourses,
+      activities: context.campus.activities,
       exams: context.campus.exams,
       grades: context.campus.grades,
+      grade_alerts: context.campus.gradeAlerts,
+      gpa_semesters: context.campus.gpaSemesters,
+      gpa_cumulative: context.campus.gpaCumulative,
       todos: context.campus.todos,
       practice_summary: context.campus.practiceSummary,
       practice_projects: context.campus.practiceProjects,
+      holidays: context.campus.holidays,
+      source_status: context.campus.sourceStatus,
     };
+  }
+  if (call.function.name === 'get_course_activities') {
+    if (!context?.readLearningActivities) return { status: 'unavailable', reason: '手机端没有配置学在浙大课程活动读取能力。' };
+    const courseId = typeof toolArguments(call).course_id === 'string' ? String(toolArguments(call).course_id).trim() : '';
+    if (!courseId) return { status: 'invalid', reason: '请提供学在浙大课程 ID。' };
+    const activities = await context.readLearningActivities(courseId);
+    return { status: activities.length ? 'ok' : 'not_found', course_id: courseId, activities, reason: activities.length ? undefined : '这门课程目前没有读取到活动。' };
   }
   if (call.function.name === 'search_campus_notices') {
     const args = toolArguments(call);
     const query = typeof args.query === 'string' ? args.query.trim().slice(0, 100) : '';
     const page = typeof args.page === 'number' && Number.isFinite(args.page) ? Math.trunc(args.page) : 1;
-    const result = await readPublicNotices(query, page);
+    const allowedCategories = ['all', 'profile', 'faculty', 'program', 'contact', 'labs'] as const;
+    const category = allowedCategories.includes(args.category as typeof allowedCategories[number]) ? args.category as typeof allowedCategories[number] : 'all';
+    const college = typeof args.college === 'string' ? args.college.trim().slice(0, 80) : '';
+    const result = await readPublicNotices(query, page, { college, category, detail: args.detail === true });
     return {
       status: result.notices.length ? 'ok' : 'not_found',
       query,
@@ -348,6 +367,8 @@ export async function runMobileAgent(
                 ? '规划路线'
                 : call.function.name === 'get_campus_info'
                   ? '读取校园信息'
+                : call.function.name === 'get_course_activities'
+                  ? '读取课程活动'
                 : call.function.name === 'search_campus_notices'
                   ? '搜索校园公告'
                 : call.function.name === 'search_college_public_info'
