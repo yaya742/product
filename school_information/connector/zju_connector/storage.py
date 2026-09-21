@@ -96,6 +96,26 @@ def save_notices_bundle(normalized: dict[str, Any], scope: str = "latest") -> st
     return bundle_id
 
 
+def save_learning_bundle(normalized: dict[str, Any], scope: str = "all") -> str:
+    now = datetime.now(timezone.utc).isoformat()
+    safe_scope = str(scope or "all")[:180]
+    bundle_id = hashlib.sha256(f"learning:courses:{safe_scope}".encode("utf-8")).hexdigest()[:32]
+    payload = {
+        "schema_version": 1,
+        "kind": "learning",
+        "scope": safe_scope,
+        "fetched_at": now,
+        "normalized": normalized,
+    }
+    write_encrypted_json(_bundles_dir() / f"{bundle_id}.dpapi", payload, "Zaichang ZJU learning bundle")
+    index = _read_index()
+    items = [item for item in index.get("items", []) if item.get("bundle_id") != bundle_id]
+    items.insert(0, {"bundle_id": bundle_id, "kind": "learning", "scope": safe_scope, "fetched_at": now})
+    index["items"] = items[:24]
+    _write_index(index)
+    return bundle_id
+
+
 def load_bundle(bundle_id: str) -> dict[str, Any]:
     if not re_bundle_id(bundle_id):
         raise ValueError("资料包编号不合法。")

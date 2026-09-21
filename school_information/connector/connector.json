@@ -18,6 +18,8 @@
   "supportedDomains": [
     "schedule",
     "courses",
+    "learning_courses",
+    "activities",
     "exams",
     "assignments",
     "grades",
@@ -40,6 +42,8 @@
     "academic",
     "calendar",
     "notices",
+    "learning",
+    "read",
     "history",
     "quick"
   ]

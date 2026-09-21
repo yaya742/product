@@ -43,11 +43,15 @@ const RESOURCE_NAMES = {
   practice: 'practice_summary',
   sports: 'practice_summary',
   projects: 'projects',
+  learning_courses: 'learning_courses',
+  activities: 'activities',
 };
 const SUPPORTED_PERSONAL_DOMAINS = new Set([
   ...ACADEMIC_RESOURCES,
   'holidays',
   'notices',
+  'learning_courses',
+  'activities',
   'source_status',
 ]);
 const SENSITIVE_FIELD = /^(?:password|passwd|token|ticket|cookie|authorization|synjones|secret|openid|unionid|accesskey|qrcode|qr_code|barcode|voucher|body_b64|student.?no|student.?id|card.?no|card_number|identity.?no|identity.?id|id.?card|phone|mobile|email|account|sno|xh|yhm|xm|zgh|custid|custmemberid|acctid|cardid|bankacc|cert|schcode|yktschoolcode)$/i;
@@ -60,6 +64,7 @@ const SAFE_FIELDS = new Set([
   'statusValue', 'statusLabel', 'approved', 'deleted', 'countsTowardTotal', 'activityStart', 'activityEnd', 'updatedAt',
   'dektJf', 'dsktJf', 'dsiktJf', 'dektXf', 'dsktXf', 'dsiktXf', 'dektDj', 'dsktDj', 'dsiktDj', 'dektTg', 'dsktTg', 'dsiktTg', 'myTg', 'lyTg',
   'title', 'publishedAt', 'publisher', 'url', 'summary', 'category', 'detail', 'detailSource', 'pinned', 'source', 'startDate', 'endDate', 'kind',
+  'code', 'courseId', 'startTime', 'endTime', 'activityId',
 ]);
 
 const CATEGORY_HINTS = {
@@ -345,6 +350,27 @@ async function resolveAcademicBundle(args, context) {
   return { bundleId: String(synced.bundle_id), academicYear, term, cached: false, sync: synced };
 }
 
+async function resolveLearningBundle(args, context) {
+  const courseId = String(args?.courseId || '').trim();
+  const scope = courseId ? `course:${courseId}` : 'all';
+  if (!args?.refresh) {
+    const history = await runConnector(['history', '--limit', '100'], context?.signal, 15_000);
+    const item = Array.isArray(history?.items)
+      ? history.items.find((entry) => entry?.kind === 'learning' && String(entry.scope || 'all') === scope)
+      : undefined;
+    if (item?.bundle_id) return { bundleId: String(item.bundle_id), cached: true, scope };
+  }
+  const syncArgs = ['learning'];
+  addOption(args, syncArgs, '--course-id', courseId);
+  if (args?.refreshActivities || courseId) syncArgs.push('--activities');
+  if (args?.refresh) syncArgs.push('--refresh');
+  const synced = await runConnector(syncArgs, context?.signal, 85_000);
+  if (!['ok', 'partial'].includes(String(synced?.status)) || !synced?.bundle_id) {
+    return { error: synced, cached: false, scope };
+  }
+  return { bundleId: String(synced.bundle_id), cached: false, scope, sync: synced };
+}
+
 function addOption(args, output, name, value) {
   if (value === undefined || value === null || value === '') return;
   output.push(name, String(value));
@@ -382,6 +408,24 @@ async function readConnectorDomain(args, context) {
       return envelope('failed', undefined, error instanceof Error ? error.message : '校园通知读取失败。');
     }
   }
+  if (domain === 'learning_courses' || domain === 'activities') {
+    try {
+      if (domain === 'activities' && !String(args?.courseId || '').trim()) {
+        return envelope('failed', undefined, '查询学在浙大课程活动时请提供 courseId，避免一次读取过多课程。');
+      }
+      const bundle = await resolveLearningBundle(args, context);
+      if (bundle.error) return connectorEnvelope(bundle.error, { domain, scope: bundle.scope });
+      const resource = RESOURCE_NAMES[domain];
+      const quickArgs = ['quick', resource, '--bundle', bundle.bundleId, '--limit', String(Math.min(50, args.limit || 20)), '--offset', String(Math.max(0, args.offset || 0))];
+      addOption(args, quickArgs, '--query', args.query);
+      addOption(args, quickArgs, '--course-id', args.courseId);
+      if (Array.isArray(args.fields) && args.fields.length) addOption({}, quickArgs, '--fields', args.fields.join(','));
+      const quick = await runConnector(quickArgs, context?.signal, 20_000);
+      return connectorEnvelope(quick, { ...quick, domain, scope: bundle.scope, cached: bundle.cached });
+    } catch (error) {
+      return envelope('failed', undefined, error instanceof Error ? error.message : '学在浙大课程读取失败。');
+    }
+  }
   try {
     const bundle = await resolveAcademicBundle(args, context);
     if (bundle.error) return connectorEnvelope(bundle.error, { domain, academic_year: bundle.academicYear, term: bundle.term });
@@ -410,6 +454,9 @@ async function readOverview(args, context) {
     sections[domain] = result.data || { status: result.status, reason: result.reason };
     if (result.status !== 'fresh') issues.push({ domain, status: result.status, reason: result.reason });
   }
+  const learning = await readConnectorDomain({ ...args, domain: 'learning_courses', limit: 8 }, context);
+  sections.learning_courses = learning.data || { status: learning.status, reason: learning.reason };
+  if (learning.status !== 'fresh') issues.push({ domain: 'learning_courses', status: learning.status, reason: learning.reason });
   const account = await connectorStatusRead(context);
   sections.source_status = account.data || { status: account.status, reason: account.reason };
   if (account.status !== 'fresh') issues.push({ domain: 'source_status', status: account.status, reason: account.reason });

@@ -114,3 +114,14 @@ test('bundled connector exposes a redacted local account status', async () => {
   assert.equal(Object.hasOwn(result.data, 'username'), false);
   assert.equal(Object.hasOwn(result.data, 'password'), false);
 });
+
+test('learning activity reads require an explicit course id', async () => {
+  const result = await plugin.invoke({
+    name: 'school.read',
+    args: { domain: 'activities' },
+    context: { request: async () => new Response('unexpected', { status: 500 }) },
+  });
+
+  assert.equal(result.status, 'failed');
+  assert.match(result.reason, /courseId/);
+});

@@ -13,8 +13,8 @@ from .normalize import courses_from_schedule, exam_items, grade_alerts, grade_it
 from .holidays import fetch_public_calendar
 from .notices import fetch_public_notices
 from .college_notices import SUPPORTED_CATEGORIES, fetch_college_notices
-from .storage import forget_bundles, history, load_bundle, save_academic_bundle, save_calendar_bundle, save_notices_bundle
-from .zdbk import fetch_exams, fetch_grades, fetch_schedule, fetch_todos
+from .storage import forget_bundles, history, load_bundle, save_academic_bundle, save_calendar_bundle, save_learning_bundle, save_notices_bundle
+from .zdbk import fetch_course_activities, fetch_exams, fetch_grades, fetch_learning, fetch_learning_courses, fetch_schedule, fetch_todos
 from .sztz import fetch_practice
 
 
@@ -32,6 +32,8 @@ SUPPORTED_RESOURCES = {
     "projects",
     "holidays",
     "notices",
+    "learning_courses",
+    "activities",
     "source_status",
 }
 
@@ -91,6 +93,18 @@ def _parser() -> argparse.ArgumentParser:
     notices.add_argument("--page", type=int, default=1)
     notices.add_argument("--detail", action="store_true")
     notices.add_argument("--refresh", action="store_true")
+    learning = commands.add_parser("learning")
+    learning.add_argument("--course-id", default="")
+    learning.add_argument("--activities", action="store_true")
+    learning.add_argument("--refresh", action="store_true")
+    read = commands.add_parser("read")
+    read.add_argument("resource", choices=("learning_courses", "activities"))
+    read.add_argument("--bundle", required=True)
+    read.add_argument("--course-id", default="")
+    read.add_argument("--query")
+    read.add_argument("--fields")
+    read.add_argument("--limit", type=int, default=8)
+    read.add_argument("--offset", type=int, default=0)
     history_parser = commands.add_parser("history")
     history_parser.add_argument("--limit", type=int, default=20)
     quick = commands.add_parser("quick")
@@ -105,6 +119,7 @@ def _parser() -> argparse.ArgumentParser:
     quick.add_argument("--fields")
     quick.add_argument("--filter", action="append", default=[])
     quick.add_argument("--query")
+    quick.add_argument("--course-id", default="")
     quick.add_argument("--sort")
     quick.add_argument("--limit", type=int, default=8)
     quick.add_argument("--offset", type=int, default=0)
@@ -214,6 +229,73 @@ def _notice_source(normalized: dict[str, Any], evidence: str) -> dict[str, str]:
     if isinstance(college, str) and college.strip():
         return {"service": f"ZJU official {college} site", "evidence": evidence}
     return {"service": "ZJU official undergraduate notice board", "evidence": evidence}
+
+
+def _previous_learning_bundle(scope: str) -> tuple[str, dict[str, Any], str] | None:
+    for item in history(100):
+        if item.get("kind") != "learning" or str(item.get("scope") or "all") != scope:
+            continue
+        bundle_id = item.get("bundle_id")
+        if not isinstance(bundle_id, str):
+            continue
+        try:
+            bundle = load_bundle(bundle_id)
+        except (FileNotFoundError, OSError, ValueError):
+            continue
+        normalized = bundle.get("normalized")
+        fetched_at = bundle.get("fetched_at")
+        if isinstance(normalized, dict) and isinstance(fetched_at, str):
+            return bundle_id, normalized, fetched_at
+    return None
+
+
+def _learning(course_id: str = "", include_activities: bool = False, refresh: bool = False) -> dict[str, Any]:
+    course_id = str(course_id or "").strip()[:100]
+    scope = f"course:{course_id}" if course_id else "all"
+    previous = _previous_learning_bundle(scope)
+    now = datetime.now(timezone.utc)
+    if previous and not refresh:
+        bundle_id, normalized, fetched_at = previous
+        try:
+            age_ms = max(0, (now - datetime.fromisoformat(fetched_at.replace("Z", "+00:00"))).total_seconds() * 1000)
+        except ValueError:
+            age_ms = 49 * 60 * 60 * 1000
+        return {
+            "status": "ok" if normalized.get("coverage", {}).get("complete") else "partial",
+            "bundle_id": bundle_id,
+            "scope": scope,
+            "fetched_at": fetched_at,
+            "normalized": normalized,
+            "stale": age_ms >= 48 * 60 * 60 * 1000,
+            "source": {"service": "Xue Zai ZJU learning platform", "evidence": "encrypted normalized cache"},
+        }
+    try:
+        credentials = load_credentials()
+        normalized = fetch_learning(authenticate(credentials), course_id or None, include_activities)
+        bundle_id = save_learning_bundle(normalized, scope)
+        return {
+            "status": "ok" if normalized.get("coverage", {}).get("complete") else "partial",
+            "bundle_id": bundle_id,
+            "scope": scope,
+            "fetched_at": now.isoformat(),
+            "normalized": normalized,
+            "stale": False,
+            "source": {"service": "Xue Zai ZJU learning platform", "evidence": "live authenticated read"},
+        }
+    except Exception as exception:
+        if previous:
+            bundle_id, normalized, fetched_at = previous
+            return {
+                "status": "partial",
+                "bundle_id": bundle_id,
+                "scope": scope,
+                "fetched_at": fetched_at,
+                "normalized": normalized,
+                "stale": True,
+                "issues": [{"resource": "learning", "message": _resource_issue("learning", exception)["message"]}],
+                "source": {"service": "Xue Zai ZJU learning platform", "evidence": "previous encrypted cache"},
+            }
+        return {"status": "error", "error": {"code": "LEARNING_SYNC_FAILED", "message": _resource_issue("learning", exception)["message"]}}
 
 
 def _notices(
@@ -425,6 +507,16 @@ def _quick(args: argparse.Namespace) -> dict[str, Any]:
                 for key in ("projectName", "categoryName", "projectType", "qualityType", "statusLabel")
             ).casefold()
         ]
+    course_id = getattr(args, "course_id", "")
+    if resource == "activities" and course_id:
+        records = [record for record in records if isinstance(record, dict) and str(record.get("courseId") or "") == str(course_id)]
+    if resource in {"learning_courses", "activities"} and args.query:
+        query = args.query.casefold().strip()
+        records = [
+            record for record in records
+            if isinstance(record, dict)
+            and query in " ".join(str(record.get(key) or "") for key in ("id", "name", "title", "code", "teachers", "term", "status")).casefold()
+        ]
     offset = max(0, args.offset)
     limit = max(1, min(50, args.limit))
     selected = records[offset : offset + limit]
@@ -484,6 +576,10 @@ def _quick(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
+def _read_learning(args: argparse.Namespace) -> dict[str, Any]:
+    return _quick(args)
+
+
 def _status() -> dict[str, Any]:
     configured = False
     try:
@@ -529,8 +625,12 @@ def main(argv: list[str] | None = None) -> int:
             return emit(_calendar(args.year, args.refresh))
         if args.command == "notices":
             return emit(_notices(args.refresh, args.query, args.page, args.detail, args.college, args.category))
+        if args.command == "learning":
+            return emit(_learning(args.course_id, args.activities, args.refresh))
         if args.command == "history":
             return emit({"status": "ok", "items": history(args.limit)})
+        if args.command == "read":
+            return emit(_read_learning(args))
         if args.command == "quick":
             return emit(_quick(args))
         return error("UNKNOWN_COMMAND", "不支持的连接器命令。")
