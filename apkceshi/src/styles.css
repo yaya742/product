@@ -266,6 +266,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .field-label { display: block; margin: 17px 0 8px; color: var(--text); font-size: 12px; font-weight: 600; }
 .campus-account-actions { display: flex; gap: 8px; margin-top: 19px; }
 .campus-account-actions button { flex: 1; }
+.campus-webvpn-button { width: 100%; margin-top: 8px; }
 .campus-read-options { display: grid; grid-template-columns: 1fr 1fr; gap: 0 9px; }
 .campus-read-options .field-label { margin-top: 14px; }
 .campus-read-options select { min-width: 0; width: 100%; padding: 10px 9px; font-size: 12px; }
