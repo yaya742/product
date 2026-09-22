@@ -416,6 +416,10 @@ async function request(options: {
     const headers: Record<string, string> = {
       'User-Agent': 'Zaichang-ZJU-Connector/0.2 (Android; read-only)',
       'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.7',
+      // CapacitorHttp's Android response reader does not transparently
+      // decode every Content-Encoding variant. A compressed login form can
+      // look like HTML but lose its _csrf field during text conversion.
+      'Accept-Encoding': 'identity',
       ...requestHeaders,
     };
     // CapacitorCookies installs the Android CookieHandler used by
@@ -570,7 +574,8 @@ async function loginWebVpn(studentId: string, password: string): Promise<void> {
   const csrf = hiddenInput(body, '_csrf');
   if (!csrf) {
     const contentType = headerValue(loginPage.headers, 'content-type') || '未知';
-    throw new CampusError(`WebVPN 登录页缺少会话校验信息（响应类型：${contentType}，长度：${body.length}），请稍后重试。`, 'authentication');
+    const contentEncoding = headerValue(loginPage.headers, 'content-encoding') || 'identity';
+    throw new CampusError(`WebVPN 登录页缺少会话校验信息（响应类型：${contentType}，编码：${contentEncoding}，长度：${body.length}），请稍后重试。`, 'authentication');
   }
   const result = await request({
     url: WEBVPN_DO_LOGIN,
