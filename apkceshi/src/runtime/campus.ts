@@ -52,7 +52,10 @@ const WEBVPN_CONFIRM_LOGIN = `${WEBVPN_ROOT}/do-confirm-login`;
 // even though the generated WebVPN URL still looks valid.
 const WEBVPN_ROUTE_CIPHER_KEY = 'wrdvpnisthebest!';
 const WEBVPN_PASSWORD_CIPHER_KEY = 'wrdvpnisawesome!';
-const NATIVE_COOKIE_SYNC_DELAY_MS = 450;
+// Android's CookieManager and CapacitorHttp do not always observe a cookie
+// write in the same event loop turn. A short settle window after every
+// Set-Cookie response prevents intermittent CAS/WebVPN session loss.
+const NATIVE_COOKIE_SYNC_DELAY_MS = 800;
 
 const TRUSTED_HOSTS = new Set([
   'zjuam.zju.edu.cn',
@@ -275,11 +278,11 @@ function splitSetCookieHeader(value: string): string[] {
  * the cookies explicitly keeps the native request layer and this read-only
  * connector on the same WebVPN/CAS session.
  */
-async function persistNativeResponseCookies(headers: Record<string, string>, sourceUrl: string): Promise<void> {
+async function persistNativeResponseCookies(headers: Record<string, string>, sourceUrl: string): Promise<boolean> {
   const setCookie = headerValue(headers, 'set-cookie');
-  if (!setCookie) return;
+  if (!setCookie) return false;
   let source: URL;
-  try { source = new URL(sourceUrl); } catch { return; }
+  try { source = new URL(sourceUrl); } catch { return false; }
 
   for (const rawCookie of splitSetCookieHeader(setCookie)) {
     const segments = rawCookie.split(';').map((segment) => segment.trim()).filter(Boolean);
@@ -322,6 +325,7 @@ async function persistNativeResponseCookies(headers: Record<string, string>, sou
       // is unavailable on an older Capacitor runtime.
     }
   }
+  return true;
 }
 
 function defaultCookiePath(pathname: string): string {
@@ -464,7 +468,9 @@ async function request(options: {
     });
     const normalizedHeaders = (result.headers || {}) as Record<string, string>;
     activeCookieJar?.capture(normalizedHeaders, url);
-    await persistNativeResponseCookies(normalizedHeaders, url);
+    // Do not start the next CAS/WebVPN request until the native cookie store
+    // has had time to expose the Set-Cookie values to HttpURLConnection.
+    if (await persistNativeResponseCookies(normalizedHeaders, url)) await waitForNativeCookieSync();
     return { status: result.status, data: result.data, headers: normalizedHeaders, url: result.url || url };
   } catch (error) {
     if (error instanceof CampusError) throw error;
@@ -947,8 +953,32 @@ function normalizePracticeProject(value: Record<string, unknown>, index: number)
   };
 }
 
+function isRetryablePracticeSessionError(error: unknown): boolean {
+  if (!(error instanceof CampusError)) return false;
+  if (error.code === 'network') return true;
+  return error.code === 'authentication' && /素质拓展|登录会话|登录跳转|认证回调|身份确认|WebVPN/i.test(error.message);
+}
+
+async function ensurePracticeSession(): Promise<void> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      await loginSztz();
+      return;
+    } catch (error) {
+      lastError = error;
+      if (!isRetryablePracticeSessionError(error) || attempt === 1) throw error;
+      // A failed callback can be caused by the native cookie store still
+      // settling. Retry the trusted CAS flow once before reporting a partial
+      // campus read to the user.
+      await waitForNativeCookieSync();
+    }
+  }
+  throw lastError instanceof Error ? lastError : new CampusError('素质拓展平台没有建立登录会话。', 'authentication');
+}
+
 async function readPractice(): Promise<{ summary: CampusPracticeSummary | null; projects: CampusPracticeProject[]; warnings: string[] }> {
-  await loginSztz();
+  await ensurePracticeSession();
   let summary: CampusPracticeSummary | null = null;
   const projects: CampusPracticeProject[] = [];
   const warnings: string[] = [];
@@ -1592,16 +1622,7 @@ export async function readLearningActivities(studentId: string, password: string
   activeCampusCredentials = { studentId: cleanId, password };
   activeCookieJar = new CookieJar();
   try {
-    await clearCampusCookies();
-    try {
-      await authenticate(cleanId, password);
-    } catch (error) {
-      if (error instanceof CampusError && error.code === 'network') {
-        await activateWebVpn();
-      } else {
-        throw error;
-      }
-    }
+    await establishCampusSession(cleanId, password);
     await ensureCoursesSession();
     const response = await request({ url: COURSE_ACTIVITIES_URL.replace('{courseId}', encodeURIComponent(cleanCourseId)), responseType: 'text', disableRedirects: true });
     const body = responseText(response);
@@ -1805,6 +1826,30 @@ function isFatalModuleError(error: unknown): boolean {
   return error instanceof CampusError && (error.code === 'authentication' || error.code === 'captcha');
 }
 
+async function establishCampusSession(studentId: string, password: string): Promise<void> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      await clearCampusCookies();
+      campusTransport = 'direct';
+      try {
+        await authenticate(studentId, password);
+      } catch (error) {
+        if (!(error instanceof CampusError) || error.code !== 'network') throw error;
+        await activateWebVpn();
+      }
+      return;
+    } catch (error) {
+      lastError = error;
+      if (!(error instanceof CampusError) || error.code !== 'network' || attempt === 1) throw error;
+      // Give Android's cookie bridge one more settle window before rebuilding
+      // the complete direct/CAS/WebVPN session.
+      await waitForNativeCookieSync();
+    }
+  }
+  throw lastError instanceof Error ? lastError : new CampusError('校园登录会话没有建立。', 'network');
+}
+
 export async function readCampusInfo(studentId: string, password: string, options: { academicYear?: string; term?: string } = {}): Promise<MobileCampusData> {
   assertNative();
   const cleanId = studentId.trim();
@@ -1813,16 +1858,7 @@ export async function readCampusInfo(studentId: string, password: string, option
   activeCampusCredentials = { studentId: cleanId, password };
   activeCookieJar = new CookieJar();
   try {
-    await clearCampusCookies();
-    try {
-      await authenticate(cleanId, password);
-    } catch (error) {
-      if (error instanceof CampusError && error.code === 'network') {
-        await activateWebVpn();
-      } else {
-        throw error;
-      }
-    }
+    await establishCampusSession(cleanId, password);
     const year = academicYearValue(options.academicYear);
     const term = termValue(options.term || academicTerm().term);
     const warnings: string[] = [];
