@@ -1311,9 +1311,9 @@ function normalizeCourse(item: Record<string, unknown>, index: number): CampusCo
   const { start: firstPeriod, end: lastPeriod } = coursePeriodRange(item);
   const periodLabel = firstPeriod && lastPeriod
     ? `第${firstPeriod}-${lastPeriod}节`
-    : field(item, ['jcs', 'jssj', 'sksj', 'period', 'skjc', 'time', 'class_time']);
+    : field(item, ['jcs', 'period', 'skjc'], '时间未提供');
   const oddEven = field(item, ['dsz', 'odd_even']);
-  const weeks = field(item, ['zcd', 'zc', 'zcmc', 'zcsm', 'weeks', 'week', 'week_range', 'weekRange', 'weekList'])
+  const weeks = field(item, ['zcxx', 'zcd', 'zc', 'zcmc', 'zcsm', 'weeks', 'week', 'week_range', 'weekRange', 'weekList'])
     || (oddEven === '0' ? '单周' : oddEven === '1' ? '双周' : '');
   return {
     id: field(item, ['jxb_id', 'jxbid', 'kch_id', 'xkkh', 'kch', 'course_id'], `course-${index}`),
