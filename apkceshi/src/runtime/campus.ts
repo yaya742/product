@@ -228,6 +228,31 @@ function responseText(result: HttpResult): string {
   return asText(value);
 }
 
+function decodeBase64Bytes(value: string): Uint8Array {
+  const normalized = value.replace(/\s/g, '');
+  const binary = atob(normalized);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+  return bytes;
+}
+
+/** Decode the raw WebVPN response before parsing its form or JSON payload. */
+async function responseArrayBufferText(result: HttpResult): Promise<string> {
+  if (typeof result.data !== 'string') return responseText(result);
+  const bytes = decodeBase64Bytes(result.data);
+  const contentEncoding = headerValue(result.headers, 'content-encoding').toLowerCase();
+  const isGzip = contentEncoding.includes('gzip') || (bytes[0] === 0x1f && bytes[1] === 0x8b);
+  let decodedBytes = bytes;
+  if (isGzip) {
+    if (typeof DecompressionStream === 'undefined') {
+      throw new CampusError('手机运行环境不支持解压 WebVPN 登录响应，请升级 Android System WebView 后重试。', 'network');
+    }
+    const stream = new Blob([bytes.buffer as ArrayBuffer]).stream().pipeThrough(new DecompressionStream('gzip'));
+    decodedBytes = new Uint8Array(await new Response(stream).arrayBuffer());
+  }
+  return new TextDecoder('utf-8').decode(decodedBytes).replace(/^\uFEFF/, '');
+}
+
 function headerValue(headers: Record<string, string>, name: string): string {
   const target = name.toLowerCase();
   const entry = Object.entries(headers).find(([key]) => key.toLowerCase() === target);
@@ -402,7 +427,7 @@ async function request(options: {
   method?: 'GET' | 'POST';
   data?: Record<string, string>;
   headers?: Record<string, string>;
-  responseType?: 'text' | 'json';
+  responseType?: 'text' | 'json' | 'arraybuffer';
   disableRedirects?: boolean;
   allowWebVpn?: boolean;
 }): Promise<HttpResult> {
@@ -446,10 +471,14 @@ async function request(options: {
   }
 }
 
-async function followGet(startUrl: string, headers?: Record<string, string>): Promise<HttpResult> {
+async function followGet(
+  startUrl: string,
+  headers?: Record<string, string>,
+  responseType: 'text' | 'arraybuffer' = 'text',
+): Promise<HttpResult> {
   let current = routedUrl(startUrl);
   for (let attempt = 0; attempt < 10; attempt += 1) {
-    const result = await request({ url: current, headers, responseType: 'text', disableRedirects: true, allowWebVpn: campusTransport === 'webvpn' });
+    const result = await request({ url: current, headers, responseType, disableRedirects: true, allowWebVpn: campusTransport === 'webvpn' });
     if (result.status < 300 || result.status >= 400) return result;
     const location = headerValue(result.headers, 'location');
     if (!location) throw new CampusError('校园系统跳转缺少目标地址。', 'response');
@@ -553,29 +582,33 @@ async function loginWebVpn(studentId: string, password: string): Promise<void> {
   };
   let loginPage: HttpResult | null = null;
   let body = '';
-  let loginPageHasCsrf = false;
+  let loginPageHasForm = false;
   // The Android WebView cookie bridge writes/clears cookies asynchronously.
   // Retry the two known gateway entry points after a short gap so a stale
   // session cannot make the fresh form appear without its session-bound CSRF.
   for (let attempt = 0; attempt < 3; attempt += 1) {
     for (const entry of ['/', '/login']) {
-      const candidate = await followGet(`${WEBVPN_ROOT}${entry}?zaichang=${Date.now()}-${attempt}`, noCacheHeaders);
-      const candidateBody = responseText(candidate);
+      const candidate = await followGet(
+        `${WEBVPN_ROOT}${entry}?zaichang=${Date.now()}-${attempt}`,
+        noCacheHeaders,
+        'arraybuffer',
+      );
+      const candidateBody = await responseArrayBufferText(candidate);
       loginPage = candidate;
       body = candidateBody;
-      loginPageHasCsrf = candidate.status === 200 && Boolean(hiddenInput(candidateBody, '_csrf'));
-      if (loginPageHasCsrf) break;
+      loginPageHasForm = candidate.status === 200 && isWebVpnLoginPage(candidateBody);
+      if (loginPageHasForm) break;
     }
-    if (loginPageHasCsrf) break;
+    if (loginPageHasForm) break;
     if (attempt < 2) await waitForNativeCookieSync();
   }
   if (!loginPage) throw new CampusError('WebVPN 登录页没有返回响应。', 'network');
   if (loginPage.status !== 200) throw new CampusError(`WebVPN 登录页请求失败（HTTP ${loginPage.status}）。`, 'network');
   const csrf = hiddenInput(body, '_csrf');
-  if (!csrf) {
+  if (!isWebVpnLoginPage(body)) {
     const contentType = headerValue(loginPage.headers, 'content-type') || '未知';
     const contentEncoding = headerValue(loginPage.headers, 'content-encoding') || 'identity';
-    throw new CampusError(`WebVPN 登录页缺少会话校验信息（响应类型：${contentType}，编码：${contentEncoding}，长度：${body.length}），请稍后重试。`, 'authentication');
+    throw new CampusError(`WebVPN 登录页未返回可识别的登录表单（响应类型：${contentType}，编码：${contentEncoding}，长度：${body.length}），请稍后重试。`, 'authentication');
   }
   const result = await request({
     url: WEBVPN_DO_LOGIN,
@@ -596,11 +629,11 @@ async function loginWebVpn(studentId: string, password: string): Promise<void> {
       Origin: WEBVPN_ROOT,
       Referer: `${WEBVPN_ROOT}/`,
     },
-    responseType: 'text',
+    responseType: 'arraybuffer',
     disableRedirects: true,
     allowWebVpn: true,
   });
-  const payload = parseJson(result, 'WebVPN 登录');
+  const payload = parseJsonBody(await responseArrayBufferText(result), 'WebVPN 登录');
   const record = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload as Record<string, unknown> : {};
   if (record.success === true) return;
   const code = String(record.error || '').toUpperCase();
@@ -618,11 +651,11 @@ async function loginWebVpn(studentId: string, password: string): Promise<void> {
         Origin: WEBVPN_ROOT,
         Referer: `${WEBVPN_ROOT}/login`,
       },
-      responseType: 'text',
+      responseType: 'arraybuffer',
       disableRedirects: true,
       allowWebVpn: true,
     });
-    const confirmationPayload = parseJson(confirmation, 'WebVPN 确认登录');
+    const confirmationPayload = parseJsonBody(await responseArrayBufferText(confirmation), 'WebVPN 确认登录');
     const confirmationRecord = confirmationPayload && typeof confirmationPayload === 'object' && !Array.isArray(confirmationPayload)
       ? confirmationPayload as Record<string, unknown>
       : {};
@@ -1034,13 +1067,24 @@ function parseJson(result: HttpResult, label: string): unknown {
   try { return JSON.parse(body) as unknown; } catch { throw new CampusError(`${label}返回了无法识别的数据。`, 'response'); }
 }
 
+function parseJsonBody(body: string, label: string): unknown {
+  const normalized = body.trim();
+  if (normalized === 'null' || normalized === '') return null;
+  try { return JSON.parse(normalized) as unknown; } catch { throw new CampusError(`${label}返回了无法识别的数据。`, 'response'); }
+}
+
 function isAuthenticationPage(body: string): boolean {
   return /name\s*=\s*["']execution["']/i.test(body)
     || (/统一身份认证/.test(body) && /登录|login|cas/i.test(body));
 }
 
 function isWebVpnLoginPage(body: string): boolean {
-  return /WebVPN/i.test(body) && /name\s*=\s*["']_csrf["']/i.test(body) && /name\s*=\s*["']username["']/i.test(body);
+  // The current gateway renders _csrf as an empty hidden input and submits it
+  // that way from its own browser form. Presence of the login form, rather
+  // than a non-empty CSRF value, is the reliable signal.
+  return /WebVPN/i.test(body)
+    && /name\s*=\s*["']username["']/i.test(body)
+    && /(?:name\s*=\s*["']_csrf["']|id\s*=\s*["']form["'])/i.test(body);
 }
 
 function isWebVpnLoginUrl(value: string): boolean {
