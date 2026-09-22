@@ -380,7 +380,10 @@ function parseExecution(body: string): string {
     const match = body.match(pattern);
     if (match?.[1]) return decodeHtml(match[1]);
   }
-  throw new CampusError('统一身份认证页面缺少本次登录会话信息，请重新读取校园信息。', 'authentication');
+  // A direct campus request may land on the generic identity entry page
+  // without a CAS service ticket. Treat that as a transport fallback signal;
+  // the caller will retry through WebVPN instead of blaming the credentials.
+  throw new CampusError('统一身份认证页面缺少本次登录会话信息，请重新读取校园信息。', 'network');
 }
 
 function decodeHtml(value: string): string {
@@ -532,7 +535,10 @@ async function authenticate(studentId: string, password: string) {
   // The CAS entry point may redirect to the current trusted identity host.
   // Follow only trusted ZJU redirects so the execution token remains tied to
   // the same manual cookie jar without treating a normal HTTP 302 as failure.
-  const loginPage = await followGet(LOGIN_URL);
+  // Include the actual academic-system service so CAS returns an execution
+  // token for this login instead of the generic identity landing page.
+  const casLoginUrl = casServiceLoginUrl();
+  const loginPage = await followGet(casLoginUrl);
   if (loginPage.status !== 200) throw new CampusError(`无法打开统一身份认证（HTTP ${loginPage.status}）。`, 'authentication');
   const execution = parseExecution(responseText(loginPage));
   const publicKeyResponse = await request({ url: PUBLIC_KEY_URL, responseType: 'text', disableRedirects: true });
@@ -543,7 +549,7 @@ async function authenticate(studentId: string, password: string) {
   if (!modulus || !exponent) throw new CampusError('统一身份认证没有返回可用公钥。', 'authentication');
 
   const loginResult = await request({
-    url: LOGIN_URL,
+    url: casLoginUrl,
     method: 'POST',
     data: {
       username: studentId,
