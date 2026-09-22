@@ -199,7 +199,28 @@ function asText(value: unknown): string {
 }
 
 function responseText(result: HttpResult): string {
-  return asText(result.data);
+  const value = result.data;
+  if (typeof value === 'string') {
+    const normalized = value.replace(/^\uFEFF/, '');
+    // Some Capacitor/Android combinations return a text response as a JSON
+    // encoded string even when responseType is "text".
+    if (normalized.trim().startsWith('"')) {
+      try {
+        const decoded = JSON.parse(normalized);
+        if (typeof decoded === 'string') return decoded.replace(/^\uFEFF/, '');
+      } catch {
+        // Keep the original response when it is ordinary HTML/text.
+      }
+    }
+    return normalized;
+  }
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const record = value as Record<string, unknown>;
+    for (const key of ['body', 'text', 'html', 'content', 'data']) {
+      if (typeof record[key] === 'string') return record[key].replace(/^\uFEFF/, '');
+    }
+  }
+  return asText(value);
 }
 
 function headerValue(headers: Record<string, string>, name: string): string {
@@ -482,9 +503,12 @@ function hiddenInput(body: string, name: string): string {
     new RegExp(`<input[^>]+name\\s*=\\s*["']${escaped}["'][^>]*value\\s*=\\s*["']([^"']*)`, 'i'),
     new RegExp(`<input[^>]+value\\s*=\\s*["']([^"']*)["'][^>]*name\\s*=\\s*["']${escaped}["']`, 'i'),
   ];
-  for (const pattern of patterns) {
-    const value = body.match(pattern)?.[1];
-    if (value !== undefined) return decodeHtml(value);
+  const candidates = body === decodeHtml(body) ? [body] : [body, decodeHtml(body)];
+  for (const candidate of candidates) {
+    for (const pattern of patterns) {
+      const value = candidate.match(pattern)?.[1];
+      if (value !== undefined) return decodeHtml(value);
+    }
   }
   return '';
 }
@@ -522,7 +546,10 @@ async function loginWebVpn(studentId: string, password: string): Promise<void> {
   }
   if (loginPage.status !== 200) throw new CampusError(`WebVPN 登录页请求失败（HTTP ${loginPage.status}）。`, 'network');
   const csrf = hiddenInput(body, '_csrf');
-  if (!csrf) throw new CampusError('WebVPN 登录页缺少会话校验信息，请稍后重试。', 'authentication');
+  if (!csrf) {
+    const contentType = headerValue(loginPage.headers, 'content-type') || '未知';
+    throw new CampusError(`WebVPN 登录页缺少会话校验信息（响应类型：${contentType}，长度：${body.length}），请稍后重试。`, 'authentication');
+  }
   const result = await request({
     url: WEBVPN_DO_LOGIN,
     method: 'POST',
