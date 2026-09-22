@@ -46,7 +46,11 @@ const PERSON_APP_KEY = '50634610756a4c0e82d5a13bb692e257';
 const PERSON_SIGN_SECRET = '1f11192bd9d14a09b29fc59d556e24e3';
 const WEBVPN_ROOT = 'https://webvpn.zju.edu.cn';
 const WEBVPN_DO_LOGIN = `${WEBVPN_ROOT}/do-login`;
-const WEBVPN_CIPHER_KEY = 'wrdvpnisthebest!';
+// The WebVPN gateway uses different keys for the encrypted target route and
+// the encrypted login password. Reusing one key makes the login request fail
+// even though the generated WebVPN URL still looks valid.
+const WEBVPN_ROUTE_CIPHER_KEY = 'wrdvpnisthebest!';
+const WEBVPN_PASSWORD_CIPHER_KEY = 'wrdvpnisawesome!';
 
 const TRUSTED_HOSTS = new Set([
   'zjuam.zju.edu.cn',
@@ -244,6 +248,7 @@ function trustedUrl(value: string, source?: string, options: { allowWebVpn?: boo
     // otherwise a valid WebVPN handoff is reported as an untrusted URL.
     if (parsed.protocol === 'http:') parsed.protocol = 'https:';
     const allowedPath = parsed.pathname === '/'
+      || parsed.pathname === '/login'
       || parsed.pathname === '/do-login'
       || parsed.pathname === '/do-confirm-login'
       || parsed.pathname === '/do-second-login'
@@ -259,8 +264,8 @@ function trustedUrl(value: string, source?: string, options: { allowWebVpn?: boo
 }
 
 function webVpnEncrypt(value: string): string {
-  const key = aesjs.utils.utf8.toBytes(WEBVPN_CIPHER_KEY);
-  const iv = aesjs.utils.utf8.toBytes(WEBVPN_CIPHER_KEY);
+  const key = aesjs.utils.utf8.toBytes(WEBVPN_ROUTE_CIPHER_KEY);
+  const iv = aesjs.utils.utf8.toBytes(WEBVPN_ROUTE_CIPHER_KEY);
   const bytes = Array.from(aesjs.utils.utf8.toBytes(value));
   const padded = bytes.length % 16 === 0 ? bytes : bytes.concat(new Array(16 - (bytes.length % 16)).fill(0));
   const cipher = new aesjs.ModeOfOperation.cfb(key, iv, 16).encrypt(padded).slice(0, bytes.length);
@@ -416,15 +421,18 @@ function encryptWebVpnPassword(password: string): string {
   const originalLength = password.length;
   if (!originalLength) throw new CampusError('校园密码不能为空。', 'credentials');
   const padded = originalLength % 16 === 0 ? password : password.padEnd(originalLength + (16 - originalLength % 16), '0');
-  const key = aesjs.utils.utf8.toBytes(WEBVPN_CIPHER_KEY);
-  const iv = aesjs.utils.utf8.toBytes(WEBVPN_CIPHER_KEY);
+  const key = aesjs.utils.utf8.toBytes(WEBVPN_PASSWORD_CIPHER_KEY);
+  const iv = aesjs.utils.utf8.toBytes(WEBVPN_PASSWORD_CIPHER_KEY);
   const plaintext = aesjs.utils.utf8.toBytes(padded);
   const encrypted = new aesjs.ModeOfOperation.cfb(key, iv, 16).encrypt(plaintext).slice(0, originalLength);
   return aesjs.utils.hex.fromBytes(iv) + aesjs.utils.hex.fromBytes(encrypted);
 }
 
 async function loginWebVpn(studentId: string, password: string): Promise<void> {
-  const loginPage = await request({ url: WEBVPN_ROOT, responseType: 'text', disableRedirects: true, allowWebVpn: true });
+  // The current WebVPN gateway redirects its root endpoint to /login before
+  // rendering the form. Follow only the allowlisted WebVPN redirect so the
+  // native flow does not mistake the normal 302 for a failed login page.
+  const loginPage = await followGet(WEBVPN_ROOT);
   const body = responseText(loginPage);
   if (loginPage.status !== 200) throw new CampusError(`WebVPN 登录页请求失败（HTTP ${loginPage.status}）。`, 'network');
   const csrf = hiddenInput(body, '_csrf');
