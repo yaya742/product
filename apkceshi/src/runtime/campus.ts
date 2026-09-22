@@ -216,6 +216,62 @@ function splitSetCookieHeader(value: string): string[] {
   return value.replace(/\r?\n/g, ',').split(/,(?=\s*[^;,=\s]+\s*=)/g).map((item) => item.trim()).filter(Boolean);
 }
 
+/**
+ * CapacitorHttp uses Android's CookieHandler, while the JS bridge only sees
+ * the normalized response headers. Some Android/WebView versions do not
+ * expose every Set-Cookie header back to JavaScript consistently. Persisting
+ * the cookies explicitly keeps the native request layer and this read-only
+ * connector on the same WebVPN/CAS session.
+ */
+async function persistNativeResponseCookies(headers: Record<string, string>, sourceUrl: string): Promise<void> {
+  const setCookie = headerValue(headers, 'set-cookie');
+  if (!setCookie) return;
+  let source: URL;
+  try { source = new URL(sourceUrl); } catch { return; }
+
+  for (const rawCookie of splitSetCookieHeader(setCookie)) {
+    const segments = rawCookie.split(';').map((segment) => segment.trim()).filter(Boolean);
+    const pair = segments.shift();
+    if (!pair) continue;
+    const separator = pair.indexOf('=');
+    if (separator <= 0) continue;
+    const key = pair.slice(0, separator).trim();
+    const value = pair.slice(separator + 1).trim();
+    if (!key) continue;
+
+    let path = defaultCookiePath(source.pathname);
+    let expires = '';
+    let remove = !value;
+    for (const segment of segments) {
+      const attributeSeparator = segment.indexOf('=');
+      const attribute = (attributeSeparator >= 0 ? segment.slice(0, attributeSeparator) : segment).trim().toLowerCase();
+      const attributeValue = attributeSeparator >= 0 ? segment.slice(attributeSeparator + 1).trim() : '';
+      if (attribute === 'path' && attributeValue.startsWith('/')) path = attributeValue;
+      if (attribute === 'expires' && attributeValue) {
+        expires = attributeValue;
+        const timestamp = Date.parse(attributeValue);
+        if (Number.isFinite(timestamp) && timestamp <= Date.now()) remove = true;
+      }
+      if (attribute === 'max-age') {
+        const seconds = Number(attributeValue);
+        if (Number.isFinite(seconds) && seconds <= 0) remove = true;
+      }
+    }
+    if (source.hostname.toLowerCase() === WEBVPN_HOST && !segments.some((segment) => /^path\s*=/i.test(segment))) path = '/';
+
+    try {
+      if (remove) {
+        await CapacitorCookies.deleteCookie({ url: sourceUrl, key });
+      } else {
+        await CapacitorCookies.setCookie({ url: sourceUrl, key, value, path, ...(expires ? { expires } : {}) });
+      }
+    } catch {
+      // The JS CookieJar remains the fallback when the native cookie bridge
+      // is unavailable on an older Capacitor runtime.
+    }
+  }
+}
+
 function defaultCookiePath(pathname: string): string {
   if (!pathname || !pathname.startsWith('/') || pathname === '/') return '/';
   const index = pathname.lastIndexOf('/');
@@ -350,6 +406,7 @@ async function request(options: {
     });
     const normalizedHeaders = (result.headers || {}) as Record<string, string>;
     activeCookieJar?.capture(normalizedHeaders, url);
+    await persistNativeResponseCookies(normalizedHeaders, url);
     return { status: result.status, data: result.data, headers: normalizedHeaders, url: result.url || url };
   } catch (error) {
     if (error instanceof CampusError) throw error;
