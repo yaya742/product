@@ -231,14 +231,18 @@ function pathMatches(pathname: string, cookiePath: string): boolean {
 
 function isWebVpnProxyPath(pathname: string): boolean {
   const parts = pathname.split('/').filter(Boolean);
-  return parts.length >= 2 && /^(https?|http)$/.test(parts[0]) && /^[0-9a-f]{32,}(?:-\d+)?$/i.test(parts[1]);
+  return parts.length >= 2 && /^https?$/.test(parts[0]) && /^[0-9a-f]{32,}(?:-\d+)?$/i.test(parts[1]);
 }
 
 function trustedUrl(value: string, source?: string, options: { allowWebVpn?: boolean } = {}): string {
   let parsed: URL;
   try { parsed = new URL(value, source); } catch { throw new CampusError('校园系统返回了无法识别的跳转地址。', 'response'); }
   const hostname = parsed.hostname.toLowerCase();
-  if (parsed.protocol === 'https:' && hostname === WEBVPN_HOST) {
+  if ((parsed.protocol === 'https:' || parsed.protocol === 'http:') && hostname === WEBVPN_HOST) {
+    // Some campus gateways emit an http Location even though the actual
+    // WebVPN endpoint is HTTPS. Normalize it before applying the allowlist;
+    // otherwise a valid WebVPN handoff is reported as an untrusted URL.
+    if (parsed.protocol === 'http:') parsed.protocol = 'https:';
     const allowedPath = parsed.pathname === '/'
       || parsed.pathname === '/do-login'
       || parsed.pathname === '/do-confirm-login'
