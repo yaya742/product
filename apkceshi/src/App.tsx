@@ -443,6 +443,11 @@ export function App() {
       return;
     }
     setCampusLoading(true);
+    setCampusSaved(false);
+    // Do not keep rendering a previous term while a new read is in flight.
+    // A failed refresh must never leave an old schedule labelled as the
+    // currently selected academic year and term.
+    updateState({ campus: null });
     setCampusMessage(copy.campusLoading);
     try {
       const campus = await readCampusInfo(state.profile.studentId, state.profile.studentPassword, { academicYear: campusAcademicYear, term: campusTerm });
@@ -1435,19 +1440,19 @@ export function App() {
             <section className="profile-section campus-account-card">
               <div className="setting-label"><strong>{copy.campus}</strong><span>{copy.campusHint}</span></div>
               <label className="field-label" htmlFor="student-id">{copy.studentId}</label>
-              <input id="student-id" value={state.profile.studentId} placeholder={copy.studentId} onChange={(event) => { updateProfile({ studentId: event.target.value }); setCampusSaved(false); }} />
+              <input id="student-id" value={state.profile.studentId} placeholder={copy.studentId} onChange={(event) => { updateProfile({ studentId: event.target.value }); updateState({ campus: null }); setCampusSaved(false); }} />
               <label className="field-label" htmlFor="student-password">{copy.studentPassword}</label>
-              <input id="student-password" type="password" value={state.profile.studentPassword} placeholder={copy.passwordPlaceholder} onChange={(event) => { updateProfile({ studentPassword: event.target.value }); setCampusSaved(false); }} />
+              <input id="student-password" type="password" value={state.profile.studentPassword} placeholder={copy.passwordPlaceholder} onChange={(event) => { updateProfile({ studentPassword: event.target.value }); updateState({ campus: null }); setCampusSaved(false); }} />
               <div className="campus-read-options">
                 <label className="field-label" htmlFor="campus-academic-year">{copy.campusAcademicYear}</label>
-                <select id="campus-academic-year" value={campusAcademicYear} onChange={(event) => setCampusAcademicYear(event.target.value)}>
+                <select id="campus-academic-year" value={campusAcademicYear} onChange={(event) => { setCampusAcademicYear(event.target.value); updateState({ campus: null }); setCampusSaved(false); }}>
                   {[0, 1, 2, 3].map((offset) => {
                     const year = String(Number(initialAcademicTerm.year) - 1 + offset);
                     return <option key={year} value={year}>{year}–{Number(year) + 1}</option>;
                   })}
                 </select>
                 <label className="field-label" htmlFor="campus-term">{copy.campusTerm}</label>
-                <select id="campus-term" value={campusTerm} onChange={(event) => setCampusTerm(event.target.value)}>
+                <select id="campus-term" value={campusTerm} onChange={(event) => { setCampusTerm(event.target.value); updateState({ campus: null }); setCampusSaved(false); }}>
                   <option value="1">{copy.campusAutumnTerm}</option>
                   <option value="2">{copy.campusSpringTerm}</option>
                 </select>
@@ -1464,7 +1469,7 @@ export function App() {
             {campus && (
               <>
                 <section className="campus-status-row">
-                  <div><strong>{copy.campusUpdated}</strong><small>{formatCampusUpdated(campus.fetchedAt, state.profile.language)} · {campus.academicYear}–{Number(campus.academicYear) + 1} · {campusTermLabel(campus.term)} · {campus.yearLevel || '年级未识别'}</small></div>
+                  <div><strong>{campus.warnings.length ? copy.campusPartial : copy.campusUpdated}</strong><small>{formatCampusUpdated(campus.fetchedAt, state.profile.language)} · {campus.academicYear}–{Number(campus.academicYear) + 1} · {campusTermLabel(campus.term)} · {campus.yearLevel || '年级未识别'}</small></div>
                   <button className="icon-refresh-button" disabled={campusLoading} onClick={() => void refreshCampusInfo()} aria-label={copy.campusRefresh}>↻</button>
                 </section>
                 {campus.warnings.length > 0 && (
