@@ -120,7 +120,6 @@ class CookieJar {
 
       let domain = source.hostname.toLowerCase();
       let path = defaultCookiePath(source.pathname);
-      let pathSpecified = false;
       let secure = false;
       let expiresAt: number | undefined;
       let remove = !value;
@@ -131,7 +130,6 @@ class CookieJar {
         if (attribute === 'domain' && attributeValue) domain = attributeValue.replace(/^\./, '').toLowerCase();
         if (attribute === 'path' && attributeValue.startsWith('/')) {
           path = attributeValue;
-          pathSpecified = true;
         }
         if (attribute === 'secure') secure = true;
         if (attribute === 'max-age') {
@@ -151,8 +149,13 @@ class CookieJar {
       }
 
       if (source.hostname.toLowerCase() === WEBVPN_HOST) {
-        if (!hostMatches(source.hostname, domain)) domain = source.hostname;
-        if (!pathSpecified) path = '/';
+        // A proxied target cookie may carry the original target path (for
+        // example /dekt). The browser actually sends it to /https/<route>/dekt,
+        // so retaining that original path prevents SESSION from reaching
+        // /dekt/ctx. All cookies observed on the gateway are scoped to the
+        // gateway root in this connector.
+        domain = source.hostname;
+        path = '/';
       }
 
       const key = `${name}\u0000${domain}\u0000${path}`;
@@ -312,7 +315,7 @@ async function persistNativeResponseCookies(headers: Record<string, string>, sou
         if (Number.isFinite(seconds) && seconds <= 0) remove = true;
       }
     }
-    if (source.hostname.toLowerCase() === WEBVPN_HOST && !segments.some((segment) => /^path\s*=/i.test(segment))) path = '/';
+    if (source.hostname.toLowerCase() === WEBVPN_HOST) path = '/';
 
     try {
       if (remove) {
@@ -435,6 +438,7 @@ async function request(options: {
   responseType?: 'text' | 'json' | 'arraybuffer';
   disableRedirects?: boolean;
   allowWebVpn?: boolean;
+  useCookieJar?: boolean;
 }): Promise<HttpResult> {
   if (isMobileVmOffline()) throw new CampusError('虚拟机已模拟断网，校园请求未发送。', 'network');
   assertNative();
@@ -443,6 +447,10 @@ async function request(options: {
     const requestHeaders: Record<string, string> = { ...options.headers };
     const referer = headerValue(requestHeaders, 'referer');
     if (referer) requestHeaders.Referer = routedUrl(referer);
+    if (options.useCookieJar && !headerValue(requestHeaders, 'cookie')) {
+      const cookieHeader = activeCookieJar?.headerFor(url);
+      if (cookieHeader) requestHeaders.Cookie = cookieHeader;
+    }
     const headers: Record<string, string> = {
       'User-Agent': 'Zaichang-ZJU-Connector/0.2 (Android; read-only)',
       'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.7',
@@ -482,10 +490,11 @@ async function followGet(
   startUrl: string,
   headers?: Record<string, string>,
   responseType: 'text' | 'arraybuffer' = 'text',
+  useCookieJar = false,
 ): Promise<HttpResult> {
   let current = routedUrl(startUrl);
   for (let attempt = 0; attempt < 10; attempt += 1) {
-    const result = await request({ url: current, headers, responseType, disableRedirects: true, allowWebVpn: campusTransport === 'webvpn' });
+    const result = await request({ url: current, headers, responseType, disableRedirects: true, allowWebVpn: campusTransport === 'webvpn', useCookieJar });
     if (result.status < 300 || result.status >= 400) return result;
     const location = headerValue(result.headers, 'location');
     if (!location) throw new CampusError('校园系统跳转缺少目标地址。', 'response');
@@ -812,7 +821,7 @@ async function loginZdbk(allowWebVpnRefresh = true) {
   }
   const body = responseText(result);
   if (isWebVpnLoginPage(body) || (campusTransport === 'webvpn' && isAuthenticationPage(body))) {
-    if (campusTransport === 'webvpn' && allowWebVpnRefresh) {
+    if (allowWebVpnRefresh) {
       await activateWebVpn();
       return loginZdbk(false);
     }
@@ -855,7 +864,7 @@ async function loginSztz(allowWebVpnRefresh = true) {
   const serviceLogin = `${LOGIN_URL}?service=${encodeURIComponent(SZTZ_SERVICE)}`;
   let ticketResponse: HttpResult;
   try {
-    ticketResponse = await request({ url: serviceLogin, responseType: 'text', disableRedirects: true });
+    ticketResponse = await request({ url: serviceLogin, responseType: 'text', disableRedirects: true, useCookieJar: true });
   } catch (error) {
     if (campusTransport === 'direct' && allowWebVpnRefresh && error instanceof CampusError && error.code === 'network' && /WebVPN/.test(error.message)) {
       await activateWebVpn();
@@ -864,7 +873,7 @@ async function loginSztz(allowWebVpnRefresh = true) {
     throw error;
   }
   if (isWebVpnLoginPage(responseText(ticketResponse))) {
-    if (campusTransport === 'webvpn' && allowWebVpnRefresh) {
+    if (allowWebVpnRefresh) {
       await activateWebVpn();
       return loginSztz(false);
     }
@@ -875,7 +884,7 @@ async function loginSztz(allowWebVpnRefresh = true) {
   const callback = routedUrl(location, ticketResponse.url);
   const parsed = new URL(callback);
   if (isWebVpnLoginUrl(callback)) {
-    if (campusTransport === 'webvpn' && allowWebVpnRefresh) {
+    if (allowWebVpnRefresh) {
       await activateWebVpn();
       return loginSztz(false);
     }
@@ -891,16 +900,16 @@ async function loginSztz(allowWebVpnRefresh = true) {
   // CAS service callbacks commonly set the target SESSION cookie on a 302
   // and then redirect to the SPA shell. Follow only trusted campus/WebVPN
   // redirects so the cookie and the final authenticated page are both seen.
-  const callbackResponse = await followGet(callback, { Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', Referer: ticketResponse.url }, 'text');
+  const callbackResponse = await followGet(callback, { Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Cache-Control': 'no-cache', Pragma: 'no-cache', Referer: ticketResponse.url }, 'text', true);
   if (isWebVpnLoginPage(responseText(callbackResponse))) {
-    if (campusTransport === 'webvpn' && allowWebVpnRefresh) {
+    if (allowWebVpnRefresh) {
       await activateWebVpn();
       return loginSztz(false);
     }
     throw new CampusError('素质拓展平台没有建立登录会话。', 'authentication');
   }
   if (callbackResponse.status !== 200 || (campusTransport === 'direct' && !activeCookieJar?.has('SESSION', campusCookieHost('sztz.zju.edu.cn')))) {
-    if (campusTransport === 'webvpn' && allowWebVpnRefresh) {
+    if (allowWebVpnRefresh) {
       await activateWebVpn();
       return loginSztz(false);
     }
@@ -915,12 +924,15 @@ async function loginSztz(allowWebVpnRefresh = true) {
       'Content-Type': 'application/x-www-form-urlencoded',
       Origin: 'https://sztz.zju.edu.cn',
       Referer: SZTZ_SERVICE,
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache',
     },
     responseType: 'text',
     disableRedirects: true,
+    useCookieJar: true,
   });
   if (contextResponse.status !== 200 || !isAuthenticatedSztzContext(responseText(contextResponse))) {
-    if (campusTransport === 'webvpn' && allowWebVpnRefresh) {
+    if (allowWebVpnRefresh) {
       await activateWebVpn();
       return loginSztz(false);
     }
@@ -991,7 +1003,11 @@ async function ensurePracticeSession(): Promise<void> {
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
-      await loginSztz();
+      // Keep the retry policy here, like Pcelechron's outer auto-relogin
+      // wrapper. The first pass must not recursively refresh the session;
+      // otherwise one failed ctx response can trigger several overlapping
+      // WebVPN logins and overwrite the same CookieJar.
+      await loginSztz(false);
       return;
     } catch (error) {
       lastError = error;
@@ -999,11 +1015,7 @@ async function ensurePracticeSession(): Promise<void> {
       // Rebuild the shared WebVPN/CAS session once. Retrying with the same
       // stale native cookie store is what caused the intermittent partial
       // sports/practice module failure.
-      if (campusTransport === 'webvpn') {
-        await activateWebVpn();
-      } else {
-        await waitForNativeCookieSync();
-      }
+      await activateWebVpn();
     }
   }
   throw lastError instanceof Error ? lastError : new CampusError('素质拓展平台没有建立登录会话。', 'authentication');
@@ -1015,7 +1027,7 @@ async function readPractice(): Promise<{ summary: CampusPracticeSummary | null; 
   const projects: CampusPracticeProject[] = [];
   const warnings: string[] = [];
   try {
-    const response = await request({ url: SZTZ_SUMMARY, responseType: 'text', headers: { Accept: 'application/json, text/plain, */*', Referer: SZTZ_SERVICE }, disableRedirects: true });
+    const response = await request({ url: SZTZ_SUMMARY, responseType: 'text', headers: { Accept: 'application/json, text/plain, */*', 'Cache-Control': 'no-cache', Pragma: 'no-cache', Referer: SZTZ_SERVICE }, disableRedirects: true, useCookieJar: true });
     if (response.status !== 200) throw new CampusError(`素质拓展汇总请求失败（HTTP ${response.status}）。`, 'response');
     const payload = parseJson(response, '素质拓展汇总');
     const root = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload as Record<string, unknown> : {};
@@ -1027,7 +1039,7 @@ async function readPractice(): Promise<{ summary: CampusPracticeSummary | null; 
     warnings.push(`素质拓展汇总：${error instanceof Error ? error.message : '读取失败'}`);
   }
   try {
-    const response = await request({ url: SZTZ_PROJECTS, responseType: 'text', headers: { Accept: 'application/json, text/html, */*', Referer: SZTZ_SERVICE }, disableRedirects: true });
+    const response = await request({ url: SZTZ_PROJECTS, responseType: 'text', headers: { Accept: 'application/json, text/html, */*', 'Cache-Control': 'no-cache', Pragma: 'no-cache', Referer: SZTZ_SERVICE }, disableRedirects: true, useCookieJar: true });
     if (response.status !== 200) throw new CampusError(`素质拓展项目请求失败（HTTP ${response.status}）。`, 'response');
     const payload = parseJson(response, '素质拓展项目');
     const root = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload as Record<string, unknown> : {};
