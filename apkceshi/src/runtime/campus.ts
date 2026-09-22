@@ -576,6 +576,12 @@ function webVpnPageHint(body: string): string {
   return [title ? `标题：${title.slice(0, 40)}` : '', markers.length ? `特征：${markers.join('、')}` : '特征：未识别'].filter(Boolean).join('；');
 }
 
+function isWebVpnResourcePortalPage(body: string): boolean {
+  const title = body.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
+  return /WebVPN\s*[-—–]\s*资源站点/i.test(title)
+    || /WebVPN[^<]{0,80}资源站点/i.test(body);
+}
+
 function webVpnPasswordKey(body: string): string {
   const embeddedKey = body.match(/encrypt\(data\[i\]\.value,\s*["']([^"']+)["']/i)?.[1]?.trim();
   return embeddedKey && aesjs.utils.utf8.toBytes(embeddedKey).length === 16
@@ -606,6 +612,7 @@ async function loginWebVpn(studentId: string, password: string): Promise<void> {
   let loginPage: HttpResult | null = null;
   let body = '';
   let loginPageHasForm = false;
+  let loginPageIsPortal = false;
   // The Android WebView cookie bridge writes/clears cookies asynchronously.
   // Retry the two known gateway entry points after a short gap so a stale
   // session cannot make the fresh form appear without its session-bound CSRF.
@@ -620,13 +627,19 @@ async function loginWebVpn(studentId: string, password: string): Promise<void> {
       loginPage = candidate;
       body = candidateBody;
       loginPageHasForm = candidate.status === 200 && isWebVpnLoginPage(candidateBody);
-      if (loginPageHasForm) break;
+      loginPageIsPortal = candidate.status === 200 && isWebVpnResourcePortalPage(candidateBody);
+      if (loginPageHasForm || loginPageIsPortal) break;
     }
     if (loginPageHasForm) break;
     if (attempt < 2) await waitForNativeCookieSync();
   }
   if (!loginPage) throw new CampusError('WebVPN 登录页没有返回响应。', 'network');
   if (loginPage.status !== 200) throw new CampusError(`WebVPN 登录页请求失败（HTTP ${loginPage.status}）。`, 'network');
+  // A previously authenticated WebVPN session opens the resource portal
+  // instead of rendering /login. It is already sufficient for the following
+  // CAS service requests; forcing a second form login turns a valid session
+  // into the misleading "login form not recognized" error.
+  if (loginPageIsPortal) return;
   const csrf = hiddenInput(body, '_csrf');
   if (!isWebVpnLoginPage(body)) {
     const contentType = headerValue(loginPage.headers, 'content-type') || '未知';
@@ -851,7 +864,10 @@ async function loginSztz(allowWebVpnRefresh = true) {
   if ((!validDirectCallback && !validWebVpnCallback) || (campusTransport === 'direct' && !validDirectCallback)) {
     throw new CampusError('素质拓展平台返回了不受信任的认证回调。', 'authentication');
   }
-  const callbackResponse = await request({ url: callback, responseType: 'text', disableRedirects: true, allowWebVpn: campusTransport === 'webvpn' });
+  // CAS service callbacks commonly set the target SESSION cookie on a 302
+  // and then redirect to the SPA shell. Follow only trusted campus/WebVPN
+  // redirects so the cookie and the final authenticated page are both seen.
+  const callbackResponse = await followGet(callback, { Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', Referer: ticketResponse.url }, 'text');
   if (isWebVpnLoginPage(responseText(callbackResponse))) {
     if (campusTransport === 'webvpn' && allowWebVpnRefresh) {
       await activateWebVpn();
