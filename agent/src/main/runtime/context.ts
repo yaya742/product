@@ -36,6 +36,43 @@ function lexical(query: string, text: string) {
   for (const g of a) if (b.has(g)) score++;
   return score;
 }
+
+function conversationContinuity(
+  currentText: string,
+  history: Array<{ id: string; role: 'user' | 'assistant'; content: string; createdAt: string; hasImage?: boolean }>,
+) {
+  const current = currentText.trim();
+  const previousUser = [...history].reverse().find((item) => item.role === 'user');
+  const previousAssistant = [...history].reverse().find((item) => item.role === 'assistant');
+  const cueMatches = [
+    ...(current.match(/最新|同步|刷新|刚才|刚刚|上一轮|上一条|前面|之前|继续|还是|那(?:个|份|门|项|张|条)|它|这(?:个|份|门|项)/gu) || []),
+  ];
+  const shortFollowUp = Array.from(current).length <= 80 && cueMatches.length > 0;
+  const priorText = [previousUser?.content, previousAssistant?.content].filter(Boolean).join('\n');
+  const campusTopic = /课表|课程表|课程|上课|考试|作业|教务|校园|学校|浙大|成绩|校历|学习资料/iu.test(priorText);
+  const latestRequested = /最新|同步|刷新|刚更新/iu.test(current);
+  const usable = Boolean(history.length && shortFollowUp);
+  return {
+    status: usable ? 'available' : history.length ? 'background_only' : 'none',
+    cues: [...new Set(cueMatches)].slice(0, 8),
+    shortFollowUp,
+    latestRequested,
+    priorUser: previousUser
+      ? { id: previousUser.id, text: previousUser.content.slice(0, 1800), hasImage: Boolean(previousUser.hasImage), createdAt: previousUser.createdAt }
+      : undefined,
+    priorAssistant: previousAssistant
+      ? { id: previousAssistant.id, text: previousAssistant.content.slice(0, 2400), createdAt: previousAssistant.createdAt }
+      : undefined,
+    instruction: usable
+      ? latestRequested && campusTopic
+        ? '这是对上一轮校园/学习资料的短追问。“最新/同步/刷新”应沿用上一轮同一资料领域，并优先调用对应校园读取的 refresh 模式；不要要求用户重复上一轮主题。若刷新不可用，说明真实缺口和已有资料的更新时间。'
+        : '这是对上一轮同一对话的短追问。优先沿用上一轮明确主题和已给出的资料，不要把短句当成全新、无关请求；若指代仍不唯一，再只询问缺少的那一项。'
+      : history.length
+        ? '这些是同一对话的较早背景，当前原话优先；只有当前短句明确指向它们时才沿用，不要把背景自动当成当前事实。'
+        : '没有可用的同一对话前情，不要声称记得未提供的内容。',
+    campusTopic,
+  };
+}
 export class ContextCompiler {
   private providerMetadata?: ProviderMetadata;
   constructor(
@@ -66,7 +103,8 @@ export class ContextCompiler {
     const currentMatter = sessionId && canReadHistory && !ingress.requiresReadPurpose && contract.enhancements?.currentMatter !== false && scope.sources.includes('work:self') ? this.repo.currentMatter(contract.scope, sessionId) : null;
     const discovered = this.broker.discover(contract.scope);
     const capabilityDirectory = { items: discovered.slice(0, 24).map(item => ({ name: item.name, sourceId: item.sourceId, displayName: item.displayName, description: item.description, effect: item.effect, connected: item.connection.connected, connection: item.connection, executableInThisTurn: item.connection.connected && (item.effect === 'read' || contract.actionMode !== 'respond') })), more: discovered.length > 24, meaning: '仅是许可范围内的非敏感能力说明，没有读取资料或执行动作；存在、已连接、本轮允许执行、实际完成是不同事实。用look_up的capability目录继续搜索、分页或获取输入schema。' };
-    const text = canonical({ current: ingress.authoredText, attachments: currentEvents.filter(e => e.speaker === 'external'), history, currentMatter, capabilityDirectory });
+    const continuity = conversationContinuity(ingress.authoredText, history);
+    const text = canonical({ current: ingress.authoredText, attachments: currentEvents.filter(e => e.speaker === 'external'), history, continuity, currentMatter, capabilityDirectory });
     const estimatedTokens = Math.ceil(Array.from(text).length / 1.4), readBytes = Buffer.byteLength(text);
     const blocked = estimatedTokens > contract.budget.maxTokens || readBytes > contract.budget.maxReadBytes;
     const evidenceIds = [...new Set([...currentEvents.map(e => e.id), ...history.filter(m => m.role === 'user').map(m => m.id)])];
@@ -88,7 +126,7 @@ export class ContextCompiler {
       data: {
         scope: { subject: scope.subjectId, world: scope.worldId, purpose: contract.purpose, audience: scope.audience, memoryMode: contract.memoryMode, retention: contract.retention },
         time: { now: contract.now, timeZone: contract.timeZone },
-        history, ...(ingress.threadContextAllowed ? { historyUse: '仅作为同一对话里用户已提供的背景理解当前假设；不代表假设已在现实发生，也未读取本人长期画像或其他会话。' } : {}), currentSources: currentEvents.map(e => ({ id: e.id, sourceId: e.sourceId, authority: e.authority, text: e.text })),
+        history, continuity, ...(ingress.threadContextAllowed ? { historyUse: '仅作为同一对话里用户已提供的背景理解当前假设；不代表假设已在现实发生，也未读取本人长期画像或其他会话。' } : {}), currentSources: currentEvents.map(e => ({ id: e.id, sourceId: e.sourceId, authority: e.authority, text: e.text })),
         currentMatter, capabilityDirectory,
         currentFacts: {}, correctionOverlay: [], workState: [], needs: [],
         coverage: receipt.coverage,

@@ -106,6 +106,48 @@ test('本地重启可恢复记录，中文短词与全文索引均能检索，�
   assert.equal(store.messages(id).length, 0);
   store.close();
 });
+test('重启后短追问保留同会话主题，并标注上一轮图片不能凭空恢复', async () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'zaichang-continuity-'));
+  const file = path.join(dir, 'store.sqlite');
+  let store = new Store(file);
+  const sessionId = store.session(undefined, '我的课表');
+  store.putMessage({
+    ...message(sessionId, '这是我的课表，请帮我看看。'),
+    image: { kind: 'image', name: '课表.jpg', mimeType: 'image/jpeg', dataUrl: 'data:image/jpeg;base64,eA==', width: 1, height: 1 },
+  });
+  store.putMessage({
+    ...message(sessionId, '我先按这份课表整理当前安排。', 'assistant'),
+    contextReceipt: {
+      id: 'receipt-continuity', runId: 'run-continuity', contractRevision: 1,
+      policyRevision: store.kernel.policyRevision, privacyEpoch: store.kernel.epoch,
+      watermarks: store.kernel.watermarks(), providedEvidenceIds: [], providedSourceIds: ['history:self'],
+      providedObjectVersions: [], needResults: [], excludedReasonCounts: {}, providerVersion: 'test',
+      toolAttempts: [], coverage: 'conditional', budget: { estimatedTokens: 1, readBytes: 1 },
+    },
+  });
+  store.close();
+  store = new Store(file);
+  const signal = new AbortController().signal;
+  const run = store.runtime.begin('最新的呢', 'current-continuity', sessionId, signal);
+  const pack = await store.runtime.context.compile(run.ingress, run.events, signal, [], false, sessionId);
+  const continuity = pack.data.continuity as {
+    status: string;
+    latestRequested: boolean;
+    campusTopic: boolean;
+    priorUser?: { text: string; hasImage: boolean };
+  };
+  const history = pack.data.history as Array<{ content: string; hasImage?: boolean }>;
+  assert.equal(continuity.status, 'available');
+  assert.equal(continuity.latestRequested, true);
+  assert.equal(continuity.campusTopic, true);
+  assert.equal(continuity.priorUser?.text, '这是我的课表，请帮我看看。');
+  assert.equal(continuity.priorUser?.hasImage, true);
+  assert.ok(history.some((item) => item.content.includes('这是我的课表')));
+  const coldMessages = (new Harness(store, () => '', () => {}) as any).coldConversationHistory(pack) as Array<{ role: string; content: string }>;
+  assert.equal(coldMessages[0].role, 'system');
+  assert.match(coldMessages.find((item) => item.content.includes('这是我的课表'))?.content || '', /不能据此恢复图片像素/);
+  store.close();
+});
 test('崩溃恢复把未完成步骤标成中断', () => {
   const file = path.join(mkdtempSync(path.join(tmpdir(), 'zaichang-crash-')), 'db');
   let store = new Store(file);
