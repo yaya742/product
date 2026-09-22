@@ -52,6 +52,7 @@ const WEBVPN_CONFIRM_LOGIN = `${WEBVPN_ROOT}/do-confirm-login`;
 // even though the generated WebVPN URL still looks valid.
 const WEBVPN_ROUTE_CIPHER_KEY = 'wrdvpnisthebest!';
 const WEBVPN_PASSWORD_CIPHER_KEY = 'wrdvpnisawesome!';
+const NATIVE_COOKIE_SYNC_DELAY_MS = 450;
 
 const TRUSTED_HOSTS = new Set([
   'zjuam.zju.edu.cn',
@@ -196,6 +197,10 @@ function asText(value: unknown): string {
   if (typeof value === 'string') return value;
   if (value === null || value === undefined) return '';
   try { return JSON.stringify(value); } catch { return ''; }
+}
+
+function waitForNativeCookieSync(): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, NATIVE_COOKIE_SYNC_DELAY_MS));
 }
 
 function responseText(result: HttpResult): string {
@@ -535,15 +540,30 @@ async function loginWebVpn(studentId: string, password: string): Promise<void> {
   // The current WebVPN gateway redirects its root endpoint to /login before
   // rendering the form. Follow only the allowlisted WebVPN redirect so the
   // native flow does not mistake the normal 302 for a failed login page.
-  const noCacheHeaders = { 'Cache-Control': 'no-cache, no-store', Pragma: 'no-cache' };
-  let loginPage = await followGet(`${WEBVPN_ROOT}/?zaichang=${Date.now()}`, noCacheHeaders);
-  let body = responseText(loginPage);
-  // If the gateway returned a cached/interstitial page, request the form
-  // directly with a fresh query so the CSRF token belongs to this session.
-  if (!hiddenInput(body, '_csrf')) {
-    loginPage = await followGet(`${WEBVPN_ROOT}/login?zaichang=${Date.now()}`, noCacheHeaders);
-    body = responseText(loginPage);
+  const noCacheHeaders = {
+    Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Cache-Control': 'no-cache, no-store',
+    Pragma: 'no-cache',
+  };
+  let loginPage: HttpResult | null = null;
+  let body = '';
+  let loginPageHasCsrf = false;
+  // The Android WebView cookie bridge writes/clears cookies asynchronously.
+  // Retry the two known gateway entry points after a short gap so a stale
+  // session cannot make the fresh form appear without its session-bound CSRF.
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    for (const entry of ['/', '/login']) {
+      const candidate = await followGet(`${WEBVPN_ROOT}${entry}?zaichang=${Date.now()}-${attempt}`, noCacheHeaders);
+      const candidateBody = responseText(candidate);
+      loginPage = candidate;
+      body = candidateBody;
+      loginPageHasCsrf = candidate.status === 200 && Boolean(hiddenInput(candidateBody, '_csrf'));
+      if (loginPageHasCsrf) break;
+    }
+    if (loginPageHasCsrf) break;
+    if (attempt < 2) await waitForNativeCookieSync();
   }
+  if (!loginPage) throw new CampusError('WebVPN 登录页没有返回响应。', 'network');
   if (loginPage.status !== 200) throw new CampusError(`WebVPN 登录页请求失败（HTTP ${loginPage.status}）。`, 'network');
   const csrf = hiddenInput(body, '_csrf');
   if (!csrf) {
@@ -621,7 +641,12 @@ async function clearCampusCookies() {
     CapacitorCookies.clearCookies({ url: 'https://courses.zju.edu.cn' }),
     CapacitorCookies.clearCookies({ url: 'https://sztz.zju.edu.cn' }),
     CapacitorCookies.clearCookies({ url: WEBVPN_ROOT }),
+    CapacitorCookies.clearCookies({ url: `${WEBVPN_ROOT}/login` }),
   ]);
+  // Capacitor's Android cookie plugin resolves after scheduling WebView
+  // CookieManager writes, not after those writes are visible to HttpURLConnection.
+  // Let the native store settle before the first WebVPN request.
+  await waitForNativeCookieSync();
 }
 
 async function authenticate(studentId: string, password: string) {
