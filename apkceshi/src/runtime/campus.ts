@@ -1,4 +1,5 @@
 import { Capacitor, CapacitorCookies, CapacitorHttp } from '@capacitor/core';
+import aesjs from 'aes-js';
 import { isMobileVmOffline } from './mobileVm';
 import type {
   CampusCourse,
@@ -43,6 +44,9 @@ const CALENDAR_LIST_URL = 'https://ugrs.zju.edu.cn/28218/list1.htm';
 const CALENDAR_LIST_FALLBACK_URL = 'https://ugrs.zju.edu.cn/28218/list.htm';
 const PERSON_APP_KEY = '50634610756a4c0e82d5a13bb692e257';
 const PERSON_SIGN_SECRET = '1f11192bd9d14a09b29fc59d556e24e3';
+const WEBVPN_ROOT = 'https://webvpn.zju.edu.cn';
+const WEBVPN_DO_LOGIN = `${WEBVPN_ROOT}/do-login`;
+const WEBVPN_CIPHER_KEY = 'wrdvpnisthebest!';
 
 const TRUSTED_HOSTS = new Set([
   'zjuam.zju.edu.cn',
@@ -55,6 +59,7 @@ const TRUSTED_HOSTS = new Set([
   'ugrs.zju.edu.cn',
 ]);
 const WEBVPN_HOST = 'webvpn.zju.edu.cn';
+type CampusTransport = 'direct' | 'webvpn';
 
 export type CampusErrorCode = 'native_required' | 'credentials' | 'network' | 'authentication' | 'captcha' | 'response';
 
@@ -105,6 +110,7 @@ class CookieJar {
 
       let domain = source.hostname.toLowerCase();
       let path = defaultCookiePath(source.pathname);
+      let pathSpecified = false;
       let secure = false;
       let expiresAt: number | undefined;
       let remove = !value;
@@ -113,7 +119,10 @@ class CookieJar {
         const attribute = (attributeSeparator >= 0 ? segment.slice(0, attributeSeparator) : segment).trim().toLowerCase();
         const attributeValue = attributeSeparator >= 0 ? segment.slice(attributeSeparator + 1).trim() : '';
         if (attribute === 'domain' && attributeValue) domain = attributeValue.replace(/^\./, '').toLowerCase();
-        if (attribute === 'path' && attributeValue.startsWith('/')) path = attributeValue;
+        if (attribute === 'path' && attributeValue.startsWith('/')) {
+          path = attributeValue;
+          pathSpecified = true;
+        }
         if (attribute === 'secure') secure = true;
         if (attribute === 'max-age') {
           const seconds = Number(attributeValue);
@@ -131,6 +140,11 @@ class CookieJar {
         }
       }
 
+      if (source.hostname.toLowerCase() === WEBVPN_HOST) {
+        if (!hostMatches(source.hostname, domain)) domain = source.hostname;
+        if (!pathSpecified) path = '/';
+      }
+
       const key = `${name}\u0000${domain}\u0000${path}`;
       if (remove) this.cookies.delete(key);
       else this.cookies.set(key, { name, value, domain, path, secure, expiresAt });
@@ -143,6 +157,11 @@ class CookieJar {
       if (cookie.name !== name || isExpired(cookie)) return false;
       return !normalizedSuffix || hostMatches(cookie.domain, normalizedSuffix);
     });
+  }
+
+  hasHost(hostSuffix: string): boolean {
+    const normalizedSuffix = hostSuffix.replace(/^\./, '').toLowerCase();
+    return [...this.cookies.values()].some((cookie) => !isExpired(cookie) && hostMatches(cookie.domain, normalizedSuffix));
   }
 
   headerFor(targetUrl: string): string {
@@ -158,6 +177,8 @@ class CookieJar {
 
 let activeCookieJar: CookieJar | null = null;
 let zdbkSessionReady = false;
+let campusTransport: CampusTransport = 'direct';
+let activeCampusCredentials: { studentId: string; password: string } | null = null;
 
 function assertNative() {
   if (!Capacitor.isNativePlatform()) {
@@ -208,17 +229,69 @@ function pathMatches(pathname: string, cookiePath: string): boolean {
   return pathname === cookiePath || pathname.startsWith(`${cookiePath}/`);
 }
 
-function trustedUrl(value: string, source?: string): string {
+function isWebVpnProxyPath(pathname: string): boolean {
+  const parts = pathname.split('/').filter(Boolean);
+  return parts.length >= 2 && /^(https?|http)$/.test(parts[0]) && /^[0-9a-f]{32,}(?:-\d+)?$/i.test(parts[1]);
+}
+
+function trustedUrl(value: string, source?: string, options: { allowWebVpn?: boolean } = {}): string {
   let parsed: URL;
   try { parsed = new URL(value, source); } catch { throw new CampusError('校园系统返回了无法识别的跳转地址。', 'response'); }
   const hostname = parsed.hostname.toLowerCase();
   if (parsed.protocol === 'https:' && hostname === WEBVPN_HOST) {
-    throw new CampusError('教务网已跳转到浙大 WebVPN，请在网页模式中登录后访问；手机直连接口无法复用该浏览器会话。', 'network');
+    const allowedPath = parsed.pathname === '/'
+      || parsed.pathname === '/do-login'
+      || parsed.pathname === '/do-confirm-login'
+      || parsed.pathname === '/do-second-login'
+      || parsed.pathname.startsWith('/captcha/')
+      || isWebVpnProxyPath(parsed.pathname);
+    if (options.allowWebVpn && allowedPath) return parsed.toString();
+    throw new CampusError('教务网已跳转到浙大 WebVPN，正在尝试应用内自动登录。', 'network');
   }
   if (parsed.protocol !== 'https:' || !TRUSTED_HOSTS.has(hostname)) {
     throw new CampusError('校园系统返回了不受信任的跳转地址，已停止连接。', 'response');
   }
   return parsed.toString();
+}
+
+function webVpnEncrypt(value: string): string {
+  const key = aesjs.utils.utf8.toBytes(WEBVPN_CIPHER_KEY);
+  const iv = aesjs.utils.utf8.toBytes(WEBVPN_CIPHER_KEY);
+  const bytes = Array.from(aesjs.utils.utf8.toBytes(value));
+  const padded = bytes.length % 16 === 0 ? bytes : bytes.concat(new Array(16 - (bytes.length % 16)).fill(0));
+  const cipher = new aesjs.ModeOfOperation.cfb(key, iv, 16).encrypt(padded).slice(0, bytes.length);
+  return aesjs.utils.hex.fromBytes(iv) + aesjs.utils.hex.fromBytes(cipher);
+}
+
+function webVpnUrl(value: string): string {
+  let target: URL;
+  try { target = new URL(value); } catch { throw new CampusError('无法生成 WebVPN 访问地址。', 'response'); }
+  const hostname = target.hostname.toLowerCase();
+  if (!/^https?:$/.test(target.protocol) || !TRUSTED_HOSTS.has(hostname)) {
+    throw new CampusError('校园系统返回了不受信任的 WebVPN 目标地址。', 'response');
+  }
+  const protocol = target.protocol.slice(0, -1);
+  const port = target.port ? `-${target.port}` : '';
+  const encryptedHost = `${webVpnEncrypt(hostname)}${port}`;
+  const path = `${target.pathname.replace(/^\/+/, '')}${target.search}${target.hash}`;
+  return `${WEBVPN_ROOT}/${protocol}/${encryptedHost}${path ? `/${path}` : ''}`;
+}
+
+function shouldProxyHost(hostname: string): boolean {
+  return TRUSTED_HOSTS.has(hostname.toLowerCase());
+}
+
+function campusCookieHost(hostname: string): string {
+  return campusTransport === 'webvpn' ? WEBVPN_HOST : hostname;
+}
+
+function routedUrl(value: string, source?: string): string {
+  let resolved: URL;
+  try { resolved = new URL(value, source); } catch { throw new CampusError('校园系统返回了无法识别的跳转地址。', 'response'); }
+  if (campusTransport === 'webvpn' && resolved.hostname.toLowerCase() !== WEBVPN_HOST && shouldProxyHost(resolved.hostname)) {
+    return webVpnUrl(resolved.toString());
+  }
+  return resolved.toString();
 }
 
 async function request(options: {
@@ -228,16 +301,20 @@ async function request(options: {
   headers?: Record<string, string>;
   responseType?: 'text' | 'json';
   disableRedirects?: boolean;
+  allowWebVpn?: boolean;
 }): Promise<HttpResult> {
   if (isMobileVmOffline()) throw new CampusError('虚拟机已模拟断网，校园请求未发送。', 'network');
   assertNative();
-  const url = trustedUrl(options.url);
+  const url = trustedUrl(routedUrl(options.url), undefined, { allowWebVpn: options.allowWebVpn || campusTransport === 'webvpn' });
   const cookie = activeCookieJar?.headerFor(url);
   try {
+    const requestHeaders: Record<string, string> = { ...options.headers };
+    const referer = headerValue(requestHeaders, 'referer');
+    if (referer) requestHeaders.Referer = routedUrl(referer);
     const headers: Record<string, string> = {
       'User-Agent': 'Zaichang-ZJU-Connector/0.2 (Android; read-only)',
       'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.7',
-      ...options.headers,
+      ...requestHeaders,
     };
     if (cookie) headers.Cookie = cookie;
     const result = await CapacitorHttp.request({
@@ -260,13 +337,13 @@ async function request(options: {
 }
 
 async function followGet(startUrl: string): Promise<HttpResult> {
-  let current = trustedUrl(startUrl);
+  let current = routedUrl(startUrl);
   for (let attempt = 0; attempt < 10; attempt += 1) {
-    const result = await request({ url: current, responseType: 'text', disableRedirects: true });
+    const result = await request({ url: current, responseType: 'text', disableRedirects: true, allowWebVpn: campusTransport === 'webvpn' });
     if (result.status < 300 || result.status >= 400) return result;
     const location = headerValue(result.headers, 'location');
     if (!location) throw new CampusError('校园系统跳转缺少目标地址。', 'response');
-    current = trustedUrl(location, current);
+    current = routedUrl(location, current);
   }
   throw new CampusError('校园系统跳转次数过多，登录流程已停止。', 'response');
 }
@@ -318,6 +395,73 @@ function encryptPassword(password: string, modulusHex: string, exponentHex: stri
   return encrypted.toString(16).padStart(width, '0');
 }
 
+function hiddenInput(body: string, name: string): string {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const patterns = [
+    new RegExp(`<input[^>]+name\\s*=\\s*["']${escaped}["'][^>]*value\\s*=\\s*["']([^"']*)`, 'i'),
+    new RegExp(`<input[^>]+value\\s*=\\s*["']([^"']*)["'][^>]*name\\s*=\\s*["']${escaped}["']`, 'i'),
+  ];
+  for (const pattern of patterns) {
+    const value = body.match(pattern)?.[1];
+    if (value !== undefined) return decodeHtml(value);
+  }
+  return '';
+}
+
+function encryptWebVpnPassword(password: string): string {
+  const originalLength = password.length;
+  if (!originalLength) throw new CampusError('校园密码不能为空。', 'credentials');
+  const padded = originalLength % 16 === 0 ? password : password.padEnd(originalLength + (16 - originalLength % 16), '0');
+  const key = aesjs.utils.utf8.toBytes(WEBVPN_CIPHER_KEY);
+  const iv = aesjs.utils.utf8.toBytes(WEBVPN_CIPHER_KEY);
+  const plaintext = aesjs.utils.utf8.toBytes(padded);
+  const encrypted = new aesjs.ModeOfOperation.cfb(key, iv, 16).encrypt(plaintext).slice(0, originalLength);
+  return aesjs.utils.hex.fromBytes(iv) + aesjs.utils.hex.fromBytes(encrypted);
+}
+
+async function loginWebVpn(studentId: string, password: string): Promise<void> {
+  const loginPage = await request({ url: WEBVPN_ROOT, responseType: 'text', disableRedirects: true, allowWebVpn: true });
+  const body = responseText(loginPage);
+  if (loginPage.status !== 200) throw new CampusError(`WebVPN 登录页请求失败（HTTP ${loginPage.status}）。`, 'network');
+  const csrf = hiddenInput(body, '_csrf');
+  if (!csrf) throw new CampusError('WebVPN 登录页缺少会话校验信息，请稍后重试。', 'authentication');
+  const result = await request({
+    url: WEBVPN_DO_LOGIN,
+    method: 'POST',
+    data: {
+      _csrf: csrf,
+      auth_type: hiddenInput(body, 'auth_type') || 'local',
+      username: studentId,
+      password: encryptWebVpnPassword(password),
+      sms_code: '',
+      captcha: '',
+      needCaptcha: hiddenInput(body, 'needCaptcha') || 'false',
+      captcha_id: hiddenInput(body, 'captcha_id'),
+    },
+    headers: {
+      Accept: 'application/json, text/plain, */*',
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      Origin: WEBVPN_ROOT,
+      Referer: `${WEBVPN_ROOT}/`,
+    },
+    responseType: 'text',
+    disableRedirects: true,
+    allowWebVpn: true,
+  });
+  const payload = parseJson(result, 'WebVPN 登录');
+  const record = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload as Record<string, unknown> : {};
+  if (record.success === true) return;
+  const code = String(record.error || '').toUpperCase();
+  const message = field(record, ['message'], 'WebVPN 登录未完成。');
+  if (/CAPTCHA|SMS|TWO_STEP|SECOND/.test(code) || /验证码|二次认证|短信/.test(message)) {
+    throw new CampusError(`WebVPN 需要人工安全校验：${message}`, 'captcha');
+  }
+  if (/INVALID_ACCOUNT|PASSWORD|ACCOUNT|AUTH/.test(code)) {
+    throw new CampusError(`WebVPN 登录失败：${message}`, 'authentication');
+  }
+  throw new CampusError(message, 'authentication');
+}
+
 async function clearCampusCookies() {
   activeCookieJar?.clear();
   zdbkSessionReady = false;
@@ -327,6 +471,7 @@ async function clearCampusCookies() {
     CapacitorCookies.clearCookies({ url: 'https://zdbk.zju.edu.cn' }),
     CapacitorCookies.clearCookies({ url: 'https://courses.zju.edu.cn' }),
     CapacitorCookies.clearCookies({ url: 'https://sztz.zju.edu.cn' }),
+    CapacitorCookies.clearCookies({ url: WEBVPN_ROOT }),
   ]);
 }
 
@@ -362,19 +507,43 @@ async function authenticate(studentId: string, password: string) {
   if (body.includes('验证码') || body.toLowerCase().includes('captcha')) {
     throw new CampusError('统一身份认证要求验证码，手机端暂不绕过安全校验。', 'captcha');
   }
-  if (loginResult.status >= 400 || body.includes('name="execution"') || !activeCookieJar?.has('iPlanetDirectoryPro', 'zju.edu.cn')) {
+  if (loginResult.status >= 400 || body.includes('name="execution"') || (campusTransport === 'direct' && !activeCookieJar?.has('iPlanetDirectoryPro', 'zju.edu.cn'))) {
     throw new CampusError('统一身份认证没有完成，请检查学号、密码或账号状态。', 'authentication');
   }
 }
 
+async function activateWebVpn(): Promise<void> {
+  const credentials = activeCampusCredentials;
+  if (!credentials) throw new CampusError('缺少校园账号，无法自动登录 WebVPN。', 'credentials');
+  await clearCampusCookies();
+  campusTransport = 'webvpn';
+  await loginWebVpn(credentials.studentId, credentials.password);
+  await authenticate(credentials.studentId, credentials.password);
+}
+
 async function loginZdbk() {
-  if (zdbkSessionReady && activeCookieJar?.has('JSESSIONID', 'zdbk.zju.edu.cn')) return;
-  const result = await followGet(casServiceLoginUrl());
+  if (zdbkSessionReady && activeCookieJar?.has('JSESSIONID', campusCookieHost('zdbk.zju.edu.cn'))) return;
+  let result: HttpResult;
+  try {
+    result = await followGet(casServiceLoginUrl());
+  } catch (error) {
+    if (campusTransport === 'direct' && error instanceof CampusError && error.code === 'network' && /WebVPN/.test(error.message)) {
+      await activateWebVpn();
+      return loginZdbk();
+    }
+    throw error;
+  }
   const body = responseText(result);
-  if (isCampusNetworkRestriction(body)) throw new CampusError('教务网提示需要校内网络；请先开启浙大 VPN 或 WebVPN 后再读取校园信息。', 'network');
+  if (isCampusNetworkRestriction(body)) {
+    if (campusTransport === 'direct') {
+      await activateWebVpn();
+      return loginZdbk();
+    }
+    throw new CampusError('WebVPN 已登录，但教务网仍返回了网络限制。', 'network');
+  }
   if (isAuthenticationPage(body)) throw new CampusError('教务网没有建立登录会话，请重新读取校园信息。', 'authentication');
   if (result.status < 200 || result.status >= 300) throw new CampusError(`教务网登录失败（HTTP ${result.status}）。`, 'authentication');
-  if (!activeCookieJar?.has('JSESSIONID', 'zdbk.zju.edu.cn') || !activeCookieJar.has('route', 'zdbk.zju.edu.cn')) {
+  if (!activeCookieJar?.has('JSESSIONID', campusCookieHost('zdbk.zju.edu.cn')) || !activeCookieJar.has('route', campusCookieHost('zdbk.zju.edu.cn'))) {
     throw new CampusError('教务网登录会话不完整，请重新读取校园信息。', 'authentication');
   }
   zdbkSessionReady = true;
@@ -403,13 +572,17 @@ async function loginSztz() {
   const ticketResponse = await request({ url: serviceLogin, responseType: 'text', disableRedirects: true });
   const location = headerValue(ticketResponse.headers, 'location');
   if (ticketResponse.status < 300 || ticketResponse.status >= 400 || !location) throw new CampusError('素质拓展平台没有返回有效的统一认证跳转。', 'authentication');
-  const callback = trustedUrl(location, ticketResponse.url);
+  const callback = routedUrl(location, ticketResponse.url);
   const parsed = new URL(callback);
-  if (parsed.hostname.toLowerCase() !== 'sztz.zju.edu.cn' || parsed.pathname.replace(/\/$/, '') !== '/dekt' || !parsed.searchParams.get('ticket')) {
+  const validDirectCallback = parsed.hostname.toLowerCase() === 'sztz.zju.edu.cn'
+    && parsed.pathname.replace(/\/$/, '') === '/dekt'
+    && !!parsed.searchParams.get('ticket');
+  const validWebVpnCallback = parsed.hostname.toLowerCase() === WEBVPN_HOST && isWebVpnProxyPath(parsed.pathname);
+  if ((!validDirectCallback && !validWebVpnCallback) || (campusTransport === 'direct' && !validDirectCallback)) {
     throw new CampusError('素质拓展平台返回了不受信任的认证回调。', 'authentication');
   }
-  const callbackResponse = await request({ url: callback, responseType: 'text', disableRedirects: true });
-  if (callbackResponse.status !== 200 || !activeCookieJar?.has('SESSION', 'sztz.zju.edu.cn')) throw new CampusError('素质拓展平台没有建立正式登录会话。', 'authentication');
+  const callbackResponse = await request({ url: callback, responseType: 'text', disableRedirects: true, allowWebVpn: campusTransport === 'webvpn' });
+  if (callbackResponse.status !== 200 || !activeCookieJar?.has('SESSION', campusCookieHost('sztz.zju.edu.cn'))) throw new CampusError('素质拓展平台没有建立正式登录会话。', 'authentication');
   const contextResponse = await request({
     url: SZTZ_CTX,
     method: 'POST',
@@ -1034,17 +1207,17 @@ export async function readPublicCollegeInfo(query: string, category: CampusPubli
 function metaRefresh(body: string, source: string): string | undefined {
   const match = body.match(/<meta\b[^>]*http-equiv=["']?refresh["']?[^>]*content=["'][^"']*url=([^"'; >]+)/i) || body.match(/<meta\b[^>]*content=["'][^"']*url=([^"'; >]+)[^"']*[^>]*http-equiv=["']?refresh/i);
   if (!match?.[1]) return undefined;
-  try { return trustedUrl(decodeHtml(match[1]), source); } catch { return undefined; }
+  try { return routedUrl(decodeHtml(match[1]), source); } catch { return undefined; }
 }
 
 async function ensureCoursesSession(): Promise<void> {
-  let current = trustedUrl(COURSES_HOME);
+  let current = routedUrl(COURSES_HOME);
   for (let index = 0; index < 8; index += 1) {
     const response = await request({ url: current, responseType: 'text', disableRedirects: true });
     if (response.status >= 300 && response.status < 400) {
       const location = headerValue(response.headers, 'location');
       if (!location) throw new CampusError('学在浙大登录跳转缺少目标地址。', 'authentication');
-      current = trustedUrl(location, current);
+      current = routedUrl(location, current);
       continue;
     }
     const body = responseText(response);
@@ -1054,7 +1227,7 @@ async function ensureCoursesSession(): Promise<void> {
     if (target) { current = target; continue; }
     break;
   }
-  if (!activeCookieJar?.has('session', 'courses.zju.edu.cn')) throw new CampusError('学在浙大没有建立可用登录会话，请重新读取。', 'authentication');
+  if (!activeCookieJar?.has('session', campusCookieHost('courses.zju.edu.cn'))) throw new CampusError('学在浙大没有建立可用登录会话，请重新读取。', 'authentication');
 }
 
 async function readLearningCourses(): Promise<CampusLearningCourse[]> {
@@ -1235,7 +1408,7 @@ export async function readPublicHolidays(academicYear: string): Promise<CampusHo
     const title = cleanDisplayText(match[2] || '');
     if (!title.replace(/[—–]/g, '-').includes(`${safeYear}学年校历`) && !match[1].includes(safeYear)) return [];
     try {
-      const url = trustedUrl(decodeHtml(match[1]), CALENDAR_LIST_URL);
+      const url = routedUrl(decodeHtml(match[1]), CALENDAR_LIST_URL);
       return [{ title, url }];
     } catch { return []; }
   });
@@ -1288,10 +1461,20 @@ export async function readCampusInfo(studentId: string, password: string, option
   assertNative();
   const cleanId = studentId.trim();
   if (!cleanId || !password) throw new CampusError('请先填写学号和校园密码。', 'credentials');
+  campusTransport = 'direct';
+  activeCampusCredentials = { studentId: cleanId, password };
   activeCookieJar = new CookieJar();
   try {
     await clearCampusCookies();
-    await authenticate(cleanId, password);
+    try {
+      await authenticate(cleanId, password);
+    } catch (error) {
+      if (error instanceof CampusError && error.code === 'network') {
+        await activateWebVpn();
+      } else {
+        throw error;
+      }
+    }
     const year = academicYearValue(options.academicYear);
     const term = termValue(options.term || academicTerm().term);
     const warnings: string[] = [];
@@ -1399,5 +1582,7 @@ export async function readCampusInfo(studentId: string, password: string, option
   } finally {
     activeCookieJar = null;
     zdbkSessionReady = false;
+    campusTransport = 'direct';
+    activeCampusCredentials = null;
   }
 }

@@ -33,7 +33,6 @@ const DEFAULT_TURN_CONTROLS: MobileTurnControls = {
   audience: 'self',
 };
 
-const CAMPUS_WEBVPN_URL = 'https://webvpn.zju.edu.cn/';
 
 function friendlyError(error: unknown): string {
   if (error instanceof DeepSeekError) return error.message;
@@ -325,7 +324,6 @@ export function App() {
   const [campusSaved, setCampusSaved] = useState(false);
   const [campusLoading, setCampusLoading] = useState(false);
   const [campusMessage, setCampusMessage] = useState('');
-  const campusWebVpnAutoOpenedRef = useRef(false);
   const initialAcademicTerm = currentAcademicTerm();
   const [campusTab, setCampusTab] = useState<'overview' | 'schedule' | 'courses' | 'learning' | 'activities' | 'exams' | 'grades' | 'gpa' | 'todos' | 'practice' | 'holidays' | 'notices' | 'public'>('overview');
   const [campusAcademicYear, setCampusAcademicYear] = useState(initialAcademicTerm.year);
@@ -424,18 +422,6 @@ export function App() {
     return state.profile.language === 'en' ? 'Campus information could not be loaded. Please try again.' : state.profile.language === 'zh-TW' ? '無法讀取校園資訊，請稍後再試。' : '暂时无法读取校园信息，请稍后重试。';
   }
 
-  async function openCampusWebVpn(options: { auto?: boolean } = {}) {
-    if (options.auto) {
-      if (campusWebVpnAutoOpenedRef.current) return;
-      campusWebVpnAutoOpenedRef.current = true;
-    }
-    try {
-      await Browser.open({ url: CAMPUS_WEBVPN_URL });
-    } catch {
-      window.open(CAMPUS_WEBVPN_URL, '_blank', 'noopener,noreferrer');
-    }
-  }
-
   async function refreshCampusInfo() {
     if (campusLoading) return;
     if (!state.profile.studentId.trim() || !state.profile.studentPassword) {
@@ -455,13 +441,9 @@ export function App() {
       setCampusAcademicYear(campus.academicYear);
       setCampusTerm(campus.term);
       setCampusSaved(true);
-      const hasNetworkWarning = campus.warnings.some((warning) => /VPN|WebVPN|校内网络|校外网络/i.test(warning));
-      setCampusMessage(hasNetworkWarning ? `${copy.campusPartial} ${copy.campusWebVpnOpened}` : campus.warnings.length ? copy.campusPartial : copy.campusUpdated);
-      if (hasNetworkWarning) void openCampusWebVpn({ auto: true });
+      setCampusMessage(campus.warnings.length ? copy.campusPartial : copy.campusUpdated);
     } catch (error) {
-      const networkRestricted = error instanceof CampusError && error.code === 'network';
-      setCampusMessage(networkRestricted ? `${campusErrorMessage(error)} ${copy.campusWebVpnOpened}` : campusErrorMessage(error));
-      if (networkRestricted) void openCampusWebVpn({ auto: true });
+      setCampusMessage(campusErrorMessage(error));
     } finally {
       setCampusLoading(false);
     }
@@ -1461,7 +1443,7 @@ export function App() {
                 <button className="secondary-button" onClick={() => setCampusSaved(true)}>{campusSaved ? copy.saved : copy.save}</button>
                 <button className="primary-button" disabled={campusLoading} onClick={() => void refreshCampusInfo()}>{campusLoading ? copy.campusLoading : copy.campusRefresh}</button>
               </div>
-              <button className="secondary-button campus-webvpn-button" onClick={() => void openCampusWebVpn()}>{copy.campusWebVpn}</button>
+              <button className="secondary-button campus-webvpn-button" disabled={campusLoading} onClick={() => void refreshCampusInfo()}>{copy.campusWebVpn}</button>
               <p className="campus-privacy-note">{copy.campusReadOnly}</p>
               {campusMessage && <p className="connection-message">{campusMessage}</p>}
             </section>
