@@ -566,7 +566,7 @@ async function activateWebVpn(): Promise<void> {
 }
 
 async function loginZdbk() {
-  if (zdbkSessionReady && activeCookieJar?.has('JSESSIONID', campusCookieHost('zdbk.zju.edu.cn'))) return;
+  if (zdbkSessionReady && (campusTransport === 'webvpn' || activeCookieJar?.has('JSESSIONID', campusCookieHost('zdbk.zju.edu.cn')))) return;
   let result: HttpResult;
   try {
     result = await followGet(casServiceLoginUrl());
@@ -587,7 +587,7 @@ async function loginZdbk() {
   }
   if (isAuthenticationPage(body)) throw new CampusError('教务网没有建立登录会话，请重新读取校园信息。', 'authentication');
   if (result.status < 200 || result.status >= 300) throw new CampusError(`教务网登录失败（HTTP ${result.status}）。`, 'authentication');
-  if (!activeCookieJar?.has('JSESSIONID', campusCookieHost('zdbk.zju.edu.cn')) || !activeCookieJar.has('route', campusCookieHost('zdbk.zju.edu.cn'))) {
+  if (campusTransport === 'direct' && (!activeCookieJar?.has('JSESSIONID', campusCookieHost('zdbk.zju.edu.cn')) || !activeCookieJar.has('route', campusCookieHost('zdbk.zju.edu.cn')))) {
     throw new CampusError('教务网登录会话不完整，请重新读取校园信息。', 'authentication');
   }
   zdbkSessionReady = true;
@@ -626,7 +626,9 @@ async function loginSztz() {
     throw new CampusError('素质拓展平台返回了不受信任的认证回调。', 'authentication');
   }
   const callbackResponse = await request({ url: callback, responseType: 'text', disableRedirects: true, allowWebVpn: campusTransport === 'webvpn' });
-  if (callbackResponse.status !== 200 || !activeCookieJar?.has('SESSION', campusCookieHost('sztz.zju.edu.cn'))) throw new CampusError('素质拓展平台没有建立正式登录会话。', 'authentication');
+  if (callbackResponse.status !== 200 || (campusTransport === 'direct' && !activeCookieJar?.has('SESSION', campusCookieHost('sztz.zju.edu.cn')))) {
+    throw new CampusError('素质拓展平台没有建立正式登录会话。', 'authentication');
+  }
   const contextResponse = await request({
     url: SZTZ_CTX,
     method: 'POST',
@@ -1271,7 +1273,9 @@ async function ensureCoursesSession(): Promise<void> {
     if (target) { current = target; continue; }
     break;
   }
-  if (!activeCookieJar?.has('session', campusCookieHost('courses.zju.edu.cn'))) throw new CampusError('学在浙大没有建立可用登录会话，请重新读取。', 'authentication');
+  if (campusTransport === 'direct' && !activeCookieJar?.has('session', campusCookieHost('courses.zju.edu.cn'))) {
+    throw new CampusError('学在浙大没有建立可用登录会话，请重新读取。', 'authentication');
+  }
 }
 
 async function readLearningCourses(): Promise<CampusLearningCourse[]> {
@@ -1296,10 +1300,20 @@ export async function readLearningActivities(studentId: string, password: string
   const cleanCourseId = courseId.trim();
   if (!cleanId || !password) throw new CampusError('请先填写学号和校园密码。', 'credentials');
   if (!/^[A-Za-z0-9_-]{1,100}$/.test(cleanCourseId)) throw new CampusError('学在浙大课程编号格式不正确。', 'response');
+  campusTransport = 'direct';
+  activeCampusCredentials = { studentId: cleanId, password };
   activeCookieJar = new CookieJar();
   try {
     await clearCampusCookies();
-    await authenticate(cleanId, password);
+    try {
+      await authenticate(cleanId, password);
+    } catch (error) {
+      if (error instanceof CampusError && error.code === 'network') {
+        await activateWebVpn();
+      } else {
+        throw error;
+      }
+    }
     await ensureCoursesSession();
     const response = await request({ url: COURSE_ACTIVITIES_URL.replace('{courseId}', encodeURIComponent(cleanCourseId)), responseType: 'text', disableRedirects: true });
     const body = responseText(response);
@@ -1316,6 +1330,8 @@ export async function readLearningActivities(studentId: string, password: string
   } finally {
     activeCookieJar = null;
     zdbkSessionReady = false;
+    campusTransport = 'direct';
+    activeCampusCredentials = null;
   }
 }
 
