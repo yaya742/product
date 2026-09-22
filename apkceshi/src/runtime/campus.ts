@@ -53,6 +53,7 @@ const TRUSTED_HOSTS = new Set([
   'www.zju.edu.cn',
   'ugrs.zju.edu.cn',
 ]);
+const WEBVPN_HOST = 'webvpn.zju.edu.cn';
 
 export type CampusErrorCode = 'native_required' | 'credentials' | 'network' | 'authentication' | 'captcha' | 'response';
 
@@ -209,7 +210,11 @@ function pathMatches(pathname: string, cookiePath: string): boolean {
 function trustedUrl(value: string, source?: string): string {
   let parsed: URL;
   try { parsed = new URL(value, source); } catch { throw new CampusError('校园系统返回了无法识别的跳转地址。', 'response'); }
-  if (parsed.protocol !== 'https:' || !TRUSTED_HOSTS.has(parsed.hostname.toLowerCase())) {
+  const hostname = parsed.hostname.toLowerCase();
+  if (parsed.protocol === 'https:' && hostname === WEBVPN_HOST) {
+    throw new CampusError('教务网已跳转到浙大 WebVPN，请在网页模式中登录后访问；手机直连接口无法复用该浏览器会话。', 'network');
+  }
+  if (parsed.protocol !== 'https:' || !TRUSTED_HOSTS.has(hostname)) {
     throw new CampusError('校园系统返回了不受信任的跳转地址，已停止连接。', 'response');
   }
   return parsed.toString();
@@ -774,20 +779,25 @@ function normalizeActivity(item: Record<string, unknown>, courseId: string): Cam
 
 async function readSchedule(year: string, term: string): Promise<CampusCourse[]> {
   await loginZdbk();
-  // ZDBK uses one code for each long semester: 3 = autumn/winter,
-  // 12 = spring/summer. Sending labels such as "1|秋" can return a
-  // fallback dataset that looks valid but belongs to an older term.
-  const semesterCode = term === '1' ? '3' : '12';
-  const response = await request({ url: SCHEDULE_URL, method: 'POST', data: { xnm: year, xqm: semesterCode, kzlx: 'ck', captcha_value: '' }, headers: ajaxHeaders(), responseType: 'text', disableRedirects: true });
-  const body = responseText(response);
-  if (isCampusNetworkRestriction(body)) throw new CampusError('教务网提示需要校内网络；请先开启浙大 VPN 或 WebVPN 后再读取。', 'network');
-  if (response.status === 401 || response.status === 403 || isAuthenticationPage(body)) throw new CampusError('教务网登录态已失效，请重新读取。', 'authentication');
-  if (body.toLowerCase().includes('captcha_error')) throw new CampusError('教务网要求验证码，手机端暂不绕过安全校验。', 'captcha');
-  const payload = parseJson(response, '教务网课表');
-  if (payload === null) return [];
-  const items = listFromPayload(payload, ['kbList', 'items', 'rows']).filter((item) => field(item, ['sfyjskc']) !== '1');
-  if (!items.length && payload && typeof payload === 'object' && !['kbList', 'items', 'rows', 'data', 'result'].some((key) => key in (payload as Record<string, unknown>))) throw new CampusError('教务网课表返回了无法识别的数据。', 'response');
-  const result = items.map(normalizeCourse).filter((item): item is CampusCourse => item !== null);
+  // The official form submits the full academic-year label and one
+  // sub-semester at a time. Sending only the start year ("2026") or the
+  // internal aggregate codes ("3"/"12") can return a valid-looking fallback
+  // dataset from an older term.
+  const academicYear = `${year}-${Number(year) + 1}`;
+  const semesterCodes = term === '1' ? ['1|秋', '1|冬'] : ['2|春', '2|夏'];
+  const result: CampusCourse[] = [];
+  for (const semesterCode of semesterCodes) {
+    const response = await request({ url: SCHEDULE_URL, method: 'POST', data: { xnm: academicYear, xqm: semesterCode, captcha_value: '' }, headers: ajaxHeaders(), responseType: 'text', disableRedirects: true });
+    const body = responseText(response);
+    if (isCampusNetworkRestriction(body)) throw new CampusError('教务网提示需要校内网络；请先开启浙大 VPN 或 WebVPN 后再读取。', 'network');
+    if (response.status === 401 || response.status === 403 || isAuthenticationPage(body)) throw new CampusError('教务网登录态已失效，请重新读取。', 'authentication');
+    if (body.toLowerCase().includes('captcha_error')) throw new CampusError('教务网要求验证码，手机端暂不绕过安全校验。', 'captcha');
+    const payload = parseJson(response, '教务网课表');
+    if (payload === null) continue;
+    const items = listFromPayload(payload, ['kbList', 'items', 'rows']).filter((item) => field(item, ['sfyjskc']) !== '1');
+    if (!items.length && payload && typeof payload === 'object' && !['kbList', 'items', 'rows', 'data', 'result'].some((key) => key in (payload as Record<string, unknown>))) throw new CampusError('教务网课表返回了无法识别的数据。', 'response');
+    result.push(...items.map(normalizeCourse).filter((item): item is CampusCourse => item !== null));
+  }
   const unique = new Map<string, CampusCourse>();
   for (const course of result) unique.set(`${course.id}|${course.time}|${course.name}`, course);
   return [...unique.values()];
