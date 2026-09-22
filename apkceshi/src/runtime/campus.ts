@@ -242,12 +242,13 @@ async function responseArrayBufferText(result: HttpResult): Promise<string> {
   const bytes = decodeBase64Bytes(result.data);
   const contentEncoding = headerValue(result.headers, 'content-encoding').toLowerCase();
   const isGzip = contentEncoding.includes('gzip') || (bytes[0] === 0x1f && bytes[1] === 0x8b);
+  const isDeflate = contentEncoding.includes('deflate') || bytes[0] === 0x78;
   let decodedBytes = bytes;
-  if (isGzip) {
+  if (isGzip || isDeflate) {
     if (typeof DecompressionStream === 'undefined') {
       throw new CampusError('手机运行环境不支持解压 WebVPN 登录响应，请升级 Android System WebView 后重试。', 'network');
     }
-    const stream = new Blob([bytes.buffer as ArrayBuffer]).stream().pipeThrough(new DecompressionStream('gzip'));
+    const stream = new Blob([bytes.buffer as ArrayBuffer]).stream().pipeThrough(new DecompressionStream(isGzip ? 'gzip' : 'deflate'));
     decodedBytes = new Uint8Array(await new Response(stream).arrayBuffer());
   }
   return new TextDecoder('utf-8').decode(decodedBytes).replace(/^\uFEFF/, '');
@@ -550,7 +551,29 @@ function hiddenInput(body: string, name: string): string {
       if (value !== undefined) return decodeHtml(value);
     }
   }
+  // Keep working when the gateway changes attribute order or omits the
+  // optional value attribute in its server-rendered form.
+  try {
+    const parsed = new DOMParser().parseFromString(body, 'text/html');
+    const input = parsed.querySelector(`input[name="${name.replace(/"/g, '\\"')}"]`);
+    return input?.getAttribute('value') || '';
+  } catch {
+    // The native runtime may not expose DOMParser; the regex path above is
+    // still sufficient for the current gateway.
+  }
   return '';
+}
+
+function webVpnPageHint(body: string): string {
+  const title = body.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/<[^>]+>/g, '').trim();
+  const markers = [
+    ['登录表单', /name\s*=\s*["']username["']/i.test(body) && /name\s*=\s*["']password["']/i.test(body)],
+    ['WebVPN 页面', /WebVPN|wengine-vpn/i.test(body)],
+    ['验证码', /验证码|captcha|slider/i.test(body)],
+    ['会话提示', /会话|session|登录失效|重新登录/i.test(body)],
+    ['网关错误', /错误|异常|error|forbidden|拒绝/i.test(body)],
+  ].filter(([, matched]) => matched).map(([label]) => label);
+  return [title ? `标题：${title.slice(0, 40)}` : '', markers.length ? `特征：${markers.join('、')}` : '特征：未识别'].filter(Boolean).join('；');
 }
 
 function webVpnPasswordKey(body: string): string {
@@ -608,7 +631,7 @@ async function loginWebVpn(studentId: string, password: string): Promise<void> {
   if (!isWebVpnLoginPage(body)) {
     const contentType = headerValue(loginPage.headers, 'content-type') || '未知';
     const contentEncoding = headerValue(loginPage.headers, 'content-encoding') || 'identity';
-    throw new CampusError(`WebVPN 登录页未返回可识别的登录表单（响应类型：${contentType}，编码：${contentEncoding}，长度：${body.length}），请稍后重试。`, 'authentication');
+    throw new CampusError(`WebVPN 登录页未返回可识别的登录表单（响应类型：${contentType}，编码：${contentEncoding}，长度：${body.length}，${webVpnPageHint(body)}），请稍后重试。`, 'authentication');
   }
   const result = await request({
     url: WEBVPN_DO_LOGIN,
@@ -1082,9 +1105,10 @@ function isWebVpnLoginPage(body: string): boolean {
   // The current gateway renders _csrf as an empty hidden input and submits it
   // that way from its own browser form. Presence of the login form, rather
   // than a non-empty CSRF value, is the reliable signal.
-  return /WebVPN/i.test(body)
-    && /name\s*=\s*["']username["']/i.test(body)
-    && /(?:name\s*=\s*["']_csrf["']|id\s*=\s*["']form["'])/i.test(body);
+  const hasUsername = /(?:name\s*=\s*["']username["']|id\s*=\s*["']user_name["'])/i.test(body);
+  const hasPassword = /(?:name\s*=\s*["']password["']|type\s*=\s*["']password["'])/i.test(body);
+  const hasGatewayMarker = /WebVPN|wengine-vpn|do-login|name\s*=\s*["']_csrf["']/i.test(body);
+  return hasUsername && hasPassword && hasGatewayMarker;
 }
 
 function isWebVpnLoginUrl(value: string): boolean {
