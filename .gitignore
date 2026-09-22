@@ -3,14 +3,31 @@ __pycache__/
 .pytest_cache/
 .venv/
 .env
+.coverage
+coverage/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+*.apk
+*.aab
+*.part
 
-# Desktop project local state and generated output
-zaichang/node_modules/
-zaichang/dist/
-zaichang/dist-electron/
-zaichang/release/
-zaichang/artifacts/
-zaichang/.dev-data/
-zaichang/.runtime/
-zaichang/.test-data/
-zaichang/build/runtime-staging-*/
+# Agent desktop local state and generated output
+agent/node_modules/
+agent/dist/
+agent/dist-electron/
+agent/release/
+agent/release-*/
+agent/artifacts/
+agent/.dev-data/
+agent/.runtime/
+agent/.test-data/
+agent/build/runtime-staging-*/
+agent/build/hermes-builder.json
+
+# Mobile local tooling
+mobile/android/.idea/
+mobile/android/.cxx/
+
+# Packaged plugin output
+school/dist/

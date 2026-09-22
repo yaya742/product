@@ -1,65 +1,53 @@
-# 校园天气插件
+# 在场（Zaichang）
 
-天气插件面向中国大学生，为校园 Agent 提供三个只读能力：
+在场是一个以 Agent + Plugins 为核心的本地优先校园助手。本仓库按功能组织源码；生成物、运行时数据、发布包和本地凭据不属于源码。
 
-- 当前天气：`GET /api/weather/current`
-- 逐小时预报：`GET /api/weather/forecast`
-- 户外活动评估：`GET /api/weather/outdoor-activity`
+## 源码目录
 
-Agent 接入契约：
+- `agent/`：Electron/React 桌面 Agent、Agent Runtime、插件宿主和平台适配。
+- `mobile/`：React/Vite + Capacitor 移动端，手机本地运行并直接调用用户配置的 DeepSeek API。
+- `weather/`：Python/FastAPI 天气服务、天气包及其测试。
+- `map/`：地图能力的统一入口、职责清单和跨端边界；平台 UI 与设备适配保留在 `agent/` 和 `mobile/`。
+- `school/`：浙江大学校园信息插件和只读连接器。
 
-- 插件清单：`GET /api/weather/manifest`
-- Agent 天气卡片：`GET /api/weather/card`
-- Provider 能力：`weather.lookup`、`weather.outdoor_activity`
-- 权限：`weather:read` 和复用地图的 `location:read`
-- 卡片协议：`weather-card/v1`，使用与地图卡片相同的内嵌展示方式
+目录与分支边界详见 [REPOSITORY_LAYOUT.md](REPOSITORY_LAYOUT.md)。产品范围、数据边界和阶段规划详见 [PRODUCT_PLAN.md](PRODUCT_PLAN.md)。
 
-清单默认标记为 `untrusted_disabled`，Agent 审核并允许插件后才能启用。天气插件不会自行申请 GPS；客户端应复用地图定位服务，把本轮经纬度、精度和定位时间传入能力调用。
+## 开发入口
 
-Android GPS 客户端建议使用对应的 `POST` 接口，把经纬度、定位精度和定位时间放在 JSON 请求体中。原有 `GET` 接口仍然保留，方便调试。
+桌面端：
 
-默认使用 Open-Meteo，适合本地开发和接口联调。正式环境可设置 `WEATHER_PROVIDER=qweather`，并配置和风天气专用 API Host 与 API Key；和风天气不可用时会自动回退到 Open-Meteo。
+```powershell
+cd agent
+npm ci
+npm run build
+npm test
+```
 
-## 本地运行
+移动端：
 
-```bash
+```powershell
+cd mobile
+npm ci
+npm run build
+npm run cap:sync
+```
+
+天气服务：
+
+```powershell
+cd weather
 python -m venv .venv
-.venv\Scripts\activate
+.venv\Scripts\Activate.ps1
 pip install -e ".[dev]"
-uvicorn weather_plugin.main:app --reload
+pytest
 ```
 
-启动后打开 <http://127.0.0.1:8000/docs> 查看接口文档。
+更完整的启动、打包和验收说明分别位于 [Agent 说明](agent/README.md)、[移动端说明](mobile/README.md)、[天气说明](weather/README.md)、[地图说明](map/README.md)和[学校插件说明](school/README.md)。
 
-## 示例请求
+## 提交边界
 
-```text
-GET /api/weather/current?latitude=30.27&longitude=120.15&timezone=Asia/Shanghai
-GET /api/weather/current?latitude=30.27&longitude=120.15&timezone=Asia/Shanghai&source=gps&accuracy_m=35&captured_at=2026-09-10T18:00:00%2B08:00
-GET /api/weather/forecast?latitude=30.27&longitude=120.15&hours=48&timezone=Asia/Shanghai
-GET /api/weather/outdoor-activity?latitude=30.27&longitude=120.15&start=2026-09-10T18:00:00%2B08:00&end=2026-09-10T20:00:00%2B08:00&activity=跑步&timezone=Asia/Shanghai
-```
-
-Android 当前天气请求：
-
-```json
-{
-  "latitude": 30.27,
-  "longitude": 120.15,
-  "source": "gps",
-  "accuracy_m": 35,
-  "captured_at": "2026-09-10T18:00:00+08:00"
-}
-```
-
-发送到：`POST /api/weather/current`
-
-## 设计约束
-
-- Android 只上传经纬度，不直接持有天气服务密钥。
-- Android 可同时上传 `source=gps`、`accuracy_m` 和 `captured_at`；定位超过 30 分钟时，接口会返回中文提醒。
-- `source` 支持 `gps`、`manual` 和 `campus_default`，GPS 拒绝时可退回手动或学校默认位置。
-- Provider 输出先转换为统一模型，Agent 不读取上游原始 JSON。
-- 当前天气缓存 5 分钟，预报缓存 30 分钟。
-- 户外活动建议由规则计算，模型只负责解释结果。
-- 当前缓存为进程内缓存；多实例部署时应替换为 Redis。
+- 不提交 `node_modules`、`dist`、`release`、`artifacts`、APK、缓存、运行时数据库或本地凭据。
+- 新功能分别进入 `codex/agent`、`codex/mobile`、`codex/weather`、`codex/map`、`codex/school` 责任分支；跨端组合功能进入 `codex/integration-*`。
+- 所有功能分支都以 `main` 为祖先并保留根级 `AGENTS.md`；`main` 更新规则后，功能分支必须及时合并。
+- 构建通过只代表构建门槛通过；真实账号、真实设备、校园网络和通知行为需要单独验收。
+- 提交前检查 `git status --short` 和 `git diff --cached --name-status`，不要用未经审查的 `git add .`。

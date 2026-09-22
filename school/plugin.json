@@ -1,0 +1,237 @@
+{
+  "apiVersion": 1,
+  "id": "campus.zju-public",
+  "version": "1.2.0",
+  "displayName": "浙江大学校园信息",
+  "description": "读取浙江大学公开校园信息，以及通过本机 DPAPI 连接器读取经过过滤的个人校园资料。",
+  "entry": "index.mjs",
+  "capabilities": [
+    {
+      "name": "school.calendar.read",
+      "displayName": "读取官方校历",
+      "description": "读取指定学年的浙江大学官方校历页面、原件链接和公告中明确写出的日期。",
+      "version": "1.0.0",
+      "effect": "read",
+      "requiredScopes": ["campus:read"],
+      "subjects": ["self"],
+      "worlds": ["real"],
+      "timeoutMs": 30000,
+      "maxBytes": 120000,
+      "supportsIdempotency": false,
+      "supportsInspect": false,
+      "supportsCancel": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "academicYear": { "type": "string", "minLength": 9, "maxLength": 9 }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": ["status", "sourceId", "simulated"],
+        "properties": {
+          "status": { "type": "string" },
+          "sourceId": { "type": "string", "const": "plugin:campus.zju-public" },
+          "simulated": { "type": "boolean", "const": false },
+          "data": { "type": "object" },
+          "reason": { "type": "string", "maxLength": 500 }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "school.notices.search",
+      "displayName": "搜索官方教学通知",
+      "description": "搜索浙江大学本科教学管理信息服务平台公开通知，可按关键词和页码读取有界摘要。",
+      "version": "1.0.0",
+      "effect": "read",
+      "requiredScopes": ["campus:read"],
+      "subjects": ["self"],
+      "worlds": ["real"],
+      "timeoutMs": 30000,
+      "maxBytes": 120000,
+      "supportsIdempotency": false,
+      "supportsInspect": false,
+      "supportsCancel": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "maxLength": 100 },
+          "page": { "type": "integer", "minimum": 1, "maximum": 50 },
+          "detail": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": ["status", "sourceId", "simulated"],
+        "properties": {
+          "status": { "type": "string" },
+          "sourceId": { "type": "string", "const": "plugin:campus.zju-public" },
+          "simulated": { "type": "boolean", "const": false },
+          "data": { "type": "object" },
+          "reason": { "type": "string", "maxLength": 500 }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "school.college.directory",
+      "displayName": "查询学院官网索引",
+      "description": "从浙江大学官方学院目录中定位学院官网，返回官方链接和目录摘要，不抓取个人信息。",
+      "version": "1.0.0",
+      "effect": "read",
+      "requiredScopes": ["campus:read"],
+      "subjects": ["self"],
+      "worlds": ["real"],
+      "timeoutMs": 30000,
+      "maxBytes": 120000,
+      "supportsIdempotency": false,
+      "supportsInspect": false,
+      "supportsCancel": false,
+      "inputSchema": {
+        "type": "object",
+        "required": ["college"],
+        "properties": {
+          "college": { "type": "string", "minLength": 1, "maxLength": 80 }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": ["status", "sourceId", "simulated"],
+        "properties": {
+          "status": { "type": "string" },
+          "sourceId": { "type": "string", "const": "plugin:campus.zju-public" },
+          "simulated": { "type": "boolean", "const": false },
+          "data": { "type": "object" },
+          "reason": { "type": "string", "maxLength": 500 }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "school.account.status",
+      "displayName": "查看校园账号状态",
+      "description": "查看本机浙大连接器是否可用、是否已保存账号以及已有缓存范围，不返回账号标识或凭据。",
+      "version": "1.2.0",
+      "effect": "read",
+      "requiredScopes": ["campus:read"],
+      "subjects": ["self"],
+      "worlds": ["real"],
+      "timeoutMs": 15000,
+      "maxBytes": 60000,
+      "supportsIdempotency": false,
+      "supportsInspect": false,
+      "supportsCancel": false,
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": ["status", "sourceId", "simulated"],
+        "properties": {
+          "status": { "type": "string" },
+          "sourceId": { "type": "string", "const": "plugin:campus.zju-public" },
+          "simulated": { "type": "boolean", "const": false },
+          "data": { "type": "object" },
+          "reason": { "type": "string", "maxLength": 500 }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "school.read",
+      "displayName": "读取校园资料",
+      "description": "读取已有浙大连接器支持的课表、课程、考试、待办、学在浙大课程与活动、成绩、绩点、素质拓展、实践、校历和通知资料。",
+      "version": "1.2.0",
+      "effect": "read",
+      "requiredScopes": ["campus:read"],
+      "subjects": ["self"],
+      "worlds": ["real"],
+      "timeoutMs": 90000,
+      "maxBytes": 145000,
+      "supportsIdempotency": false,
+      "supportsInspect": false,
+      "supportsCancel": false,
+      "inputSchema": {
+        "type": "object",
+        "required": ["domain"],
+        "properties": {
+          "domain": {
+            "type": "string",
+            "enum": ["schedule", "courses", "exams", "assignments", "learning_courses", "activities", "grades", "grade_alerts", "gpa", "gpa_semesters", "gpa_cumulative", "practice", "sports", "projects", "holidays", "notices", "source_status"]
+          },
+          "academicYear": { "type": "string", "minLength": 9, "maxLength": 9 },
+          "term": { "type": "string", "enum": ["1", "2"] },
+          "refresh": { "type": "boolean" },
+          "courseId": { "type": "string", "maxLength": 100 },
+          "refreshActivities": { "type": "boolean" },
+          "query": { "type": "string", "maxLength": 100 },
+          "college": { "type": "string", "maxLength": 80 },
+          "category": { "type": "string", "enum": ["all", "profile", "faculty", "program", "contact", "labs"] },
+          "page": { "type": "integer", "minimum": 1, "maximum": 50 },
+          "detail": { "type": "boolean" },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 50 },
+          "offset": { "type": "integer", "minimum": 0, "maximum": 10000 },
+          "fields": { "type": "array", "maxItems": 24, "items": { "type": "string", "maxLength": 80 } }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": ["status", "sourceId", "simulated"],
+        "properties": {
+          "status": { "type": "string" },
+          "sourceId": { "type": "string", "const": "plugin:campus.zju-public" },
+          "simulated": { "type": "boolean", "const": false },
+          "data": { "type": "object" },
+          "reason": { "type": "string", "maxLength": 500 }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "school.overview",
+      "displayName": "整理校园资料总览",
+      "description": "有界整理当前学期学业资料、学在浙大课程、公开校历、官方通知和素质拓展资料；未登录时仍保留公开部分并明确说明缺口。",
+      "version": "1.2.0",
+      "effect": "read",
+      "requiredScopes": ["campus:read"],
+      "subjects": ["self"],
+      "worlds": ["real"],
+      "timeoutMs": 90000,
+      "maxBytes": 145000,
+      "supportsIdempotency": false,
+      "supportsInspect": false,
+      "supportsCancel": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "academicYear": { "type": "string", "minLength": 9, "maxLength": 9 },
+          "term": { "type": "string", "enum": ["1", "2"] },
+          "refresh": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": ["status", "sourceId", "simulated"],
+        "properties": {
+          "status": { "type": "string" },
+          "sourceId": { "type": "string", "const": "plugin:campus.zju-public" },
+          "simulated": { "type": "boolean", "const": false },
+          "data": { "type": "object" },
+          "reason": { "type": "string", "maxLength": 500 }
+        },
+        "additionalProperties": false
+      }
+    }
+  ],
+  "egressHosts": ["zjuam.zju.edu.cn", "identity.zju.edu.cn", "zdbk.zju.edu.cn", "courses.zju.edu.cn", "ugrs.zju.edu.cn", "sztz.zju.edu.cn", "www.zju.edu.cn"],
+  "platforms": ["win32", "darwin", "linux"],
+  "offline": "unsupported",
+  "license": "MIT"
+}

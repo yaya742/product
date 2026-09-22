@@ -1,0 +1,11 @@
+{
+  "name": "campus-zju-public-plugin",
+  "version": "1.2.0",
+  "private": true,
+  "type": "module",
+  "description": "只读的浙江大学校园公开信息插件",
+  "scripts": {
+    "test": "node --test tests/plugin.test.mjs",
+    "package": "node scripts/package.mjs"
+  }
+}

@@ -27,16 +27,19 @@
 
 ## 2. 当前仓库状态与基线选择
 
-截至 2026-09-22，当前 checkout 是 `main`，`origin/main` 的跟踪内容只有根目录 `AGENT.md`。本地的 `zaichang/`、`apkceshi/`、`weather_plugin/`、`tests/` 是未跟踪目录，其中混有 APK、构建输出、运行时目录、缓存和测试数据库，不能直接整体 `git add .`。
+截至 2026-09-22，源码归位使用功能目录：`agent/`、`mobile/`、`weather/`、`map/`、`school/`。旧的 `D:\product\zaichang` checkout 保留为本地运行时快照，其中混有 APK、构建输出、运行时目录、缓存和测试数据库，不能作为源码目录或整体执行 `git add .`。
 
 远端已有的职责边界如下，后续开发应以远端源代码分支或隔离 worktree 为准：
 
-- `origin/codex/zaichang-desktop`：桌面 Electron/React、Agent Harness、插件宿主、地图和校园连接器。
-- `origin/mobile_app`：Android/Capacitor 移动端及手机侧能力。
-- `origin/school`：学校插件和校园信息扩展。
-- `origin/weather`：天气服务/插件。
-- `origin/codex/reorg-staging`：较完整的阶段性整合候选，适合在核对差异后作为集成基线。
+- `codex/agent`：桌面 Agent、Agent Harness、插件宿主和平台适配。
+- `codex/mobile`：Android/Capacitor 移动端及手机侧能力。
+- `codex/weather`：天气服务和天气插件。
+- `codex/map`：地图能力、共享边界和跨端地图变更。
+- `codex/school`：学校插件和校园信息扩展。
+- `codex/workspace-layout`：功能目录归位和迁移验证。
 - `origin/main`：稳定发布入口；在没有完成源码归位、测试和审查前，不应把它当作产品源码分支。
+
+所有功能分支必须以 `main` 为祖先并保留根级 `AGENTS.md`。AI 读取当前工作树中的规则文件；`main` 更新规则后，各功能分支必须合并 `main`。旧的 `PCagent`、`mobile_app`、`weather`、`school` 和 `codex/zaichang-desktop` 分支保留作历史与回退来源，不删除或强推。
 
 第一项实际工作不是继续扩大功能，而是完成一次源码归位：选定一个明确的集成基线，分别确认桌面、移动端、学校插件和天气插件的源代码、锁文件、测试、文档和忽略规则；把 `node_modules`、`dist`、`release`、`artifacts`、`.runtime`、`.dev-data`、`.test-data`、APK 成品和 `__pycache__` 等生成物排除在源码提交之外。
 
@@ -183,7 +186,7 @@ Agent 通过 `Plugin Registry` 发现能力，不通过文件路径、特定模�
 
 目标：先获得可重复构建的唯一源码基线。
 
-- 从 `origin/codex/reorg-staging`、`origin/codex/zaichang-desktop`、`origin/mobile_app`、`origin/school`、`origin/weather` 分别核对提交、文件树和职责，不把当前未跟踪运行时目录当作源代码。
+- 从 `origin/codex/reorg-staging`、旧桌面/移动/学校/天气责任分支分别核对提交、文件树和职责，再归入 `agent/`、`mobile/`、`weather/`、`map/`、`school/`；不把本地未跟踪运行时目录当作源代码。
 - 冻结 `shared` 的领域 schema、状态枚举、来源/新鲜度字段和插件 manifest。
 - 增加 `.gitignore`、依赖锁文件、构建入口、源码/生成物说明和第三方许可证清单。
 - 将桌面、移动端、插件和测试放到明确的责任目录，必要时使用独立 worktree 完成迁移。
@@ -266,10 +269,12 @@ Agent 通过 `Plugin Registry` 发现能力，不通过文件路径、特定模�
 ### 7.1 分支职责
 
 - `main`：稳定、可发布、经过合并和验收的基线，只通过 Pull Request 合入。
-- 桌面功能：继续使用现有 `codex/zaichang-desktop` 责任线；新功能从正确基线创建 `codex/desktop-<topic>`。
-- 移动功能：现有移动责任线为 `mobile_app`；新功能使用 `codex/mobile-<topic>`，完成后再合入移动责任线或集成分支。
-- 学校插件：现有责任线为 `school`；新连接器使用 `codex/school-<topic>`。
-- 天气/地图等独立能力：使用对应责任分支；跨端组合功能使用 `codex/integration-<milestone>`。
+- Agent 功能：使用 `codex/agent`；短期变更使用 `codex/agent-<topic>`。
+- 移动功能：使用 `codex/mobile`；短期变更使用 `codex/mobile-<topic>`。
+- 天气功能：使用 `codex/weather`；短期变更使用 `codex/weather-<topic>`。
+- 地图功能：使用 `codex/map`；短期变更使用 `codex/map-<topic>`。
+- 学校插件：使用 `codex/school`；新连接器使用 `codex/school-<topic>`。
+- 跨端组合功能使用 `codex/integration-<milestone>`。
 - 发布准备：使用 `codex/release-<version>`，只放版本号、迁移、打包、安装器、发布说明和验收修复，不在其中堆积未审查的新功能。
 
 已有分支名称不完全统一时，先核对远端提交和 worktree，不为了“看起来统一”擅自重写历史或删除分支；从现在开始新建分支使用 `codex/` 前缀，并在 PR 中说明最终合入目标。

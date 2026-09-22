@@ -1,6 +1,6 @@
 # 在场移动端（本地直连版）
 
-这是与 Windows 桌面版分开的移动端代码目录。它不依赖 `D:\product\zaichang\zaichang` 的 Electron 源码，也不需要部署在场云服务器。
+这是与 Windows 桌面版分开的移动端代码目录。它不依赖 `../agent/` 的 Electron 运行时，也不需要部署在场云服务器。
 
 ## 当前切片
 

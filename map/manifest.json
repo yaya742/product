@@ -1,0 +1,23 @@
+{
+  "schema": "zaichang.map.ownership/v1",
+  "branch": "codex/map",
+  "shared": [
+    "agent/src/shared/map-v2.ts",
+    "agent/src/shared/map-routing.ts"
+  ],
+  "desktop": {
+    "service": [
+      "agent/src/main/mapService.ts",
+      "agent/src/main/mapLocation.ts"
+    ],
+    "ui": "agent/src/renderer/map",
+    "sourceData": "agent/assets/map-v2",
+    "publicData": "agent/public/map-v2",
+    "documentation": "agent/MAP-V2.md"
+  },
+  "mobile": {
+    "ui": "mobile/src/MapPanel.tsx",
+    "runtime": "mobile/src/runtime/map.ts",
+    "publicData": "mobile/public/map-v2"
+  }
+}
