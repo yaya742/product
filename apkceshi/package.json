@@ -6,6 +6,7 @@
   "description": "在场移动端本地 Agent：手机直连用户自己的 DeepSeek API Key",
   "scripts": {
     "dev": "vite",
+    "dev:vm": "vite --open /?mobileVm=1",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "cap:sync": "npm run build && cap sync",

@@ -1,4 +1,5 @@
 import { Capacitor, CapacitorCookies, CapacitorHttp } from '@capacitor/core';
+import { isMobileVmOffline } from './mobileVm';
 import type {
   CampusCourse,
   CampusCourseOffering,
@@ -228,6 +229,7 @@ async function request(options: {
   responseType?: 'text' | 'json';
   disableRedirects?: boolean;
 }): Promise<HttpResult> {
+  if (isMobileVmOffline()) throw new CampusError('虚拟机已模拟断网，校园请求未发送。', 'network');
   assertNative();
   const url = trustedUrl(options.url);
   const cookie = activeCookieJar?.headerFor(url);

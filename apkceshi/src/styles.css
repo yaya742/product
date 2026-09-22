@@ -447,6 +447,65 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .theme-dark .map-feature-road { stroke: #b2c2ad; }
 .theme-dark .map-labels text { fill: #d6ead9; stroke: #1b2a20; }
 
+/* Browser-only phone shell used by npm run dev:vm. */
+body.mobile-vm-body { min-width: 320px; background: #101412; }
+.mobile-vm-workbench { min-height: 100dvh; display: flex; flex-direction: column; color: #e8efe9; background: radial-gradient(circle at 18% 0%, #263b2e 0, #101412 42%, #0b0e0c 100%); }
+.mobile-vm-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 74px; padding: 14px 20px; border-bottom: 1px solid rgba(214, 235, 219, .13); background: rgba(13, 19, 16, .82); backdrop-filter: blur(18px); }
+.mobile-vm-toolbar > div:first-child { display: grid; gap: 4px; min-width: 0; }
+.mobile-vm-toolbar strong { font-size: 15px; letter-spacing: .04em; }
+.mobile-vm-toolbar span { color: #9bb09f; font-size: 11px; }
+.mobile-vm-toolbar-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.mobile-vm-toolbar-actions label { display: flex; align-items: center; gap: 7px; color: #9bb09f; font-size: 11px; }
+.mobile-vm-toolbar-actions select, .mobile-vm-toolbar-actions button { min-height: 35px; padding: 0 10px; color: #e8efe9; border: 1px solid rgba(214, 235, 219, .18); border-radius: 9px; background: rgba(255, 255, 255, .07); font-size: 11px; }
+.mobile-vm-toolbar-actions select { min-width: 122px; padding-right: 7px; }
+.mobile-vm-toolbar-actions button:hover { border-color: rgba(169, 209, 176, .65); background: rgba(169, 209, 176, .14); }
+.mobile-vm-layout { min-height: 0; flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 320px); }
+.mobile-vm-stage { min-height: 0; display: grid; place-items: center; overflow: hidden; padding: 14px; }
+.mobile-vm-device-holder { position: relative; flex: 0 0 auto; }
+.mobile-vm-device { position: absolute; top: 0; left: 0; overflow: hidden; transform-origin: top left; border: 5px solid #242a26; border-radius: 38px; background: #060807; box-shadow: 0 30px 65px rgba(0, 0, 0, .48), 0 0 0 1px rgba(225, 245, 228, .13); }
+.mobile-vm-device-ios { border-radius: 43px; border-color: #1d211f; }
+.mobile-vm-statusbar { position: absolute; top: 0; left: 0; right: 0; z-index: 40; height: 30px; display: flex; align-items: center; justify-content: space-between; padding: 0 17px; color: rgba(255, 255, 255, .95); background: #111613; font-size: 10px; font-variant-numeric: tabular-nums; }
+.mobile-vm-status-icons { letter-spacing: .12em; }
+.mobile-vm-screen { position: absolute; top: 30px; right: 0; bottom: 24px; left: 0; overflow: hidden; background: #fff; }
+.mobile-vm-screen .app-shell { width: 100%; max-width: none; height: 100% !important; min-height: 100% !important; margin: 0; }
+.mobile-vm-screen .topbar, .mobile-vm-screen .composer-area { position: absolute; left: 0; width: 100%; transform: none; }
+.mobile-vm-screen .history-drawer, .mobile-vm-screen .drawer-backdrop, .mobile-vm-screen .full-screen-panel { position: absolute; }
+.mobile-vm-screen .history-drawer { left: 0; }
+.mobile-vm-screen .full-screen-panel { width: 100%; min-height: 100%; }
+.mobile-vm-screen .settings-scroll { height: calc(100% - 68px); }
+.mobile-vm-screen .map-screen, .mobile-vm-screen .weather-screen { height: calc(100% - 68px); }
+.mobile-vm-screen.mobile-vm-keyboard-open::after { content: ""; position: absolute; right: 0; bottom: 0; left: 0; z-index: 12; height: 205px; pointer-events: none; background: linear-gradient(180deg, rgba(239, 242, 240, .15), #d9dfdc 33%, #c7d0ca); }
+.mobile-vm-screen.mobile-vm-keyboard-open .composer-area { bottom: 205px; z-index: 15; }
+.mobile-vm-homebar { position: absolute; right: 50%; bottom: 8px; z-index: 41; width: 112px; height: 4px; transform: translateX(50%); border-radius: 99px; background: rgba(255, 255, 255, .78); }
+.mobile-vm-controls { overflow-y: auto; padding: 22px 20px; border-left: 1px solid rgba(214, 235, 219, .13); background: rgba(13, 19, 16, .52); }
+.mobile-vm-card { display: grid; gap: 12px; margin: 0 auto 12px; padding: 17px; border: 1px solid rgba(214, 235, 219, .14); border-radius: 16px; background: rgba(255, 255, 255, .06); box-shadow: 0 14px 30px rgba(0, 0, 0, .13); }
+.mobile-vm-card h1 { margin: 0; color: #f0f8f1; font-size: 19px; letter-spacing: -.03em; }
+.mobile-vm-eyebrow { margin: 0; color: #a9d1b0; font-size: 10px; letter-spacing: .15em; text-transform: uppercase; }
+.mobile-vm-muted, .mobile-vm-note p { margin: 0; color: #9bb09f; font-size: 11px; line-height: 1.6; }
+.mobile-vm-field { display: grid; gap: 7px; padding-top: 10px; border-top: 1px solid rgba(214, 235, 219, .1); color: #dce9de; font-size: 12px; }
+.mobile-vm-segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 3px; border-radius: 10px; background: rgba(0, 0, 0, .2); }
+.mobile-vm-segmented button { min-height: 32px; color: #a9bcae; border: 0; border-radius: 8px; background: transparent; font-size: 11px; }
+.mobile-vm-segmented button.selected { color: #16301d; background: #a9d1b0; font-weight: 700; }
+.mobile-vm-switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #dce9de; font-size: 12px; }
+.mobile-vm-switch-row input { width: 18px; height: 18px; accent-color: #a9d1b0; }
+.mobile-vm-note { gap: 7px; }
+.mobile-vm-note strong { font-size: 12px; }
+
+@media (max-width: 880px) {
+  .mobile-vm-toolbar { align-items: flex-start; flex-direction: column; }
+  .mobile-vm-toolbar-actions { width: 100%; justify-content: flex-start; flex-wrap: wrap; }
+  .mobile-vm-layout { grid-template-columns: 1fr; grid-template-rows: minmax(420px, 1fr) auto; }
+  .mobile-vm-stage { min-height: 520px; }
+  .mobile-vm-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 12px 14px 18px; border-top: 1px solid rgba(214, 235, 219, .13); border-left: 0; }
+  .mobile-vm-card { width: 100%; margin: 0; }
+}
+
+@media (max-width: 560px) {
+  .mobile-vm-toolbar { padding: 12px 14px; }
+  .mobile-vm-controls { display: block; }
+  .mobile-vm-card { margin-bottom: 10px; }
+}
+
 @keyframes rise { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes drawer-right { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: translateX(0); } }

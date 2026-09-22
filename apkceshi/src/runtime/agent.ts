@@ -8,6 +8,7 @@ import {
 } from './deepseek';
 import { findWalkingRoute, loadMapData } from './map';
 import { readPublicCollegeInfo, readPublicNotices } from './campus';
+import { isMobileVmLocationAvailable, isMobileVmSession, mobileVmLocation } from './mobileVm';
 import { CAMPUS_COORDINATE, fetchWeather, readDeviceLocation } from './weather';
 import type { MobileAgendaItem, MobileAttachment, MobileCampusData, MobileConversation, MobileLanguage, MobileMessage, MobileReminder, MobileTurnControls } from './types';
 
@@ -50,6 +51,18 @@ function modelHistory(messages: MobileMessage[]): DeepSeekMessage[] {
 }
 
 function readLocation(signal: AbortSignal): Promise<Record<string, unknown>> {
+  if (isMobileVmSession()) {
+    if (!isMobileVmLocationAvailable()) return Promise.resolve({ status: 'unavailable', reason: '虚拟机已模拟定位不可用。' });
+    const location = mobileVmLocation();
+    return Promise.resolve({
+      status: 'ok',
+      latitude: location.latitude,
+      longitude: location.longitude,
+      accuracy_m: location.accuracy,
+      captured_at: new Date(location.timestamp).toISOString(),
+      note: '这是虚拟机提供的紫金港测试位置，不会由本地运行时自动写入长期记忆。',
+    });
+  }
   if (!navigator.geolocation)
     return Promise.resolve({ status: 'unavailable', reason: '当前设备没有提供定位能力。' });
   return new Promise((resolve) => {

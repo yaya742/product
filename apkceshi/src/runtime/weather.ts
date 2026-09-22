@@ -1,4 +1,5 @@
 import { Capacitor, CapacitorHttp } from '@capacitor/core';
+import { isMobileVmLocationAvailable, isMobileVmOffline, isMobileVmSession, mobileVmLocation } from './mobileVm';
 import type { MobileLanguage } from './types';
 import type { MapCoordinate } from './map';
 
@@ -49,6 +50,12 @@ export interface WeatherLocation {
 }
 
 export function readDeviceLocation(signal?: AbortSignal): Promise<DeviceLocation> {
+  if (isMobileVmSession()) {
+    if (!isMobileVmLocationAvailable()) return Promise.reject(new Error('虚拟机已模拟定位不可用。'));
+    if (signal?.aborted) return Promise.reject(new DOMException('定位已取消。', 'AbortError'));
+    const location = mobileVmLocation();
+    return Promise.resolve({ coordinate: [location.longitude, location.latitude], accuracy: location.accuracy });
+  }
   if (!navigator.geolocation) return Promise.reject(new Error('当前设备不支持定位。'));
   return new Promise((resolve, reject) => {
     let settled = false;
@@ -73,6 +80,7 @@ export function readDeviceLocation(signal?: AbortSignal): Promise<DeviceLocation
 }
 
 export async function fetchWeather(coordinate: MapCoordinate, signal?: AbortSignal): Promise<WeatherSnapshot> {
+  if (isMobileVmOffline()) throw new Error('虚拟机已模拟断网，天气请求未发送。');
   const params = new URLSearchParams({
     latitude: coordinate[1].toFixed(6),
     longitude: coordinate[0].toFixed(6),
@@ -136,6 +144,7 @@ export async function fetchWeather(coordinate: MapCoordinate, signal?: AbortSign
 type JsonResponse = Record<string, unknown> & { __status?: number };
 
 async function requestJson(url: string, signal?: AbortSignal): Promise<JsonResponse> {
+  if (isMobileVmOffline()) throw new Error('虚拟机已模拟断网，网络请求未发送。');
   if (Capacitor.isNativePlatform()) {
     const response = await CapacitorHttp.get({ url, responseType: 'json', connectTimeout: 15_000, readTimeout: 20_000 });
     const data = (typeof response.data === 'string' ? JSON.parse(response.data) : response.data) as JsonResponse;

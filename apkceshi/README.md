@@ -28,6 +28,14 @@ npm install
 npm run dev
 ```
 
+浏览器手机虚拟机（不需要真机或 Android 模拟器）：
+
+```powershell
+npm run dev:vm
+```
+
+它会把同一份移动端 `App` 放进可切换的 Android/iPhone 手机壳中，支持屏幕尺寸、横竖屏、断网、定位不可用和虚拟键盘测试。它模拟的是移动端 UI 与部分设备能力，不是完整 Android 操作系统；DeepSeek、天气和校园请求会按测试开关执行。
+
 构建移动端网页资源：
 
 ```powershell

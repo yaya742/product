@@ -8,6 +8,7 @@ import { CampusError, currentAcademicTerm, readCampusInfo, readLearningActivitie
 import { getUiCopy } from './runtime/i18n';
 import { cancelLocalReminder, scheduleLocalReminder, withNotificationId } from './runtime/reminders';
 import { clearMobileState, hydrateMobileSecrets, loadMobileState, saveMobileState } from './runtime/storage';
+import { isMobileVmSession, launchMobileVm } from './runtime/mobileVm';
 import {
   createConversation,
   createInitialState,
@@ -1325,6 +1326,11 @@ export function App() {
             <button className="profile-link" onClick={() => { setCampusOpen(true); setCampusSaved(false); }}>
               <span><strong>{copy.campus}</strong><small>{copy.campusHint}</small></span><ArrowIcon />
             </button>
+            {import.meta.env.DEV && !isMobileVmSession() && (
+              <button className="profile-link" onClick={launchMobileVm}>
+                <span><strong>手机端虚拟机</strong><small>在浏览器手机壳中测试尺寸、旋转、网络和定位</small></span><ArrowIcon />
+              </button>
+            )}
             <section className="profile-section api-key-section">
               <div className="setting-label"><strong>{copy.apiKey}</strong><span>{copy.secureNote}</span></div>
               <div className="key-row">

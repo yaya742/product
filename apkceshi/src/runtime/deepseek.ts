@@ -1,4 +1,5 @@
 import { Capacitor, CapacitorHttp } from '@capacitor/core';
+import { isMobileVmOffline } from './mobileVm';
 import type { MobileLanguage } from './types';
 
 export const DEEPSEEK_ENDPOINT = 'https://api.deepseek.com/chat/completions';
@@ -373,6 +374,7 @@ export async function completeDeepSeek(
   onText?: (text: string) => void,
 ): Promise<DeepSeekCompletion> {
   if (!apiKey.trim()) throw new DeepSeekError('请先在设置中填写 DeepSeek API Key。', 'authentication');
+  if (isMobileVmOffline()) throw new DeepSeekError('虚拟机已模拟断网，请切换为在线后重试。', 'network');
   const requestBody = {
     model: DEEPSEEK_MODEL,
     messages,
