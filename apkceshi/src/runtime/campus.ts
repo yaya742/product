@@ -717,6 +717,11 @@ async function clearCampusCookies() {
   activeCookieJar?.clear();
   zdbkSessionReady = false;
   await Promise.allSettled([
+    // URL-scoped removal is not consistently propagated by Android's
+    // CookieManager when a previous WebVPN redirect set a parent-domain
+    // cookie. The app has no shared browser account state, so clear the
+    // native WebView cookie store before rebuilding the campus session.
+    CapacitorCookies.clearAllCookies(),
     CapacitorCookies.clearCookies({ url: 'https://zjuam.zju.edu.cn' }),
     CapacitorCookies.clearCookies({ url: 'https://identity.zju.edu.cn' }),
     CapacitorCookies.clearCookies({ url: 'https://zdbk.zju.edu.cn' }),
@@ -777,7 +782,20 @@ async function activateWebVpn(): Promise<void> {
   await clearCampusCookies();
   campusTransport = 'webvpn';
   await loginWebVpn(credentials.studentId, credentials.password);
-  await authenticate(credentials.studentId, credentials.password);
+  await waitForNativeCookieSync();
+  try {
+    await authenticate(credentials.studentId, credentials.password);
+  } catch (error) {
+    // The gateway can acknowledge the login before Android exposes its
+    // session cookie to the native HTTP client. Rebuild the WebVPN/CAS pair
+    // once instead of continuing with a half-created identity session.
+    if (!(error instanceof CampusError) || error.code !== 'network') throw error;
+    await clearCampusCookies();
+    campusTransport = 'webvpn';
+    await loginWebVpn(credentials.studentId, credentials.password);
+    await waitForNativeCookieSync();
+    await authenticate(credentials.studentId, credentials.password);
+  }
 }
 
 async function loginZdbk(allowWebVpnRefresh = true) {
@@ -801,9 +819,9 @@ async function loginZdbk(allowWebVpnRefresh = true) {
     throw new CampusError('教务网没有建立登录会话，请重新读取校园信息。', 'authentication');
   }
   if (isCampusNetworkRestriction(body)) {
-    if (campusTransport === 'direct') {
+    if (allowWebVpnRefresh) {
       await activateWebVpn();
-      return loginZdbk();
+      return loginZdbk(false);
     }
     throw new CampusError('WebVPN 已登录，但教务网仍返回了网络限制。', 'network');
   }
@@ -882,6 +900,10 @@ async function loginSztz(allowWebVpnRefresh = true) {
     throw new CampusError('素质拓展平台没有建立登录会话。', 'authentication');
   }
   if (callbackResponse.status !== 200 || (campusTransport === 'direct' && !activeCookieJar?.has('SESSION', campusCookieHost('sztz.zju.edu.cn')))) {
+    if (campusTransport === 'webvpn' && allowWebVpnRefresh) {
+      await activateWebVpn();
+      return loginSztz(false);
+    }
     throw new CampusError('素质拓展平台没有建立正式登录会话。', 'authentication');
   }
   const contextResponse = await request({
@@ -897,7 +919,13 @@ async function loginSztz(allowWebVpnRefresh = true) {
     responseType: 'text',
     disableRedirects: true,
   });
-  if (contextResponse.status !== 200 || !isAuthenticatedSztzContext(responseText(contextResponse))) throw new CampusError('素质拓展平台身份确认未完成。', 'authentication');
+  if (contextResponse.status !== 200 || !isAuthenticatedSztzContext(responseText(contextResponse))) {
+    if (campusTransport === 'webvpn' && allowWebVpnRefresh) {
+      await activateWebVpn();
+      return loginSztz(false);
+    }
+    throw new CampusError('素质拓展平台身份确认未完成。', 'authentication');
+  }
 }
 
 function practiceBoolean(value: unknown): boolean | null {
@@ -968,10 +996,14 @@ async function ensurePracticeSession(): Promise<void> {
     } catch (error) {
       lastError = error;
       if (!isRetryablePracticeSessionError(error) || attempt === 1) throw error;
-      // A failed callback can be caused by the native cookie store still
-      // settling. Retry the trusted CAS flow once before reporting a partial
-      // campus read to the user.
-      await waitForNativeCookieSync();
+      // Rebuild the shared WebVPN/CAS session once. Retrying with the same
+      // stale native cookie store is what caused the intermittent partial
+      // sports/practice module failure.
+      if (campusTransport === 'webvpn') {
+        await activateWebVpn();
+      } else {
+        await waitForNativeCookieSync();
+      }
     }
   }
   throw lastError instanceof Error ? lastError : new CampusError('素质拓展平台没有建立登录会话。', 'authentication');
@@ -1167,7 +1199,10 @@ function isWebVpnLoginUrl(value: string): boolean {
 }
 
 function isCampusNetworkRestriction(body: string): boolean {
-  return /仅限校内|校内网络|WebVPN|使用 VPN|使用VPN|VPN 访问|VPN访问/i.test(body);
+  // Do not match the ordinary word "WebVPN" appearing in a page footer or
+  // navigation link. Only explicit access-denied wording is a restriction;
+  // the previous broad matcher turned valid WebVPN responses into failures.
+  return /仅限(?:校内|校园网)|校内网络(?:访问|环境|登录)|请在校内(?:网络|校园网)|(?:需要|请先|请开启|请连接).{0,16}(?:VPN|校园网)|网络访问(?:受限|被拒绝)|访问被拒绝|access\s+denied|403\s+forbidden/i.test(body);
 }
 
 function scheduleParts(value: string): string[] {
