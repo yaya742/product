@@ -46,6 +46,7 @@ const PERSON_APP_KEY = '50634610756a4c0e82d5a13bb692e257';
 const PERSON_SIGN_SECRET = '1f11192bd9d14a09b29fc59d556e24e3';
 const WEBVPN_ROOT = 'https://webvpn.zju.edu.cn';
 const WEBVPN_DO_LOGIN = `${WEBVPN_ROOT}/do-login`;
+const WEBVPN_CONFIRM_LOGIN = `${WEBVPN_ROOT}/do-confirm-login`;
 // The WebVPN gateway uses different keys for the encrypted target route and
 // the encrypted login password. Reusing one key makes the login request fail
 // even though the generated WebVPN URL still looks valid.
@@ -417,12 +418,19 @@ function hiddenInput(body: string, name: string): string {
   return '';
 }
 
-function encryptWebVpnPassword(password: string): string {
+function webVpnPasswordKey(body: string): string {
+  const embeddedKey = body.match(/encrypt\(data\[i\]\.value,\s*["']([^"']+)["']/i)?.[1]?.trim();
+  return embeddedKey && aesjs.utils.utf8.toBytes(embeddedKey).length === 16
+    ? embeddedKey
+    : WEBVPN_PASSWORD_CIPHER_KEY;
+}
+
+function encryptWebVpnPassword(password: string, cipherKey = WEBVPN_PASSWORD_CIPHER_KEY): string {
   const originalLength = password.length;
   if (!originalLength) throw new CampusError('校园密码不能为空。', 'credentials');
   const padded = originalLength % 16 === 0 ? password : password.padEnd(originalLength + (16 - originalLength % 16), '0');
-  const key = aesjs.utils.utf8.toBytes(WEBVPN_PASSWORD_CIPHER_KEY);
-  const iv = aesjs.utils.utf8.toBytes(WEBVPN_PASSWORD_CIPHER_KEY);
+  const key = aesjs.utils.utf8.toBytes(cipherKey);
+  const iv = aesjs.utils.utf8.toBytes(cipherKey);
   const plaintext = aesjs.utils.utf8.toBytes(padded);
   const encrypted = new aesjs.ModeOfOperation.cfb(key, iv, 16).encrypt(plaintext).slice(0, originalLength);
   return aesjs.utils.hex.fromBytes(iv) + aesjs.utils.hex.fromBytes(encrypted);
@@ -444,7 +452,7 @@ async function loginWebVpn(studentId: string, password: string): Promise<void> {
       _csrf: csrf,
       auth_type: hiddenInput(body, 'auth_type') || 'local',
       username: studentId,
-      password: encryptWebVpnPassword(password),
+      password: encryptWebVpnPassword(password, webVpnPasswordKey(body)),
       sms_code: '',
       captcha: '',
       needCaptcha: hiddenInput(body, 'needCaptcha') || 'false',
@@ -465,6 +473,30 @@ async function loginWebVpn(studentId: string, password: string): Promise<void> {
   if (record.success === true) return;
   const code = String(record.error || '').toUpperCase();
   const message = field(record, ['message'], 'WebVPN 登录未完成。');
+  if (code === 'NEED_CONFIRM') {
+    // The web form asks the user to confirm when an older WebVPN session is
+    // still active. Mobile auto-read has no browser dialog, so perform the
+    // same explicit confirmation request on the user's behalf.
+    const confirmation = await request({
+      url: WEBVPN_CONFIRM_LOGIN,
+      method: 'POST',
+      headers: {
+        Accept: 'application/json, text/plain, */*',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        Origin: WEBVPN_ROOT,
+        Referer: `${WEBVPN_ROOT}/login`,
+      },
+      responseType: 'text',
+      disableRedirects: true,
+      allowWebVpn: true,
+    });
+    const confirmationPayload = parseJson(confirmation, 'WebVPN 确认登录');
+    const confirmationRecord = confirmationPayload && typeof confirmationPayload === 'object' && !Array.isArray(confirmationPayload)
+      ? confirmationPayload as Record<string, unknown>
+      : {};
+    if (confirmationRecord.success === true) return;
+    throw new CampusError(field(confirmationRecord, ['message', 'url'], 'WebVPN 确认登录未完成。'), 'authentication');
+  }
   if (/CAPTCHA|SMS|TWO_STEP|SECOND/.test(code) || /验证码|二次认证|短信/.test(message)) {
     throw new CampusError(`WebVPN 需要人工安全校验：${message}`, 'captcha');
   }
