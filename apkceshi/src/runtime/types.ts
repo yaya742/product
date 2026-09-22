@@ -55,6 +55,10 @@ export interface CampusCourse {
   teacher: string;
   location: string;
   time: string;
+  /** Numeric timetable fields retained for deterministic sorting and display. */
+  weekday?: number;
+  startPeriod?: number;
+  endPeriod?: number;
   weeks: string;
   credit: string;
   score: string;

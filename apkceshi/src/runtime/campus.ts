@@ -192,6 +192,10 @@ let activeCookieJar: CookieJar | null = null;
 let zdbkSessionReady = false;
 let campusTransport: CampusTransport = 'direct';
 let activeCampusCredentials: { studentId: string; password: string } | null = null;
+// Keep a good response for each half-semester so a transient empty or
+// malformed response cannot erase a timetable that was already read.
+const scheduleCache = new Map<string, CampusCourse[]>();
+let scheduleReadWarning = '';
 
 function assertNative() {
   if (!Capacitor.isNativePlatform()) {
@@ -1075,6 +1079,8 @@ function ajaxHeaders() {
     Accept: 'application/json, text/javascript, */*; q=0.01',
     'X-Requested-With': 'XMLHttpRequest',
     'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
+    'Cache-Control': 'no-cache',
+    Pragma: 'no-cache',
   };
 }
 
@@ -1112,6 +1118,13 @@ function inferYearLevel(studentId: string, academicYear: string): string {
 function numberValue(value: string): number | undefined {
   const numeric = Number(value.replace(/,/g, '').trim());
   return Number.isFinite(numeric) ? numeric : undefined;
+}
+
+function integerValue(value: string): number | undefined {
+  const match = value.replace(/,/g, '').match(/\d+/);
+  if (!match) return undefined;
+  const numeric = Number(match[0]);
+  return Number.isInteger(numeric) ? numeric : undefined;
 }
 
 function textValue(value: unknown): string {
@@ -1162,7 +1175,7 @@ function listFromPayload(value: unknown, keys: string[] = []): Record<string, un
   const record = value as Record<string, unknown>;
   for (const key of keys) {
     const candidate = record[key];
-    if (Array.isArray(candidate)) return candidate.filter((item): item is Record<string, unknown> => !!item && typeof item === 'object' && !Array.isArray(item));
+    if (Array.isArray(candidate) && candidate.length) return candidate.filter((item): item is Record<string, unknown> => !!item && typeof item === 'object' && !Array.isArray(item));
   }
   for (const key of ['data', 'result', 'rows']) {
     if (record[key] && typeof record[key] === 'object') {
@@ -1171,6 +1184,14 @@ function listFromPayload(value: unknown, keys: string[] = []): Record<string, un
     }
   }
   return [];
+}
+
+function payloadContainsList(value: unknown, keys: string[]): boolean {
+  if (Array.isArray(value)) return true;
+  if (!value || typeof value !== 'object') return false;
+  const record = value as Record<string, unknown>;
+  if (keys.some((key) => Array.isArray(record[key]))) return true;
+  return ['data', 'result', 'rows'].some((key) => payloadContainsList(record[key], keys));
 }
 
 function parseJson(result: HttpResult, label: string): unknown {
@@ -1221,13 +1242,61 @@ function scheduleParts(value: string): string[] {
   return cleanDisplayText(value).replace(/zwf.*$/i, '').split(/\r?\n/).map((part) => part.trim()).filter(Boolean);
 }
 
-function weekdayLabel(value: string): string {
+function weekdayNumber(value: string): number | undefined {
   const clean = value.trim();
-  if (!clean) return '';
-  if (/^(周|星期)/.test(clean)) return clean.replace(/^星期/, '周');
+  if (!clean) return undefined;
+  const named = clean.match(/(?:周|星期)\s*([一二三四五六日天1-7])/);
+  if (named) {
+    const day = named[1];
+    if (/\d/.test(day)) return Number(day);
+    return '一二三四五六日'.indexOf(day) + 1 || (day === '天' ? 7 : undefined);
+  }
   const numeric = Number(clean.replace(/\D/g, ''));
-  if (numeric >= 1 && numeric <= 7) return `周${['一', '二', '三', '四', '五', '六', '日'][numeric - 1]}`;
-  return `周${clean}`;
+  return numeric >= 1 && numeric <= 7 ? numeric : undefined;
+}
+
+function weekdayLabel(value: string): string {
+  const day = weekdayNumber(value);
+  return day ? `周${['一', '二', '三', '四', '五', '六', '日'][day - 1]}` : '';
+}
+
+function periodRangeFromText(value: string): { start?: number; end?: number } {
+  const clean = value.trim();
+  if (!clean) return {};
+  const labelled = clean.match(/第\s*(\d{1,2})(?:\s*[-~至—–－]\s*(\d{1,2}))?\s*节/);
+  if (labelled) {
+    const start = Number(labelled[1]);
+    const end = Number(labelled[2] || labelled[1]);
+    return start >= 1 && start <= 20 && end >= start && end <= 20 ? { start, end } : {};
+  }
+  const range = clean.match(/(?:^|[^\d])(\d{1,2})\s*[-~至—–－]\s*(\d{1,2})(?:节)?(?:$|[^\d])/);
+  if (range) {
+    const start = Number(range[1]);
+    const end = Number(range[2]);
+    return start >= 1 && start <= 20 && end >= start && end <= 20 ? { start, end } : {};
+  }
+  const single = clean.match(/(?:^|[^\d])(\d{1,2})(?:节)?$/);
+  if (single) {
+    const start = Number(single[1]);
+    return start >= 1 && start <= 20 ? { start, end: start } : {};
+  }
+  return {};
+}
+
+function coursePeriodRange(item: Record<string, unknown>): { start?: number; end?: number } {
+  const initialText = field(item, ['djj', 'start_period', 'startPeriod']);
+  const initial = integerValue(initialText);
+  const duration = integerValue(field(item, ['skcd', 'period_count', 'periodCount']));
+  if (initial && duration && duration >= 1 && duration <= 20 && initial <= 20) {
+    return { start: initial, end: initial + duration - 1 };
+  }
+  const explicit = periodRangeFromText(initialText);
+  if (explicit.start) return explicit;
+  for (const key of ['jcs', 'jssj', 'sksj', 'period', 'skjc', 'time', 'class_time']) {
+    const parsed = periodRangeFromText(field(item, [key]));
+    if (parsed.start) return parsed;
+  }
+  return {};
 }
 
 function normalizeCourse(item: Record<string, unknown>, index: number): CampusCourse | null {
@@ -1237,25 +1306,52 @@ function normalizeCourse(item: Record<string, unknown>, index: number): CampusCo
   const rawTeacher = field(item, ['jsxx', 'jsxms', 'jsxm', 'teacher', 'teacherName', 'teacher_name', 'jsmc', 'teacherList']);
   const rawLocation = field(item, ['cdmc', 'jxcdmc', 'jxcd', 'classroom', 'room', 'location', 'place', 'jxcdm']);
   if (!parts.length && !rawName && !rawTeacher && !rawLocation) return null;
-  const day = weekdayLabel(field(item, ['xqj', 'xqjmc', 'week_day', 'weekday', 'weekdayName']));
-  const firstPeriod = numberValue(field(item, ['djj', 'start_period', 'startPeriod']));
-  const duration = numberValue(field(item, ['skcd', 'period_count', 'periodCount']));
-  const lastPeriod = firstPeriod && duration ? firstPeriod + duration - 1 : undefined;
-  const periodLabel = firstPeriod && lastPeriod ? `第${firstPeriod}-${lastPeriod}节` : field(item, ['jcs', 'jssj', 'sksj', 'period', 'skjc', 'time', 'class_time']);
+  const dayNumber = weekdayNumber(field(item, ['xqj', 'xqjmc', 'week_day', 'weekday', 'weekdayName']));
+  const day = dayNumber ? weekdayLabel(String(dayNumber)) : '';
+  const { start: firstPeriod, end: lastPeriod } = coursePeriodRange(item);
+  const periodLabel = firstPeriod && lastPeriod
+    ? `第${firstPeriod}-${lastPeriod}节`
+    : field(item, ['jcs', 'jssj', 'sksj', 'period', 'skjc', 'time', 'class_time']);
   const oddEven = field(item, ['dsz', 'odd_even']);
   const weeks = field(item, ['zcd', 'zc', 'zcmc', 'zcsm', 'weeks', 'week', 'week_range', 'weekRange', 'weekList'])
     || (oddEven === '0' ? '单周' : oddEven === '1' ? '双周' : '');
   return {
     id: field(item, ['jxb_id', 'jxbid', 'kch_id', 'xkkh', 'kch', 'course_id'], `course-${index}`),
     name: (rawName || parts[0] || '未命名课程').replace(/\(/g, '（').replace(/\)/g, '）'),
-    teacher: rawTeacher || parts[2] || '教师未提供',
+    teacher: rawTeacher || parts[2] || parts[1] || '教师未提供',
     location: rawLocation || parts[3] || '地点未提供',
     time: [day, periodLabel].filter(Boolean).join(' · ') || '时间未提供',
+    ...(dayNumber ? { weekday: dayNumber } : {}),
+    ...(firstPeriod ? { startPeriod: firstPeriod } : {}),
+    ...(lastPeriod ? { endPeriod: lastPeriod } : {}),
     weeks: weeks || '周次未提供',
     credit: field(item, ['xf', 'credit', 'course_credit', 'kcxzxf'], '—'),
     score: field(item, ['cj', 'score', 'original_score'], '—'),
     completed: false,
   };
+}
+
+function courseSortPosition(course: CampusCourse): { weekday: number; start: number; end: number } {
+  const time = course.time || '';
+  const weekday = course.weekday || weekdayNumber(time) || 99;
+  const range = course.startPeriod && course.endPeriod
+    ? { start: course.startPeriod, end: course.endPeriod }
+    : periodRangeFromText(time);
+  return { weekday, start: range.start || 99, end: range.end || 99 };
+}
+
+function sortCourses(courses: CampusCourse[]): CampusCourse[] {
+  return [...courses].sort((left, right) => {
+    const a = courseSortPosition(left);
+    const b = courseSortPosition(right);
+    return a.weekday - b.weekday
+      || a.start - b.start
+      || a.end - b.end
+      || left.name.localeCompare(right.name, 'zh-CN')
+      || left.location.localeCompare(right.location, 'zh-CN')
+      || left.teacher.localeCompare(right.teacher, 'zh-CN')
+      || left.id.localeCompare(right.id);
+  });
 }
 
 function examStatus(value: string): CampusExam['status'] {
@@ -1351,6 +1447,7 @@ function normalizeActivity(item: Record<string, unknown>, courseId: string): Cam
 
 async function readSchedule(year: string, term: string): Promise<CampusCourse[]> {
   await loginZdbk();
+  scheduleReadWarning = '';
   // The official form submits the full academic-year label and one
   // sub-semester at a time. Sending only the start year ("2026") or the
   // internal aggregate codes ("3"/"12") can return a valid-looking fallback
@@ -1359,20 +1456,63 @@ async function readSchedule(year: string, term: string): Promise<CampusCourse[]>
   const semesterCodes = term === '1' ? ['1|秋', '1|冬'] : ['2|春', '2|夏'];
   const result: CampusCourse[] = [];
   for (const semesterCode of semesterCodes) {
-    const response = await request({ url: SCHEDULE_URL, method: 'POST', data: { xnm: academicYear, xqm: semesterCode, captcha_value: '' }, headers: ajaxHeaders(), responseType: 'text', disableRedirects: true });
-    const body = responseText(response);
-    if (isCampusNetworkRestriction(body)) throw new CampusError('教务网提示需要校内网络；请先开启浙大 VPN 或 WebVPN 后再读取。', 'network');
-    if (response.status === 401 || response.status === 403 || isAuthenticationPage(body)) throw new CampusError('教务网登录态已失效，请重新读取。', 'authentication');
-    if (body.toLowerCase().includes('captcha_error')) throw new CampusError('教务网要求验证码，手机端暂不绕过安全校验。', 'captcha');
-    const payload = parseJson(response, '教务网课表');
-    if (payload === null) continue;
-    const items = listFromPayload(payload, ['kbList', 'items', 'rows']).filter((item) => field(item, ['sfyjskc']) !== '1');
-    if (!items.length && payload && typeof payload === 'object' && !['kbList', 'items', 'rows', 'data', 'result'].some((key) => key in (payload as Record<string, unknown>))) throw new CampusError('教务网课表返回了无法识别的数据。', 'response');
-    result.push(...items.map(normalizeCourse).filter((item): item is CampusCourse => item !== null));
+    const cacheKey = `${activeCampusCredentials?.studentId || 'current'}|${academicYear}|${semesterCode}`;
+    let semesterCourses: CampusCourse[] | null = null;
+    let lastError: unknown = null;
+    for (let attempt = 0; attempt < 2 && semesterCourses === null; attempt += 1) {
+      try {
+        if (attempt > 0) {
+          // Rebuild the academic-system session before retrying a malformed
+          // response. This avoids reusing a half-valid JSESSIONID/route pair.
+          zdbkSessionReady = false;
+          await waitForNativeCookieSync();
+          await loginZdbk();
+        }
+        const response = await request({ url: SCHEDULE_URL, method: 'POST', data: { xnm: academicYear, xqm: semesterCode, captcha_value: '' }, headers: ajaxHeaders(), responseType: 'text', disableRedirects: true });
+        const body = responseText(response);
+        if (isCampusNetworkRestriction(body)) throw new CampusError('教务网提示需要校内网络；请先开启浙大 VPN 或 WebVPN 后再读取。', 'network');
+        if (response.status === 401 || response.status === 403 || isAuthenticationPage(body)) throw new CampusError('教务网登录态已失效，请重新读取。', 'authentication');
+        if (body.toLowerCase().includes('captcha_error')) throw new CampusError('教务网要求验证码，手机端暂不绕过安全校验。', 'captcha');
+        const payload = parseJson(response, '教务网课表');
+        const cached = scheduleCache.get(cacheKey);
+        if (payload === null) {
+          if (!cached && attempt === 0) throw new CampusError('教务网课表本次返回为空，正在重试。', 'response');
+          semesterCourses = cached ? [...cached] : [];
+          if (cached?.length) scheduleReadWarning = '本次课表响应为空，已保留上次成功读取的数据。';
+          continue;
+        }
+        if (!payloadContainsList(payload, ['kbList', 'items', 'rows'])) throw new CampusError('教务网课表返回了无法识别的数据。', 'response');
+        const items = listFromPayload(payload, ['kbList', 'items', 'rows']).filter((item) => field(item, ['sfyjskc']) !== '1');
+        const parsed = sortCourses(items.map(normalizeCourse).filter((item): item is CampusCourse => item !== null));
+        // A non-empty list whose every row is unusable is not an empty
+        // timetable. Retry it so a broken bridge response cannot silently
+        // replace a complete schedule with “暂无数据”.
+        if (items.length && !parsed.length) throw new CampusError('教务网课表条目缺少有效星期或节次。', 'response');
+        if (!parsed.length && !cached && attempt === 0) throw new CampusError('教务网课表本次没有可识别课程，正在重试。', 'response');
+        if (parsed.length) scheduleCache.set(cacheKey, parsed);
+        semesterCourses = parsed.length || !cached ? parsed : [...cached];
+        if (!parsed.length && cached?.length) scheduleReadWarning = '本次课表响应不完整，已保留上次成功读取的数据。';
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    if (semesterCourses === null) {
+      const cached = scheduleCache.get(cacheKey);
+      if (cached?.length) {
+        scheduleReadWarning = '课表实时读取失败，已保留上次成功读取的数据。';
+        semesterCourses = [...cached];
+      } else if (result.length) {
+        scheduleReadWarning = `课表${semesterCode}读取失败，本次仅返回了另一半学期的数据。`;
+        semesterCourses = [];
+      } else {
+        throw lastError instanceof Error ? lastError : new CampusError('教务网课表读取失败。', 'response');
+      }
+    }
+    result.push(...semesterCourses);
   }
   const unique = new Map<string, CampusCourse>();
   for (const course of result) unique.set(`${course.id}|${course.time}|${course.name}`, course);
-  return [...unique.values()];
+  return sortCourses([...unique.values()]);
 }
 
 async function readExams(): Promise<CampusExam[]> {
@@ -1410,13 +1550,14 @@ function gradePassed(score: string): boolean {
 
 function enrichCoursesWithGrades(courses: CampusCourse[], grades: CampusGrade[]): CampusCourse[] {
   const byId = new Map(grades.map((grade) => [grade.id.trim(), grade]));
+  const byCourseKey = new Map(grades.filter((grade) => grade.courseKey?.trim()).map((grade) => [grade.courseKey!.trim(), grade]));
   const byName = new Map<string, CampusGrade>();
   for (const grade of grades) {
     const key = normalizedCourseName(grade.name);
     if (key && !byName.has(key)) byName.set(key, grade);
   }
   return courses.map((course) => {
-    const grade = byId.get(course.id.trim()) || byName.get(normalizedCourseName(course.name));
+    const grade = byId.get(course.id.trim()) || byCourseKey.get(course.id.trim()) || byName.get(normalizedCourseName(course.name));
     if (!grade) return course;
     return {
       ...course,
@@ -1924,7 +2065,14 @@ export async function readCampusInfo(studentId: string, password: string, option
     let holidays: CampusHoliday[] = [];
     let successfulModules = 0;
 
-    try { courses = await readSchedule(year, term); successfulModules += 1; } catch (error) { if (isFatalModuleError(error)) throw error; warnings.push(`课表：${errorText(error)}`); }
+    try {
+      courses = await readSchedule(year, term);
+      successfulModules += 1;
+      if (scheduleReadWarning) warnings.push(`课表：${scheduleReadWarning}`);
+    } catch (error) {
+      if (isFatalModuleError(error)) throw error;
+      warnings.push(`课表：${errorText(error)}`);
+    }
     courseOfferings = [...new Map(courses.map((course) => [course.id, normalizeCourseOffering(course, `${year}-${term}`)])).values()];
     try { exams = await readExams(); successfulModules += 1; } catch (error) { if (isFatalModuleError(error)) throw error; warnings.push(`考试：${errorText(error)}`); }
     try { grades = await readGrades(); successfulModules += 1; } catch (error) { if (isFatalModuleError(error)) throw error; warnings.push(`成绩：${errorText(error)}`); }

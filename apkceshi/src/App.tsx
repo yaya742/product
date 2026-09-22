@@ -1506,7 +1506,7 @@ export function App() {
                   <section className="profile-section campus-data-card">
                     <div className="setting-label"><strong>{copy.campusSchedule}</strong><span>{campus.courses.length ? `${campus.courses.length} · ${campus.academicYear}–${Number(campus.academicYear) + 1} · ${campusTermLabel(campus.term)} · ${campus.yearLevel || '年级未识别'} · ${copy.campusCompletedCredit} ${campus.completedCredit.toFixed(1)}` : copy.campusEmpty}</span></div>
                     {campus.courses.length ? campus.courses.map((course) => (
-                      <div className="campus-record" key={course.id}>
+                      <div className="campus-record" key={`${course.id}|${course.time}|${course.name}`}>
                         <strong>{course.name}</strong><span>{course.time} · {course.location || copy.campusNoLocation}</span><small>{course.teacher} · {course.weeks}</small><small>{copy.campusCourseCredit}：{course.credit || '—'}{course.completed ? ` · ${copy.campusCourseCompleted}` : ''}{course.score && course.score !== '—' ? ` · ${course.score}` : ''}</small>
                       </div>
                     )) : <p className="empty-history">{copy.campusEmpty}</p>}
