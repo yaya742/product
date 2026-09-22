@@ -409,7 +409,6 @@ async function request(options: {
   if (isMobileVmOffline()) throw new CampusError('虚拟机已模拟断网，校园请求未发送。', 'network');
   assertNative();
   const url = trustedUrl(routedUrl(options.url), undefined, { allowWebVpn: options.allowWebVpn || campusTransport === 'webvpn' });
-  const cookie = activeCookieJar?.headerFor(url);
   try {
     const requestHeaders: Record<string, string> = { ...options.headers };
     const referer = headerValue(requestHeaders, 'referer');
@@ -419,7 +418,10 @@ async function request(options: {
       'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.7',
       ...requestHeaders,
     };
-    if (cookie) headers.Cookie = cookie;
+    // CapacitorCookies installs the Android CookieHandler used by
+    // CapacitorHttp. Do not also send the JS CookieJar as a Cookie header:
+    // duplicate session names can make WebVPN choose a stale ticket and
+    // return its short interstitial page without a session-bound _csrf field.
     const result = await CapacitorHttp.request({
       url,
       method: options.method || 'GET',
