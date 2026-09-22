@@ -115,6 +115,7 @@ export interface CampusGrade {
   point: string;
   semesterId?: string;
   courseKey?: string;
+  creditIncluded?: boolean;
   gpaIncluded?: boolean;
   gpaExclusionReason?: string;
 }

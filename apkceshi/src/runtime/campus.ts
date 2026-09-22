@@ -1299,6 +1299,11 @@ function coursePeriodRange(item: Record<string, unknown>): { start?: number; end
   return {};
 }
 
+function semesterPartLabel(value: string): string {
+  const parts = [...new Set(value.match(/[春夏秋冬]/g) || [])];
+  return parts.length ? `${parts.join('')}学期` : '';
+}
+
 function normalizeCourse(item: Record<string, unknown>, index: number): CampusCourse | null {
   if (field(item, ['sfyjskc']) === '1') return null;
   const parts = scheduleParts(textValue(item.kcb));
@@ -1313,8 +1318,10 @@ function normalizeCourse(item: Record<string, unknown>, index: number): CampusCo
     ? `第${firstPeriod}-${lastPeriod}节`
     : field(item, ['jcs', 'period', 'skjc'], '时间未提供');
   const oddEven = field(item, ['dsz', 'odd_even']);
-  const weeks = field(item, ['zcxx', 'zcd', 'zc', 'zcmc', 'zcsm', 'weeks', 'week', 'week_range', 'weekRange', 'weekList'])
-    || (oddEven === '0' ? '单周' : oddEven === '1' ? '双周' : '');
+  const explicitWeeks = field(item, ['zcxx', 'zcd', 'zc', 'zcmc', 'zcsm', 'weeks', 'week', 'week_range', 'weekRange', 'weekList']);
+  const semesterPart = semesterPartLabel(field(item, ['xxq', 'xq', 'semester_part', 'semesterPart']));
+  const parity = oddEven === '0' ? '单周' : oddEven === '1' ? '双周' : '';
+  const weeks = [explicitWeeks || semesterPart, parity && !explicitWeeks.includes(parity) ? parity : ''].filter(Boolean).join(' · ');
   return {
     id: field(item, ['jxb_id', 'jxbid', 'kch_id', 'xkkh', 'kch', 'course_id'], `course-${index}`),
     name: (rawName || parts[0] || '未命名课程').replace(/\(/g, '（').replace(/\)/g, '）'),
@@ -1325,7 +1332,7 @@ function normalizeCourse(item: Record<string, unknown>, index: number): CampusCo
     ...(firstPeriod ? { startPeriod: firstPeriod } : {}),
     ...(lastPeriod ? { endPeriod: lastPeriod } : {}),
     weeks: weeks || '周次未提供',
-    credit: field(item, ['xf', 'credit', 'course_credit', 'kcxzxf'], '—'),
+    credit: field(item, ['xf', 'credit', 'credits', 'course_credit', 'kcxzxf', 'kczxf', 'xkxf', 'zxf'], '—'),
     score: field(item, ['cj', 'score', 'original_score'], '—'),
     completed: false,
   };
@@ -1375,19 +1382,45 @@ function normalizeExams(item: Record<string, unknown>, index: number): CampusExa
   return candidates.flatMap((candidate) => candidate.time ? [{ id: `${courseId}-${candidate.type}`, name, time: candidate.time, location: candidate.location || '地点未提供', seat: candidate.seat, type: candidate.type, status: examStatus(candidate.time) }] : []);
 }
 
+function normalizedGradeLabel(score: string): string {
+  return score.replace(/\s+/g, '').trim();
+}
+
+function gradeCreditIncluded(score: string): boolean {
+  const value = normalizedGradeLabel(score);
+  return !!value && value !== '—' && value !== '-' && !/^(弃修|待录|缓考|无效)$/.test(value);
+}
+
+function gradeGpaPolicyIncluded(score: string, courseId: string): boolean {
+  const value = normalizedGradeLabel(score);
+  return gradeCreditIncluded(value) && !/^(合格|不合格)$/.test(value) && !courseId.toLowerCase().includes('xtwkc');
+}
+
 function normalizeGrade(item: Record<string, unknown>, index: number): CampusGrade {
+  const id = field(item, ['xkkh', 'kch', 'kcmc', 'grade_id'], `grade-${index}`);
   const score = field(item, ['cj', 'score', 'original_score', 'cjbj'], '—');
   const point = field(item, ['jd', 'point', 'five_point', 'gpa'], '—');
+  const credit = field(item, ['xf', 'credit', 'course_credit'], '—');
+  const creditIncluded = gradeCreditIncluded(score);
+  const gpaPolicyIncluded = gradeGpaPolicyIncluded(score, id);
+  const gpaIncluded = gpaPolicyIncluded && numberValue(credit) !== undefined && numberValue(point) !== undefined;
   return {
-    id: field(item, ['xkkh', 'kch', 'kcmc', 'grade_id'], `grade-${index}`),
+    id,
     name: field(item, ['kcmc', 'course_name', 'courseName'], '未命名课程'),
     score,
-    credit: field(item, ['xf', 'credit', 'course_credit'], '—'),
+    credit,
     point,
     semesterId: field(item, ['semester_id', 'semester', 'xq_id', 'xqmmc', 'xnm'], ''),
     courseKey: field(item, ['xkkh', 'course_key', 'kch'], ''),
-    gpaIncluded: numberValue(field(item, ['xf', 'credit', 'course_credit'])) !== undefined && numberValue(point) !== undefined,
-    gpaExclusionReason: numberValue(field(item, ['xf', 'credit', 'course_credit'])) !== undefined && numberValue(point) !== undefined ? '' : '成绩接口未提供可纳入绩点计算的学分或绩点。',
+    creditIncluded,
+    gpaIncluded,
+    gpaExclusionReason: gpaIncluded
+      ? ''
+      : !creditIncluded
+        ? `${score}记录不计学分和绩点。`
+        : !gpaPolicyIncluded
+          ? `${score}记录不计绩点。`
+          : '成绩接口未提供可纳入绩点计算的学分或绩点。',
   };
 }
 
@@ -1536,34 +1569,62 @@ function normalizedCourseName(value: string): string {
 }
 
 function gradeRecorded(score: string): boolean {
-  const value = score.trim();
-  return !!value && value !== '—' && value !== '-' && value !== '未录入' && value !== '暂无';
+  const value = normalizedGradeLabel(score);
+  return gradeCreditIncluded(value) && value !== '未录入' && value !== '暂无';
 }
 
 function gradePassed(score: string): boolean {
-  const value = score.trim();
+  const value = normalizedGradeLabel(score);
+  if (!gradeRecorded(value)) return false;
   const numeric = numberValue(value);
   if (numeric !== undefined) return numeric >= 60;
   if (/优秀|良好|中等|通过|合格|免修|免考|优|良/.test(value)) return true;
   return !/不及格|不通过|未通过|缺考|取消|缓考|违纪/.test(value) && value === '通过';
 }
 
-function enrichCoursesWithGrades(courses: CampusCourse[], grades: CampusGrade[]): CampusCourse[] {
+function usableCredit(value: string | undefined): boolean {
+  const credit = value === undefined ? undefined : numberValue(value);
+  return credit !== undefined && credit > 0;
+}
+
+function enrichCoursesWithAcademicData(courses: CampusCourse[], grades: CampusGrade[], learningCourses: CampusLearningCourse[]): CampusCourse[] {
   const byId = new Map(grades.map((grade) => [grade.id.trim(), grade]));
   const byCourseKey = new Map(grades.filter((grade) => grade.courseKey?.trim()).map((grade) => [grade.courseKey!.trim(), grade]));
   const byName = new Map<string, CampusGrade>();
   for (const grade of grades) {
     const key = normalizedCourseName(grade.name);
-    if (key && !byName.has(key)) byName.set(key, grade);
+    if (key && usableCredit(grade.credit) && !byName.has(key)) byName.set(key, grade);
+  }
+  const learningById = new Map<string, CampusLearningCourse>();
+  const learningByName = new Map<string, CampusLearningCourse>();
+  for (const learningCourse of learningCourses) {
+    for (const key of [learningCourse.id, learningCourse.code].map((value) => value.trim()).filter(Boolean)) {
+      if (!learningById.has(key)) learningById.set(key, learningCourse);
+    }
+    const nameKey = normalizedCourseName(learningCourse.name);
+    if (nameKey && usableCredit(learningCourse.credit) && !learningByName.has(nameKey)) learningByName.set(nameKey, learningCourse);
   }
   return courses.map((course) => {
-    const grade = byId.get(course.id.trim()) || byCourseKey.get(course.id.trim()) || byName.get(normalizedCourseName(course.name));
-    if (!grade) return course;
+    const courseId = course.id.trim();
+    const nameKey = normalizedCourseName(course.name);
+    const exactGrade = byId.get(courseId) || byCourseKey.get(courseId);
+    const namedGrade = byName.get(nameKey);
+    const learningCourse = learningById.get(courseId) || learningByName.get(nameKey);
+    const credit = usableCredit(course.credit)
+      ? course.credit
+      : usableCredit(exactGrade?.credit)
+        ? exactGrade!.credit
+        : usableCredit(learningCourse?.credit)
+          ? learningCourse!.credit
+          : usableCredit(namedGrade?.credit)
+            ? namedGrade!.credit
+            : '—';
+    if (!exactGrade) return { ...course, credit };
     return {
       ...course,
-      credit: course.credit !== '—' ? course.credit : grade.credit,
-      score: course.score !== '—' ? course.score : grade.score,
-      completed: gradeRecorded(grade.score),
+      credit,
+      score: course.score !== '—' ? course.score : exactGrade.score,
+      completed: gradeRecorded(exactGrade.score),
     };
   });
 }
@@ -1978,6 +2039,7 @@ export async function readPublicHolidays(academicYear: string): Promise<CampusHo
 
 function makeGradeAlerts(grades: CampusGrade[]): CampusGradeAlert[] {
   return grades.flatMap((grade) => {
+    if (!gradeCreditIncluded(grade.score)) return [];
     const numeric = numberValue(grade.score);
     const failed = (numeric !== undefined && numeric < 60) || /不及格|不通过|挂科|未通过/.test(grade.score);
     const attention = !failed && ((numeric !== undefined && numeric >= 60 && numeric < 70) || (numberValue(grade.point) !== undefined && Number(grade.point) < 3));
@@ -1989,8 +2051,8 @@ function makeGradeAlerts(grades: CampusGrade[]): CampusGradeAlert[] {
 function makeGpaSummary(grades: CampusGrade[], semesterId?: string): CampusGpaSummary | null {
   const scoped = semesterId ? grades.filter((grade) => grade.semesterId === semesterId) : grades;
   if (!scoped.length) return null;
-  const eligible = scoped.filter((grade) => numberValue(grade.credit) !== undefined);
-  const counted = eligible.filter((grade) => numberValue(grade.point) !== undefined);
+  const eligible = scoped.filter((grade) => usableCredit(grade.credit) && gradeCreditIncluded(grade.score));
+  const counted = eligible.filter((grade) => gradeGpaPolicyIncluded(grade.score, grade.id) && numberValue(grade.point) !== undefined);
   const denominator = counted.reduce((sum, grade) => sum + (numberValue(grade.credit) || 0), 0);
   const gpa = denominator ? counted.reduce((sum, grade) => sum + (numberValue(grade.credit) || 0) * (numberValue(grade.point) || 0), 0) / denominator : null;
   return {
@@ -2000,7 +2062,7 @@ function makeGpaSummary(grades: CampusGrade[], semesterId?: string): CampusGpaSu
     creditDenominator: Number(denominator.toFixed(3)),
     eligibleAttempts: eligible.length,
     countedAttempts: counted.length,
-    excludedAttempts: eligible.length - counted.length,
+    excludedAttempts: scoped.length - counted.length,
     complete: false,
     note: '教务成绩接口未返回重修取舍和学期排除口径，仅按可用成绩、绩点和学分计算近似汇总。',
   };
@@ -2101,7 +2163,7 @@ export async function readCampusInfo(studentId: string, password: string, option
     }
     if (!successfulModules && warnings.length) throw new CampusError(warnings.join('；'), 'response');
 
-    courses = enrichCoursesWithGrades(courses, grades);
+    courses = enrichCoursesWithAcademicData(courses, grades, learningCourses);
     courseOfferings = [...new Map(courses.map((course) => [course.id, normalizeCourseOffering(course, `${year}-${term}`)])).values()];
     gradeAlerts = makeGradeAlerts(grades);
     gpaCumulative = makeGpaSummary(grades);
@@ -2110,21 +2172,15 @@ export async function readCampusInfo(studentId: string, password: string, option
       const summary = makeGpaSummary(grades, semesterId);
       return summary ? [summary] : [];
     });
-    const countedGrades = grades.flatMap((grade) => {
+    const creditGrades = grades.flatMap((grade) => {
       const credit = numberValue(grade.credit);
       const point = numberValue(grade.point);
-      return credit !== undefined && credit > 0 ? [{ credit, point }] : [];
+      return credit !== undefined && credit > 0 && gradeCreditIncluded(grade.score) ? [{ grade, credit, point }] : [];
     });
-    const totalCredit = countedGrades.reduce((sum, grade) => sum + grade.credit, 0);
-    const completedCredit = grades.reduce((sum, grade) => {
-      const credit = numberValue(grade.credit);
-      return credit !== undefined && credit > 0 && gradeRecorded(grade.score) ? sum + credit : sum;
-    }, 0);
-    const earnedCredit = grades.reduce((sum, grade) => {
-      const credit = numberValue(grade.credit);
-      return credit !== undefined && credit > 0 && gradePassed(grade.score) ? sum + credit : sum;
-    }, 0);
-    const gpaGrades = countedGrades.filter((grade): grade is { credit: number; point: number } => grade.point !== undefined && Number.isFinite(grade.point));
+    const totalCredit = creditGrades.reduce((sum, item) => sum + item.credit, 0);
+    const completedCredit = creditGrades.reduce((sum, item) => gradeRecorded(item.grade.score) ? sum + item.credit : sum, 0);
+    const earnedCredit = creditGrades.reduce((sum, item) => gradePassed(item.grade.score) ? sum + item.credit : sum, 0);
+    const gpaGrades = creditGrades.filter((item): item is { grade: CampusGrade; credit: number; point: number } => gradeGpaPolicyIncluded(item.grade.score, item.grade.id) && item.point !== undefined && Number.isFinite(item.point));
     const gpaDenominator = gpaGrades.reduce((sum, grade) => sum + grade.credit, 0);
     const gpa = gpaDenominator ? gpaGrades.reduce((sum, grade) => sum + grade.credit * grade.point, 0) / gpaDenominator : null;
     return {
