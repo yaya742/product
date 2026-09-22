@@ -64,6 +64,7 @@ const TRUSTED_HOSTS = new Set([
   'ugrs.zju.edu.cn',
 ]);
 const WEBVPN_HOST = 'webvpn.zju.edu.cn';
+const ZJU_DOMAIN = 'zju.edu.cn';
 type CampusTransport = 'direct' | 'webvpn';
 
 export type CampusErrorCode = 'native_required' | 'credentials' | 'network' | 'authentication' | 'captcha' | 'response';
@@ -239,6 +240,11 @@ function isWebVpnProxyPath(pathname: string): boolean {
   return parts.length >= 2 && /^https?$/.test(parts[0]) && /^[0-9a-f]{32,}(?:-\d+)?$/i.test(parts[1]);
 }
 
+function isTrustedCampusHost(hostname: string): boolean {
+  const normalized = hostname.toLowerCase().replace(/\.$/, '');
+  return TRUSTED_HOSTS.has(normalized) || normalized === ZJU_DOMAIN || normalized.endsWith(`.${ZJU_DOMAIN}`);
+}
+
 function trustedUrl(value: string, source?: string, options: { allowWebVpn?: boolean } = {}): string {
   let parsed: URL;
   try { parsed = new URL(value, source); } catch { throw new CampusError('校园系统返回了无法识别的跳转地址。', 'response'); }
@@ -258,9 +264,12 @@ function trustedUrl(value: string, source?: string, options: { allowWebVpn?: boo
     if (options.allowWebVpn && allowedPath) return parsed.toString();
     throw new CampusError('教务网已跳转到浙大 WebVPN，正在尝试应用内自动登录。', 'network');
   }
-  if (parsed.protocol !== 'https:' || !TRUSTED_HOSTS.has(hostname)) {
-    throw new CampusError('校园系统返回了不受信任的跳转地址，已停止连接。', 'response');
+  if (!/^https?:$/.test(parsed.protocol) || !isTrustedCampusHost(hostname)) {
+    throw new CampusError(`校园系统返回了不受信任的跳转地址（域名：${hostname || '未知'}），已停止连接。`, 'response');
   }
+  // Some official ZJU pages still emit an HTTP Location. Upgrade only an
+  // already trusted ZJU host; arbitrary external HTTP redirects remain blocked.
+  if (parsed.protocol === 'http:') parsed.protocol = 'https:';
   return parsed.toString();
 }
 
@@ -277,7 +286,7 @@ function webVpnUrl(value: string): string {
   let target: URL;
   try { target = new URL(value); } catch { throw new CampusError('无法生成 WebVPN 访问地址。', 'response'); }
   const hostname = target.hostname.toLowerCase();
-  if (!/^https?:$/.test(target.protocol) || !TRUSTED_HOSTS.has(hostname)) {
+  if (!/^https?:$/.test(target.protocol) || !isTrustedCampusHost(hostname)) {
     throw new CampusError('校园系统返回了不受信任的 WebVPN 目标地址。', 'response');
   }
   const protocol = target.protocol.slice(0, -1);
@@ -288,7 +297,7 @@ function webVpnUrl(value: string): string {
 }
 
 function shouldProxyHost(hostname: string): boolean {
-  return TRUSTED_HOSTS.has(hostname.toLowerCase());
+  return isTrustedCampusHost(hostname);
 }
 
 function campusCookieHost(hostname: string): string {
