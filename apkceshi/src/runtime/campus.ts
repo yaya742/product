@@ -205,7 +205,9 @@ function responseText(result: HttpResult): string {
 function headerValue(headers: Record<string, string>, name: string): string {
   const target = name.toLowerCase();
   const entry = Object.entries(headers).find(([key]) => key.toLowerCase() === target);
-  return entry?.[1] || '';
+  const value = entry?.[1] as unknown;
+  if (Array.isArray(value)) return value.join('\n');
+  return typeof value === 'string' ? value : value === undefined || value === null ? '' : String(value);
 }
 
 function splitSetCookieHeader(value: string): string[] {
@@ -355,10 +357,10 @@ async function request(options: {
   }
 }
 
-async function followGet(startUrl: string): Promise<HttpResult> {
+async function followGet(startUrl: string, headers?: Record<string, string>): Promise<HttpResult> {
   let current = routedUrl(startUrl);
   for (let attempt = 0; attempt < 10; attempt += 1) {
-    const result = await request({ url: current, responseType: 'text', disableRedirects: true, allowWebVpn: campusTransport === 'webvpn' });
+    const result = await request({ url: current, headers, responseType: 'text', disableRedirects: true, allowWebVpn: campusTransport === 'webvpn' });
     if (result.status < 300 || result.status >= 400) return result;
     const location = headerValue(result.headers, 'location');
     if (!location) throw new CampusError('校园系统跳转缺少目标地址。', 'response');
@@ -452,8 +454,15 @@ async function loginWebVpn(studentId: string, password: string): Promise<void> {
   // The current WebVPN gateway redirects its root endpoint to /login before
   // rendering the form. Follow only the allowlisted WebVPN redirect so the
   // native flow does not mistake the normal 302 for a failed login page.
-  const loginPage = await followGet(WEBVPN_ROOT);
-  const body = responseText(loginPage);
+  const noCacheHeaders = { 'Cache-Control': 'no-cache, no-store', Pragma: 'no-cache' };
+  let loginPage = await followGet(`${WEBVPN_ROOT}/?zaichang=${Date.now()}`, noCacheHeaders);
+  let body = responseText(loginPage);
+  // If the gateway returned a cached/interstitial page, request the form
+  // directly with a fresh query so the CSRF token belongs to this session.
+  if (!hiddenInput(body, '_csrf')) {
+    loginPage = await followGet(`${WEBVPN_ROOT}/login?zaichang=${Date.now()}`, noCacheHeaders);
+    body = responseText(loginPage);
+  }
   if (loginPage.status !== 200) throw new CampusError(`WebVPN 登录页请求失败（HTTP ${loginPage.status}）。`, 'network');
   const csrf = hiddenInput(body, '_csrf');
   if (!csrf) throw new CampusError('WebVPN 登录页缺少会话校验信息，请稍后重试。', 'authentication');
@@ -580,7 +589,7 @@ async function activateWebVpn(): Promise<void> {
   await authenticate(credentials.studentId, credentials.password);
 }
 
-async function loginZdbk() {
+async function loginZdbk(allowWebVpnRefresh = true) {
   if (zdbkSessionReady && (campusTransport === 'webvpn' || activeCookieJar?.has('JSESSIONID', campusCookieHost('zdbk.zju.edu.cn')))) return;
   let result: HttpResult;
   try {
@@ -593,6 +602,13 @@ async function loginZdbk() {
     throw error;
   }
   const body = responseText(result);
+  if (isWebVpnLoginPage(body) || (campusTransport === 'webvpn' && isAuthenticationPage(body))) {
+    if (campusTransport === 'webvpn' && allowWebVpnRefresh) {
+      await activateWebVpn();
+      return loginZdbk(false);
+    }
+    throw new CampusError('教务网没有建立登录会话，请重新读取校园信息。', 'authentication');
+  }
   if (isCampusNetworkRestriction(body)) {
     if (campusTransport === 'direct') {
       await activateWebVpn();
@@ -626,13 +642,36 @@ function isAuthenticatedSztzContext(body: string): boolean {
   }
 }
 
-async function loginSztz() {
+async function loginSztz(allowWebVpnRefresh = true) {
   const serviceLogin = `${LOGIN_URL}?service=${encodeURIComponent(SZTZ_SERVICE)}`;
-  const ticketResponse = await request({ url: serviceLogin, responseType: 'text', disableRedirects: true });
+  let ticketResponse: HttpResult;
+  try {
+    ticketResponse = await request({ url: serviceLogin, responseType: 'text', disableRedirects: true });
+  } catch (error) {
+    if (campusTransport === 'direct' && allowWebVpnRefresh && error instanceof CampusError && error.code === 'network' && /WebVPN/.test(error.message)) {
+      await activateWebVpn();
+      return loginSztz(false);
+    }
+    throw error;
+  }
+  if (isWebVpnLoginPage(responseText(ticketResponse))) {
+    if (campusTransport === 'webvpn' && allowWebVpnRefresh) {
+      await activateWebVpn();
+      return loginSztz(false);
+    }
+    throw new CampusError('素质拓展平台没有建立登录会话。', 'authentication');
+  }
   const location = headerValue(ticketResponse.headers, 'location');
   if (ticketResponse.status < 300 || ticketResponse.status >= 400 || !location) throw new CampusError('素质拓展平台没有返回有效的统一认证跳转。', 'authentication');
   const callback = routedUrl(location, ticketResponse.url);
   const parsed = new URL(callback);
+  if (isWebVpnLoginUrl(callback)) {
+    if (campusTransport === 'webvpn' && allowWebVpnRefresh) {
+      await activateWebVpn();
+      return loginSztz(false);
+    }
+    throw new CampusError('素质拓展平台没有建立登录会话。', 'authentication');
+  }
   const validDirectCallback = parsed.hostname.toLowerCase() === 'sztz.zju.edu.cn'
     && parsed.pathname.replace(/\/$/, '') === '/dekt'
     && !!parsed.searchParams.get('ticket');
@@ -641,6 +680,13 @@ async function loginSztz() {
     throw new CampusError('素质拓展平台返回了不受信任的认证回调。', 'authentication');
   }
   const callbackResponse = await request({ url: callback, responseType: 'text', disableRedirects: true, allowWebVpn: campusTransport === 'webvpn' });
+  if (isWebVpnLoginPage(responseText(callbackResponse))) {
+    if (campusTransport === 'webvpn' && allowWebVpnRefresh) {
+      await activateWebVpn();
+      return loginSztz(false);
+    }
+    throw new CampusError('素质拓展平台没有建立登录会话。', 'authentication');
+  }
   if (callbackResponse.status !== 200 || (campusTransport === 'direct' && !activeCookieJar?.has('SESSION', campusCookieHost('sztz.zju.edu.cn')))) {
     throw new CampusError('素质拓展平台没有建立正式登录会话。', 'authentication');
   }
@@ -875,6 +921,19 @@ function parseJson(result: HttpResult, label: string): unknown {
 function isAuthenticationPage(body: string): boolean {
   return /name\s*=\s*["']execution["']/i.test(body)
     || (/统一身份认证/.test(body) && /登录|login|cas/i.test(body));
+}
+
+function isWebVpnLoginPage(body: string): boolean {
+  return /WebVPN/i.test(body) && /name\s*=\s*["']_csrf["']/i.test(body) && /name\s*=\s*["']username["']/i.test(body);
+}
+
+function isWebVpnLoginUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.hostname.toLowerCase() === WEBVPN_HOST && (parsed.pathname === '/' || parsed.pathname === '/login');
+  } catch {
+    return false;
+  }
 }
 
 function isCampusNetworkRestriction(body: string): boolean {
@@ -1271,19 +1330,33 @@ function metaRefresh(body: string, source: string): string | undefined {
   try { return routedUrl(decodeHtml(match[1]), source); } catch { return undefined; }
 }
 
-async function ensureCoursesSession(): Promise<void> {
+async function ensureCoursesSession(allowWebVpnRefresh = true): Promise<void> {
   let current = routedUrl(COURSES_HOME);
   for (let index = 0; index < 8; index += 1) {
     const response = await request({ url: current, responseType: 'text', disableRedirects: true });
     if (response.status >= 300 && response.status < 400) {
       const location = headerValue(response.headers, 'location');
       if (!location) throw new CampusError('学在浙大登录跳转缺少目标地址。', 'authentication');
-      current = routedUrl(location, current);
+      const next = routedUrl(location, current);
+      if (isWebVpnLoginUrl(next)) {
+        if (campusTransport === 'webvpn' && allowWebVpnRefresh) {
+          await activateWebVpn();
+          return ensureCoursesSession(false);
+        }
+        throw new CampusError('学在浙大没有建立登录会话，请重新读取。', 'authentication');
+      }
+      current = next;
       continue;
     }
     const body = responseText(response);
     if (response.status < 200 || response.status >= 300) throw new CampusError(`学在浙大登录失败（HTTP ${response.status}）。`, 'authentication');
-    if (isAuthenticationPage(body)) throw new CampusError('学在浙大没有建立登录会话，请重新读取。', 'authentication');
+    if (isWebVpnLoginPage(body) || (campusTransport === 'webvpn' && isAuthenticationPage(body))) {
+      if (campusTransport === 'webvpn' && allowWebVpnRefresh) {
+        await activateWebVpn();
+        return ensureCoursesSession(false);
+      }
+      throw new CampusError('学在浙大没有建立登录会话，请重新读取。', 'authentication');
+    }
     const target = metaRefresh(body, current);
     if (target) { current = target; continue; }
     break;
