@@ -76,6 +76,31 @@ function readLocation(signal: AbortSignal): Promise<Record<string, unknown>> {
   });
 }
 
+function localTeacherMatches(query: string, campus: MobileCampusData | null) {
+  if (!campus) return [];
+  const needle = query.replace(/[\s·,，。！？!?、]/g, '').toLowerCase();
+  if (!needle) return [];
+  const seen = new Set<string>();
+  return campus.courses.flatMap((course) => {
+    const teacher = course.teacher.trim();
+    const normalizedTeacher = teacher.replace(/[\s·,，。！？!?、]/g, '').toLowerCase();
+    if (!normalizedTeacher || (!needle.includes(normalizedTeacher) && !normalizedTeacher.includes(needle))) return [];
+    if (seen.has(normalizedTeacher)) return [];
+    seen.add(normalizedTeacher);
+    return [{
+      id: `campus-course-teacher-${normalizedTeacher}`,
+      name: teacher,
+      college: '已同步校园课表',
+      title: '课表中的授课教师',
+      phone: '',
+      email: '',
+      profileUrl: '',
+      sourceUrl: '',
+      source: `已同步课表：${course.name}`,
+    }];
+  }).slice(0, 8);
+}
+
 async function runLocalTool(call: DeepSeekToolCall, signal: AbortSignal, context?: MobileAgentContext): Promise<Record<string, unknown>> {
   if (call.function.name === 'get_local_time') {
     return {
@@ -244,7 +269,16 @@ async function runLocalTool(call: DeepSeekToolCall, signal: AbortSignal, context
       ? args.category as typeof allowedCategories[number]
       : 'all';
     if (!query) return { status: 'unavailable', reason: '没有提供要查询的教师或院系名称。' };
-    return { ...(await readPublicCollegeInfo(query, category)) };
+    const result = await readPublicCollegeInfo(query, category);
+    if (result.results.length || !context?.campus) return { ...result };
+    const localResults = localTeacherMatches(query, context.campus);
+    if (!localResults.length) return { ...result };
+    return {
+      ...result,
+      status: 'ok',
+      results: localResults,
+      reason: '已在同步校园课表中找到授课教师，但浙江大学教师个人主页门户没有找到对应公开主页或联系方式。',
+    };
   }
   if (call.function.name === 'prepare_action') {
     if (!context) return { status: 'unavailable', reason: '手机端本地安排存储暂不可用。' };

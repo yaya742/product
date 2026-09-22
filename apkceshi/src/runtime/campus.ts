@@ -22,7 +22,7 @@ const LOGIN_URL = 'https://zjuam.zju.edu.cn/cas/login';
 const PUBLIC_KEY_URL = 'https://zjuam.zju.edu.cn/cas/v2/getPubKey';
 const ZDBK_HOME = 'https://zdbk.zju.edu.cn/jwglxt/xtgl/index_initMenu.html';
 const ZDBK_SERVICE = 'https://zdbk.zju.edu.cn/jwglxt/xtgl/login_ssologin.html';
-const SCHEDULE_URL = 'https://zdbk.zju.edu.cn/jwglxt/kbcx/xskbcx_cxXsKb.html';
+const SCHEDULE_URL = 'https://zdbk.zju.edu.cn/jwglxt/kbcx/xskbcx_cxXsKb.html?gnmkdm=N2151';
 const EXAMS_URL = 'https://zdbk.zju.edu.cn/jwglxt/xskscx/kscx_cxXsgrksIndex.html?doType=query&queryModel.showCount=5000';
 const GRADES_URL = 'https://zdbk.zju.edu.cn/jwglxt/cxdy/xscjcx_cxXscjIndex.html?doType=query&queryModel.showCount=5000';
 const COURSES_HOME = 'https://courses.zju.edu.cn/user/index';
@@ -364,6 +364,7 @@ async function loginZdbk() {
   if (zdbkSessionReady && activeCookieJar?.has('JSESSIONID', 'zdbk.zju.edu.cn')) return;
   const result = await followGet(casServiceLoginUrl());
   const body = responseText(result);
+  if (isCampusNetworkRestriction(body)) throw new CampusError('教务网提示需要校内网络；请先开启浙大 VPN 或 WebVPN 后再读取校园信息。', 'network');
   if (isAuthenticationPage(body)) throw new CampusError('教务网没有建立登录会话，请重新读取校园信息。', 'authentication');
   if (result.status < 200 || result.status >= 300) throw new CampusError(`教务网登录失败（HTTP ${result.status}）。`, 'authentication');
   if (!activeCookieJar?.has('JSESSIONID', 'zdbk.zju.edu.cn') || !activeCookieJar.has('route', 'zdbk.zju.edu.cn')) {
@@ -635,6 +636,10 @@ function isAuthenticationPage(body: string): boolean {
     || (/统一身份认证/.test(body) && /登录|login|cas/i.test(body));
 }
 
+function isCampusNetworkRestriction(body: string): boolean {
+  return /仅限校内|校内网络|WebVPN|使用 VPN|使用VPN|VPN 访问|VPN访问/i.test(body);
+}
+
 function scheduleParts(value: string): string[] {
   return cleanDisplayText(value).replace(/zwf.*$/i, '').split(/\r?\n/).map((part) => part.trim()).filter(Boolean);
 }
@@ -769,19 +774,20 @@ function normalizeActivity(item: Record<string, unknown>, courseId: string): Cam
 
 async function readSchedule(year: string, term: string): Promise<CampusCourse[]> {
   await loginZdbk();
-  const seasons = term === '1' ? ['1|秋', '1|冬'] : ['2|春', '2|夏'];
-  const result: CampusCourse[] = [];
-  for (const season of seasons) {
-    const response = await request({ url: SCHEDULE_URL, method: 'POST', data: { xnm: year, xqm: season, captcha_value: '' }, headers: ajaxHeaders(), responseType: 'text', disableRedirects: true });
-    const body = responseText(response);
-    if (response.status === 401 || response.status === 403 || isAuthenticationPage(body)) throw new CampusError('教务网登录态已失效，请重新读取。', 'authentication');
-    if (body.toLowerCase().includes('captcha_error')) throw new CampusError('教务网要求验证码，手机端暂不绕过安全校验。', 'captcha');
-    const payload = parseJson(response, '教务网课表');
-    if (payload === null) continue;
-    const items = listFromPayload(payload, ['kbList', 'items', 'rows']).filter((item) => field(item, ['sfyjskc']) !== '1');
-    if (!items.length && payload && typeof payload === 'object' && !['kbList', 'items', 'rows', 'data', 'result'].some((key) => key in (payload as Record<string, unknown>))) throw new CampusError('教务网课表返回了无法识别的数据。', 'response');
-    result.push(...items.map(normalizeCourse).filter((item): item is CampusCourse => item !== null));
-  }
+  // ZDBK uses one code for each long semester: 3 = autumn/winter,
+  // 12 = spring/summer. Sending labels such as "1|秋" can return a
+  // fallback dataset that looks valid but belongs to an older term.
+  const semesterCode = term === '1' ? '3' : '12';
+  const response = await request({ url: SCHEDULE_URL, method: 'POST', data: { xnm: year, xqm: semesterCode, kzlx: 'ck', captcha_value: '' }, headers: ajaxHeaders(), responseType: 'text', disableRedirects: true });
+  const body = responseText(response);
+  if (isCampusNetworkRestriction(body)) throw new CampusError('教务网提示需要校内网络；请先开启浙大 VPN 或 WebVPN 后再读取。', 'network');
+  if (response.status === 401 || response.status === 403 || isAuthenticationPage(body)) throw new CampusError('教务网登录态已失效，请重新读取。', 'authentication');
+  if (body.toLowerCase().includes('captcha_error')) throw new CampusError('教务网要求验证码，手机端暂不绕过安全校验。', 'captcha');
+  const payload = parseJson(response, '教务网课表');
+  if (payload === null) return [];
+  const items = listFromPayload(payload, ['kbList', 'items', 'rows']).filter((item) => field(item, ['sfyjskc']) !== '1');
+  if (!items.length && payload && typeof payload === 'object' && !['kbList', 'items', 'rows', 'data', 'result'].some((key) => key in (payload as Record<string, unknown>))) throw new CampusError('教务网课表返回了无法识别的数据。', 'response');
+  const result = items.map(normalizeCourse).filter((item): item is CampusCourse => item !== null);
   const unique = new Map<string, CampusCourse>();
   for (const course of result) unique.set(`${course.id}|${course.time}|${course.name}`, course);
   return [...unique.values()];
@@ -911,12 +917,24 @@ async function requestPersonApi(path: string, data: Record<string, string>): Pro
 }
 
 function extractPublicContact(body: string, label: string): string {
-  const match = body.match(new RegExp(`<label[^>]*>\\s*${label}\\s*</label>([\\s\\S]{0,360})`, 'i'));
-  if (!match?.[1]) return '';
-  const segment = match[1].split(/<li\\b/i)[0];
-  const mailto = segment.match(/mailto:([^"' >]+)/i)?.[1];
-  if (mailto) return decodeHtml(mailto);
-  return cleanDisplayText(segment).slice(0, 180);
+  const escapedLabel = label;
+  const patterns = [
+    new RegExp(`<label[^>]*>\\s*${escapedLabel}\\s*</label>([\\s\\S]{0,360})`, 'i'),
+    new RegExp(`<li[^>]*class=["'][^"']*(?:email|telephone)[^"']*["'][^>]*>([\\s\\S]{0,360})`, 'i'),
+  ];
+  for (const pattern of patterns) {
+    const match = body.match(pattern);
+    if (!match?.[1]) continue;
+    const segment = match[1].split(/<li\b/i)[0];
+    const mailto = segment.match(/mailto:([^"' >]+)/i)?.[1];
+    if (mailto) return decodeHtml(mailto);
+    const value = cleanDisplayText(segment).replace(new RegExp(`^${escapedLabel}\\s*[:：]?\\s*`, 'i'), '').trim();
+    if (value) return value.slice(0, 180);
+  }
+  const plainEmail = label === '邮箱'
+    ? cleanDisplayText(body).match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0]
+    : '';
+  return plainEmail || '';
 }
 
 function officialProfileUrl(mappingName: string): string {
@@ -980,7 +998,7 @@ export async function readPublicCollegeInfo(query: string, category: CampusPubli
     const profileUrl = officialProfileUrl(mappingName);
     let phone = ''; let email = '';
     try {
-      const profile = await request({ url: profileUrl, responseType: 'text', disableRedirects: true });
+      const profile = await followGet(profileUrl);
       if (profile.status >= 200 && profile.status < 300) {
         const body = responseText(profile);
         phone = extractPublicContact(body, '电话');

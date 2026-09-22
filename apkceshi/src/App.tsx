@@ -1641,7 +1641,7 @@ export function App() {
                     <span>{item.college} · {item.title}</span>
                     {item.phone && <small>电话：{item.phone}</small>}
                     {item.email && <small>邮箱：{item.email}</small>}
-                    <button className="notice-open-button" onClick={() => void openPublicInfoInBrowser(item.profileUrl)}>{copy.campusPublicOpen}</button>
+                    {item.profileUrl && <button className="notice-open-button" onClick={() => void openPublicInfoInBrowser(item.profileUrl)}>{copy.campusPublicOpen}</button>}
                   </article>
                 ))}
                 {publicInfo && publicInfo.results.length === 0 && <p className="empty-history">{copy.campusPublicEmpty}</p>}
