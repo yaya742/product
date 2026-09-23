@@ -51,6 +51,8 @@ export interface MobileAgendaItem {
 
 export interface CampusCourse {
   id: string;
+  /** Course/selection key used to join timetable rows with grades. */
+  courseKey?: string;
   name: string;
   teacher: string;
   location: string;

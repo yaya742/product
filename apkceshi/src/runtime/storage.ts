@@ -155,6 +155,7 @@ function parseCampusData(value: unknown): MobileCampusData | null {
   };
   const courses = parseList<Record<string, unknown>>(value.courses, ['id', 'name', 'teacher', 'location', 'time', 'weeks']).map((course) => ({
     id: String(course.id),
+    ...(typeof course.courseKey === 'string' && course.courseKey.trim() ? { courseKey: course.courseKey.trim() } : {}),
     name: String(course.name),
     teacher: String(course.teacher),
     location: String(course.location),

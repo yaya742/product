@@ -1378,6 +1378,8 @@ function semesterPartLabel(value: string): string {
 function normalizeCourse(item: Record<string, unknown>, index: number): CampusCourse | null {
   if (field(item, ['sfyjskc']) === '1') return null;
   const parts = scheduleParts(textValue(item.kcb));
+  const courseId = field(item, ['jxb_id', 'jxbid', 'kch_id', 'xkkh', 'kch', 'course_id'], `course-${index}`);
+  const courseKey = field(item, ['xkkh', 'course_key', 'kch', 'course_id']);
   const rawName = field(item, ['kcmc', 'course_name', 'courseName', 'jxbmc', 'kcm', 'course_name_full']);
   const rawTeacher = field(item, ['jsxx', 'jsxms', 'jsxm', 'teacher', 'teacherName', 'teacher_name', 'jsmc', 'teacherList']);
   const rawLocation = field(item, ['cdmc', 'jxcdmc', 'jxcd', 'classroom', 'room', 'location', 'place', 'jxcdm']);
@@ -1394,7 +1396,8 @@ function normalizeCourse(item: Record<string, unknown>, index: number): CampusCo
   const parity = oddEven === '0' ? '单周' : oddEven === '1' ? '双周' : '';
   const weeks = [explicitWeeks || semesterPart, parity && !explicitWeeks.includes(parity) ? parity : ''].filter(Boolean).join(' · ');
   return {
-    id: field(item, ['jxb_id', 'jxbid', 'kch_id', 'xkkh', 'kch', 'course_id'], `course-${index}`),
+    id: courseId,
+    ...(courseKey ? { courseKey } : {}),
     name: (rawName || parts[0] || '未命名课程').replace(/\(/g, '（').replace(/\)/g, '）'),
     teacher: rawTeacher || parts[2] || parts[1] || '教师未提供',
     location: rawLocation || parts[3] || '地点未提供',
@@ -1639,6 +1642,13 @@ function normalizedCourseName(value: string): string {
   return value.replace(/[\s()（）【】[\]·:：,，.。]/g, '').toLowerCase();
 }
 
+function relatedCourseNames(left: string, right: string): boolean {
+  const leftKey = normalizedCourseName(left);
+  const rightKey = normalizedCourseName(right);
+  if (leftKey.length < 2 || rightKey.length < 2) return false;
+  return leftKey === rightKey || leftKey.includes(rightKey) || rightKey.includes(leftKey);
+}
+
 function gradeRecorded(score: string): boolean {
   const value = normalizedGradeLabel(score);
   return gradeCreditIncluded(value) && value !== '未录入' && value !== '暂无';
@@ -1675,12 +1685,28 @@ function enrichCoursesWithAcademicData(courses: CampusCourse[], grades: CampusGr
     const nameKey = normalizedCourseName(learningCourse.name);
     if (nameKey && usableCredit(learningCourse.credit) && !learningByName.has(nameKey)) learningByName.set(nameKey, learningCourse);
   }
+  const relatedGradeFor = (name: string): CampusGrade | undefined => {
+    const matches = grades.filter((grade) => usableCredit(grade.credit) && relatedCourseNames(name, grade.name));
+    const credits = new Set(matches.map((grade) => grade.credit.trim()));
+    return credits.size === 1 ? matches[0] : undefined;
+  };
+  const relatedLearningCourseFor = (name: string): CampusLearningCourse | undefined => {
+    const matches = learningCourses.filter((course) => usableCredit(course.credit) && relatedCourseNames(name, course.name));
+    const credits = new Set(matches.map((course) => course.credit.trim()));
+    return credits.size === 1 ? matches[0] : undefined;
+  };
   return courses.map((course) => {
     const courseId = course.id.trim();
     const nameKey = normalizedCourseName(course.name);
-    const exactGrade = byId.get(courseId) || byCourseKey.get(courseId);
-    const namedGrade = byName.get(nameKey);
-    const learningCourse = learningById.get(courseId) || learningByName.get(nameKey);
+    const exactGrade = [courseId, course.courseKey?.trim() || '']
+      .filter(Boolean)
+      .map((key) => byId.get(key) || byCourseKey.get(key))
+      .find((grade): grade is CampusGrade => Boolean(grade));
+    const namedGrade = byName.get(nameKey) || relatedGradeFor(course.name);
+    const learningCourse = learningById.get(courseId)
+      || (course.courseKey ? learningById.get(course.courseKey.trim()) : undefined)
+      || learningByName.get(nameKey)
+      || relatedLearningCourseFor(course.name);
     const credit = usableCredit(course.credit)
       ? course.credit
       : usableCredit(exactGrade?.credit)
