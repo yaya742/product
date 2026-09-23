@@ -33,6 +33,14 @@ const STORAGE_KEY = 'zaichang.mobile.local.v2';
 const SECURE_API_KEY = 'zaichang.mobile.deepseek.api-key';
 const SECURE_STUDENT_PASSWORD = 'zaichang.mobile.campus.password';
 // Remove the duplicate seeded history item shown at the top of the mobile history panel.
+
+function normalizeYearLevel(value: string): string {
+  const normalized = value.trim().slice(0, 16);
+  const numericLevel = normalized.match(/^大([1-8])$/)?.[1];
+  if (!numericLevel) return normalized;
+  const labels = ['', '一', '二', '三', '四', '五', '六', '七', '八'];
+  return `大${labels[Number(numericLevel)] || numericLevel}`;
+}
 const LEGACY_DUPLICATE_HISTORY_TITLES = new Set(['简短问候', '查看课表请求', '查询课表', '查看课表', '数学学院转专业名额咨询']);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -283,7 +291,7 @@ function parseCampusData(value: unknown): MobileCampusData | null {
     totalCredit,
     completedCredit: typeof value.completedCredit === 'number' && Number.isFinite(value.completedCredit) ? value.completedCredit : totalCredit,
     earnedCredit: typeof value.earnedCredit === 'number' && Number.isFinite(value.earnedCredit) ? value.earnedCredit : totalCredit,
-    yearLevel: typeof value.yearLevel === 'string' ? value.yearLevel.slice(0, 16) : '',
+    yearLevel: typeof value.yearLevel === 'string' ? normalizeYearLevel(value.yearLevel) : '',
     holidays,
     sourceStatus: {
       available: rawSourceStatus.available === true,

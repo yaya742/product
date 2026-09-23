@@ -1121,7 +1121,9 @@ function inferYearLevel(studentId: string, academicYear: string): string {
   const entryYear = fullYear ? Number(fullYear) : compactYear ? 2000 + Number(compactYear) : NaN;
   const startYear = Number(academicYear);
   if (!Number.isFinite(startYear) || startYear < entryYear - 1 || startYear > entryYear + 7) return '';
-  return `大${Math.max(1, Math.min(8, startYear - entryYear + 1))}`;
+  const level = Math.max(1, Math.min(8, startYear - entryYear + 1));
+  const labels = ['', '一', '二', '三', '四', '五', '六', '七', '八'];
+  return `大${labels[level] || level}`;
 }
 
 function numberValue(value: string): number | undefined {

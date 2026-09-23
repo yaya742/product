@@ -1616,7 +1616,7 @@ export function App() {
                     <div className="campus-grade-summary"><div><span>{copy.campusGpa}</span><strong>{campus.gpa === null ? '—' : campus.gpa.toFixed(2)}</strong></div><div><span>{copy.campusCompletedCredit}</span><strong>{campus.completedCredit.toFixed(1)}</strong></div><div><span>{copy.campusEarnedCredit}</span><strong>{campus.earnedCredit.toFixed(1)}</strong></div></div>
                     {campus.grades.length ? campus.grades.map((grade) => (
                       <div className="campus-record campus-grade-record" key={grade.id}>
-                        <strong>{grade.name}</strong><span>{grade.score}</span><small>{grade.credit} · {grade.point}</small>
+                        <strong>{grade.name}</strong><span>{grade.score}</span><small>学分：{grade.credit} · 绩点：{grade.point}</small>
                       </div>
                     )) : <p className="empty-history">{copy.campusEmpty}</p>}
                   </section>
