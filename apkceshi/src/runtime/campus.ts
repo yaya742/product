@@ -1668,7 +1668,7 @@ function usableCredit(value: string | undefined): boolean {
   return credit !== undefined && credit > 0;
 }
 
-function enrichCoursesWithAcademicData(courses: CampusCourse[], grades: CampusGrade[], learningCourses: CampusLearningCourse[]): CampusCourse[] {
+export function enrichCoursesWithAcademicData(courses: CampusCourse[], grades: CampusGrade[], learningCourses: CampusLearningCourse[]): CampusCourse[] {
   const byId = new Map(grades.map((grade) => [grade.id.trim(), grade]));
   const byCourseKey = new Map(grades.filter((grade) => grade.courseKey?.trim()).map((grade) => [grade.courseKey!.trim(), grade]));
   const byName = new Map<string, CampusGrade>();

@@ -27,6 +27,7 @@ import {
 } from './types';
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
+import { enrichCoursesWithAcademicData } from './campus';
 
 const STORAGE_KEY = 'zaichang.mobile.local.v2';
 const SECURE_API_KEY = 'zaichang.mobile.deepseek.api-key';
@@ -36,6 +37,11 @@ const LEGACY_DUPLICATE_HISTORY_TITLES = new Set(['简短问候', '查看课表�
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function hasCourseCredit(value: string): boolean {
+  const numeric = Number(value.replace(/,/g, '').match(/\d+(?:\.\d+)?/)?.[0] || '');
+  return Number.isFinite(numeric) && numeric > 0;
 }
 
 function parseTranslations(value: unknown): MobileMessage['translations'] | undefined {
@@ -153,7 +159,7 @@ function parseCampusData(value: unknown): MobileCampusData | null {
       return valid ? [entry as T] : [];
     }).slice(0, 200);
   };
-  const courses = parseList<Record<string, unknown>>(value.courses, ['id', 'name', 'teacher', 'location', 'time', 'weeks']).map((course) => ({
+  const parsedCourses = parseList<Record<string, unknown>>(value.courses, ['id', 'name', 'teacher', 'location', 'time', 'weeks']).map((course) => ({
     id: String(course.id),
     ...(typeof course.courseKey === 'string' && course.courseKey.trim() ? { courseKey: course.courseKey.trim() } : {}),
     name: String(course.name),
@@ -178,12 +184,21 @@ function parseCampusData(value: unknown): MobileCampusData | null {
     status: exam.status === 'finished' || exam.status === 'upcoming' ? exam.status : 'unknown',
   } satisfies CampusExam));
   const grades = parseList<CampusGrade>(value.grades, ['id', 'name', 'score', 'credit', 'point']);
-  const courseOfferings = parseList<Record<string, unknown>>(value.courseOfferings, ['id', 'name', 'semesterId', 'credit', 'teachers']).map((item) => ({
+  const parsedCourseOfferings = parseList<Record<string, unknown>>(value.courseOfferings, ['id', 'name', 'semesterId', 'credit', 'teachers']).map((item) => ({
     id: String(item.id), name: String(item.name), semesterId: String(item.semesterId), credit: String(item.credit), teachers: String(item.teachers),
     confirmed: typeof item.confirmed === 'boolean' ? item.confirmed : null,
     online: typeof item.online === 'boolean' ? item.online : null,
   } satisfies CampusCourseOffering));
   const learningCourses = parseList<CampusLearningCourse>(value.learningCourses, ['id', 'name', 'code', 'teachers', 'term', 'credit', 'status']);
+  // Migrate cached campus data created before timetable credits were joined
+  // with grades. This repairs the existing local snapshot without requiring
+  // a new login or a manual campus refresh after an app update.
+  const courses = enrichCoursesWithAcademicData(parsedCourses, grades, learningCourses);
+  const courseOfferings = parsedCourseOfferings.map((offering) => {
+    if (hasCourseCredit(offering.credit)) return offering;
+    const course = courses.find((item) => item.id === offering.id || (item.courseKey && item.courseKey === offering.id));
+    return course && hasCourseCredit(course.credit) ? { ...offering, credit: course.credit } : offering;
+  });
   const activities = parseList<CampusActivity>(value.activities, ['id', 'courseId', 'title', 'type', 'startTime', 'endTime', 'deadline', 'status', 'url']);
   const gradeAlerts = parseList<Record<string, unknown>>(value.gradeAlerts, ['id', 'courseKey', 'name', 'credit', 'score', 'point', 'level', 'note']).map((item) => ({
     id: String(item.id), courseKey: String(item.courseKey), name: String(item.name), credit: String(item.credit), score: String(item.score), point: String(item.point),
