@@ -1700,7 +1700,7 @@ async function requestPersonApi(path: string, data: Record<string, string>): Pro
   return (parsed as Record<string, unknown>).data;
 }
 
-function extractPublicContact(body: string, label: string): string {
+function extractPublicContactLegacy(body: string, label: string): string {
   const escapedLabel = label;
   const patterns = [
     new RegExp(`<label[^>]*>\\s*${escapedLabel}\\s*</label>([\\s\\S]{0,360})`, 'i'),
@@ -1719,6 +1719,37 @@ function extractPublicContact(body: string, label: string): string {
     ? cleanDisplayText(body).match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0]
     : '';
   return plainEmail || '';
+}
+
+function extractPublicContact(body: string, label: string): string {
+  const legacy = extractPublicContactLegacy(body, label);
+  if (legacy) return legacy;
+
+  const labelPattern = label === '电话'
+    ? '(?:办公电话|联系电话|工作电话|移动电话|电话|手机|座机)'
+    : '(?:电子邮箱|邮箱|E-?mail)';
+  const classPattern = label === '电话' ? '(?:telephone|phone|tel|mobile)' : '(?:email|mail)';
+  const stripLabel = new RegExp('^' + labelPattern + '\\s*[:：]?\\s*', 'i');
+  const nextFieldPattern = /\s+(?:电子邮箱|邮箱|E-?mail|地址|办公地址|研究方向)\s*[:：]?/i;
+  const patterns = [
+    new RegExp('<label[^>]*>\\s*' + labelPattern + '\\s*</label>([\\s\\S]{0,360})', 'i'),
+    new RegExp('<[^>]+(?:class|id)=[^>]*' + classPattern + '[^>]*>([\\s\\S]{0,360})', 'i'),
+  ];
+  for (const pattern of patterns) {
+    const match = body.match(pattern);
+    if (!match?.[1]) continue;
+    const segment = match[1].split(/<li\b/i)[0];
+    const mailto = segment.match(/mailto:([^"' >]+)/i)?.[1];
+    if (mailto) return decodeHtml(mailto);
+    const value = cleanDisplayText(segment).replace(stripLabel, '').split(nextFieldPattern)[0].trim();
+    if (value) return value.slice(0, 180);
+  }
+
+  const plain = cleanDisplayText(body);
+  if (label === '邮箱') return plain.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] || '';
+  return plain.match(new RegExp(labelPattern + '\\s*[:：]?\\s*([^\\n]{3,180})', 'i'))?.[1]
+    ?.split(nextFieldPattern)[0]
+    .trim() || '';
 }
 
 function officialProfileUrl(mappingName: string): string {
@@ -1780,13 +1811,16 @@ export async function readPublicCollegeInfo(query: string, category: CampusPubli
     const college = field(item, ['college_name', 'collegeName'], '浙江大学');
     if (category === 'program' || category === 'labs') continue;
     const profileUrl = officialProfileUrl(mappingName);
-    let phone = ''; let email = '';
+    let phone = field(item, ['phone', 'telephone', 'tel', 'mobile', 'mobile_phone', 'office_phone', 'work_phone', 'contact_phone']);
+    let email = field(item, ['email', 'mail', 'email_address', 'contact_email']);
     try {
-      const profile = await followGet(profileUrl);
-      if (profile.status >= 200 && profile.status < 300) {
-        const body = responseText(profile);
-        phone = extractPublicContact(body, '电话');
-        email = extractPublicContact(body, '邮箱');
+      if (!phone || !email) {
+        const profile = await followGet(profileUrl);
+        if (profile.status >= 200 && profile.status < 300) {
+          const body = responseText(profile);
+          phone = phone || extractPublicContact(body, '电话');
+          email = email || extractPublicContact(body, '邮箱');
+        }
       }
     } catch {
       // Keep the official profile URL even if the optional detail page is unavailable.
