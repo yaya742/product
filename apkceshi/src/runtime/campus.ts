@@ -1698,12 +1698,16 @@ function normalizeCourseCreditRecord(item: Record<string, unknown>, index: numbe
 async function readSelectedCourseCredits(year: string, term: string): Promise<CourseCreditRecord[]> {
   await loginZdbk();
   const academicYear = `${year}-${Number(year) + 1}`;
-  const semesterCode = term === '1' ? '3' : '12';
+  const semesterCode = term;
+  const aggregateSemesterCode = term === '1' ? '3' : '12';
   const requestBodies: Record<string, string>[] = [
     { xn: academicYear, xq: semesterCode },
     { xnm: academicYear, xqm: semesterCode },
+    { xn: academicYear, xq: aggregateSemesterCode },
+    { xnm: academicYear, xqm: aggregateSemesterCode },
   ];
   let lastError: unknown;
+  let parsedEmptyResponse = false;
   for (const data of requestBodies) {
     try {
       const response = await request({ url: CHOSEN_COURSES_URL, method: 'POST', data, headers: ajaxHeaders(), responseType: 'text', disableRedirects: true });
@@ -1715,16 +1719,22 @@ async function readSelectedCourseCredits(year: string, term: string): Promise<Co
         .map(normalizeCourseCreditRecord)
         .filter((item): item is CourseCreditRecord => item !== null);
       const seen = new Set<string>();
-      return records.filter((record) => {
+      const uniqueRecords = records.filter((record) => {
         const key = `${record.courseKey}|${record.name}|${record.credit}`;
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
       });
+      if (!uniqueRecords.length) {
+        parsedEmptyResponse = true;
+        continue;
+      }
+      return uniqueRecords;
     } catch (error) {
       lastError = error;
     }
   }
+  if (parsedEmptyResponse) return [];
   throw lastError instanceof Error ? lastError : new CampusError('教务网已选课程读取失败。', 'response');
 }
 
