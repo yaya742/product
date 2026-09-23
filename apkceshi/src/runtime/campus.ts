@@ -1158,6 +1158,17 @@ function field(value: Record<string, unknown>, keys: string[], fallback = ''): s
   return fallback;
 }
 
+function creditField(value: Record<string, unknown>): string {
+  const known = field(value, ['xf', 'credit', 'credits', 'course_credit', 'kcxzxf', 'kczxf', 'xkxf', 'zxf', '学分']);
+  if (known) return known;
+  for (const [key, candidate] of Object.entries(value)) {
+    if (!/(?:^|[_-])(?:xf|credit|credits)(?:$|[_-])/i.test(key) && !/学分/.test(key)) continue;
+    const text = cleanDisplayText(candidate);
+    if (/^\d+(?:\.\d+)?$/.test(text)) return text;
+  }
+  return '—';
+}
+
 function officialNoticeUrl(value: string, noticeId: string): string {
   const fallback = `https://zdbk.zju.edu.cn${NOTICE_DETAIL_PATH}?xwbh=${encodeURIComponent(noticeId)}`;
   try {
@@ -1379,7 +1390,7 @@ function normalizeCourse(item: Record<string, unknown>, index: number): CampusCo
   if (field(item, ['sfyjskc']) === '1') return null;
   const parts = scheduleParts(textValue(item.kcb));
   const courseId = field(item, ['jxb_id', 'jxbid', 'kch_id', 'xkkh', 'kch', 'course_id'], `course-${index}`);
-  const courseKey = field(item, ['xkkh', 'course_key', 'kch', 'course_id']);
+  const courseKey = field(item, ['xkkh', 'course_key', 'kch', 'kch_id', 'course_id']);
   const rawName = field(item, ['kcmc', 'course_name', 'courseName', 'jxbmc', 'kcm', 'course_name_full']);
   const rawTeacher = field(item, ['jsxx', 'jsxms', 'jsxm', 'teacher', 'teacherName', 'teacher_name', 'jsmc', 'teacherList']);
   const rawLocation = field(item, ['cdmc', 'jxcdmc', 'jxcd', 'classroom', 'room', 'location', 'place', 'jxcdm']);
@@ -1406,7 +1417,7 @@ function normalizeCourse(item: Record<string, unknown>, index: number): CampusCo
     ...(firstPeriod ? { startPeriod: firstPeriod } : {}),
     ...(lastPeriod ? { endPeriod: lastPeriod } : {}),
     weeks: weeks || '周次未提供',
-    credit: field(item, ['xf', 'credit', 'credits', 'course_credit', 'kcxzxf', 'kczxf', 'xkxf', 'zxf'], '—'),
+    credit: creditField(item),
     score: field(item, ['cj', 'score', 'original_score'], '—'),
     completed: false,
   };
@@ -1474,7 +1485,7 @@ function normalizeGrade(item: Record<string, unknown>, index: number): CampusGra
   const id = field(item, ['xkkh', 'kch', 'kcmc', 'grade_id'], `grade-${index}`);
   const score = field(item, ['cj', 'score', 'original_score', 'cjbj'], '—');
   const point = field(item, ['jd', 'point', 'five_point', 'gpa'], '—');
-  const credit = field(item, ['xf', 'credit', 'course_credit'], '—');
+  const credit = creditField(item);
   const creditIncluded = gradeCreditIncluded(score);
   const gpaPolicyIncluded = gradeGpaPolicyIncluded(score, id);
   const gpaIncluded = gpaPolicyIncluded && numberValue(credit) !== undefined && numberValue(point) !== undefined;
@@ -1485,7 +1496,7 @@ function normalizeGrade(item: Record<string, unknown>, index: number): CampusGra
     credit,
     point,
     semesterId: field(item, ['semester_id', 'semester', 'xq_id', 'xqmmc', 'xnm'], ''),
-    courseKey: field(item, ['xkkh', 'course_key', 'kch'], ''),
+    courseKey: field(item, ['xkkh', 'course_key', 'kch', 'kch_id'], ''),
     creditIncluded,
     gpaIncluded,
     gpaExclusionReason: gpaIncluded
