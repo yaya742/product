@@ -25,6 +25,7 @@ const PUBLIC_KEY_URL = 'https://zjuam.zju.edu.cn/cas/v2/getPubKey';
 const ZDBK_HOME = 'https://zdbk.zju.edu.cn/jwglxt/xtgl/index_initMenu.html';
 const ZDBK_SERVICE = 'https://zdbk.zju.edu.cn/jwglxt/xtgl/login_ssologin.html';
 const SCHEDULE_URL = 'https://zdbk.zju.edu.cn/jwglxt/kbcx/xskbcx_cxXsKb.html?gnmkdm=N2151';
+const CHOSEN_COURSES_URL = 'https://zdbk.zju.edu.cn/jwglxt/xsxk/zzxkghb_cxZzxkGhbChoosed.html?gnmkdm=N253530';
 const EXAMS_URL = 'https://zdbk.zju.edu.cn/jwglxt/xskscx/kscx_cxXsgrksIndex.html?doType=query&queryModel.showCount=5000';
 const GRADES_URL = 'https://zdbk.zju.edu.cn/jwglxt/cxdy/xscjcx_cxXscjIndex.html?doType=query&queryModel.showCount=5000';
 const COURSES_HOME = 'https://courses.zju.edu.cn/user/index';
@@ -70,6 +71,13 @@ const TRUSTED_HOSTS = new Set([
 const WEBVPN_HOST = 'webvpn.zju.edu.cn';
 const ZJU_DOMAIN = 'zju.edu.cn';
 type CampusTransport = 'direct' | 'webvpn';
+
+interface CourseCreditRecord {
+  id: string;
+  courseKey: string;
+  name: string;
+  credit: string;
+}
 
 export type CampusErrorCode = 'native_required' | 'credentials' | 'network' | 'authentication' | 'captcha' | 'response';
 
@@ -1158,13 +1166,45 @@ function field(value: Record<string, unknown>, keys: string[], fallback = ''): s
   return fallback;
 }
 
+function normalizePublicPhone(value: unknown): string {
+  const text = cleanDisplayText(value)
+    .replace(/[‐‑‒–—−]/g, '-')
+    .trim();
+  if (!text || /^(未公开|未提供|暂无|无|未知|none|null|undefined|n\/?a|[-—])$/i.test(text)) return '';
+  const mobile = text.match(/(?:\+?86[\s-]?)?1[3-9]\d{9}/)?.[0];
+  if (mobile) {
+    const remainder = text.replace(mobile, '').replace(/[()（）\s+\-]/g, '');
+    if (remainder && !/^(电话|手机|座机|办公电话|联系电话|工作电话|移动电话|号码)$/i.test(remainder)) return '';
+    return mobile.replace(/^(?:\+?86[\s-]?)/, '');
+  }
+  const landline = text.match(/(?:0\d{2,3}[\s-]?)?\d{7,8}(?:\s*(?:转|x|#)\s*\d{1,6})?/i)?.[0];
+  if (!landline) return '';
+  const digitCount = landline.replace(/\D/g, '').length;
+  const remainder = text.replace(landline, '').replace(/[()（）\s+\-]/g, '');
+  if (remainder && !/^(电话|手机|座机|办公电话|联系电话|工作电话|移动电话|号码)$/i.test(remainder)) return '';
+  return digitCount >= 7 && digitCount <= 13 ? landline.replace(/\s+/g, ' ').trim() : '';
+}
+
+function normalizePublicEmail(value: unknown): string {
+  const text = cleanDisplayText(value);
+  if (!text || /^(未公开|未提供|暂无|无|未知|none|null|undefined|n\/?a|[-—])$/i.test(text)) return '';
+  return text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] || '';
+}
+
 function creditField(value: Record<string, unknown>): string {
-  const known = field(value, ['xf', 'credit', 'credits', 'course_credit', 'kcxzxf', 'kczxf', 'xkxf', 'zxf', '学分']);
-  if (known) return known;
+  const parseCredit = (candidate: unknown): string => {
+    const text = cleanDisplayText(candidate);
+    const match = text.match(/^(\d+(?:\.\d+)?)(?:\s*学分)?$/);
+    return match?.[1] || '';
+  };
+  for (const key of ['xf', 'credit', 'credits', 'course_credit', 'kcxzxf', 'kczxf', 'xkxf', 'zxf', '学分']) {
+    const known = parseCredit(value[key]);
+    if (known) return known;
+  }
   for (const [key, candidate] of Object.entries(value)) {
     if (!/(?:^|[_-])(?:xf|credit|credits)(?:$|[_-])/i.test(key) && !/学分/.test(key)) continue;
-    const text = cleanDisplayText(candidate);
-    if (/^\d+(?:\.\d+)?$/.test(text)) return text;
+    const parsed = parseCredit(candidate);
+    if (parsed) return parsed;
   }
   return '—';
 }
@@ -1633,6 +1673,49 @@ async function readSchedule(year: string, term: string): Promise<CampusCourse[]>
   return mergeContiguousCourses([...unique.values()]);
 }
 
+function normalizeCourseCreditRecord(item: Record<string, unknown>, index: number): CourseCreditRecord | null {
+  const credit = creditField(item);
+  if (!usableCredit(credit)) return null;
+  const name = field(item, ['kcmc', 'course_name', 'courseName', 'kcm']);
+  const courseKey = field(item, ['xkkh', 'course_key', 'kch', 'kcdm', 'xskcdm', 'kch_id', 'course_id']);
+  const id = field(item, ['xkkh', 'jxb_id', 'jxbid', 'kch_id', 'kcdm', 'xskcdm', 'kch', 'course_id'], `selection-course-${index}`);
+  if (!name && !courseKey) return null;
+  return { id, courseKey, name, credit };
+}
+
+async function readSelectedCourseCredits(year: string, term: string): Promise<CourseCreditRecord[]> {
+  await loginZdbk();
+  const academicYear = `${year}-${Number(year) + 1}`;
+  const semesterCode = term === '1' ? '3' : '12';
+  const requestBodies: Record<string, string>[] = [
+    { xn: academicYear, xq: semesterCode },
+    { xnm: academicYear, xqm: semesterCode },
+  ];
+  let lastError: unknown;
+  for (const data of requestBodies) {
+    try {
+      const response = await request({ url: CHOSEN_COURSES_URL, method: 'POST', data, headers: ajaxHeaders(), responseType: 'text', disableRedirects: true });
+      const body = responseText(response);
+      if (response.status === 401 || response.status === 403 || isAuthenticationPage(body)) throw new CampusError('教务网登录态已失效，请重新读取。', 'authentication');
+      const payload = parseJson(response, '教务网已选课程');
+      const items = listFromPayload(payload, ['items', 'rows', 'result', 'data', 'chosen', 'xkList', 'courseList', 'courses', 'list']);
+      const records = items
+        .map(normalizeCourseCreditRecord)
+        .filter((item): item is CourseCreditRecord => item !== null);
+      const seen = new Set<string>();
+      return records.filter((record) => {
+        const key = `${record.courseKey}|${record.name}|${record.credit}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError instanceof Error ? lastError : new CampusError('教务网已选课程读取失败。', 'response');
+}
+
 async function readExams(): Promise<CampusExam[]> {
   await loginZdbk();
   const response = await request({ url: EXAMS_URL, method: 'POST', data: {}, headers: ajaxHeaders(), responseType: 'text', disableRedirects: true });
@@ -1679,7 +1762,14 @@ function usableCredit(value: string | undefined): boolean {
   return credit !== undefined && credit > 0;
 }
 
-export function enrichCoursesWithAcademicData(courses: CampusCourse[], grades: CampusGrade[], learningCourses: CampusLearningCourse[]): CampusCourse[] {
+export function enrichCoursesWithAcademicData(courses: CampusCourse[], grades: CampusGrade[], learningCourses: CampusLearningCourse[], courseCredits: CourseCreditRecord[] = []): CampusCourse[] {
+  const creditById = new Map(courseCredits.map((record) => [record.id.trim(), record]));
+  const creditByCourseKey = new Map(courseCredits.filter((record) => record.courseKey.trim()).map((record) => [record.courseKey.trim(), record]));
+  const creditByName = new Map<string, CourseCreditRecord>();
+  for (const record of courseCredits) {
+    const key = normalizedCourseName(record.name);
+    if (key && !creditByName.has(key)) creditByName.set(key, record);
+  }
   const byId = new Map(grades.map((grade) => [grade.id.trim(), grade]));
   const byCourseKey = new Map(grades.filter((grade) => grade.courseKey?.trim()).map((grade) => [grade.courseKey!.trim(), grade]));
   const byName = new Map<string, CampusGrade>();
@@ -1706,9 +1796,19 @@ export function enrichCoursesWithAcademicData(courses: CampusCourse[], grades: C
     const credits = new Set(matches.map((course) => course.credit.trim()));
     return credits.size === 1 ? matches[0] : undefined;
   };
+  const relatedCourseCreditFor = (name: string): CourseCreditRecord | undefined => {
+    const matches = courseCredits.filter((record) => usableCredit(record.credit) && relatedCourseNames(name, record.name));
+    const credits = new Set(matches.map((record) => record.credit.trim()));
+    return credits.size === 1 ? matches[0] : undefined;
+  };
   return courses.map((course) => {
     const courseId = course.id.trim();
     const nameKey = normalizedCourseName(course.name);
+    const selectedCourse = [courseId, course.courseKey?.trim() || '']
+      .filter(Boolean)
+      .map((key) => creditById.get(key) || creditByCourseKey.get(key))
+      .find((record): record is CourseCreditRecord => Boolean(record));
+    const namedSelectedCourse = creditByName.get(nameKey) || relatedCourseCreditFor(course.name);
     const exactGrade = [courseId, course.courseKey?.trim() || '']
       .filter(Boolean)
       .map((key) => byId.get(key) || byCourseKey.get(key))
@@ -1720,13 +1820,17 @@ export function enrichCoursesWithAcademicData(courses: CampusCourse[], grades: C
       || relatedLearningCourseFor(course.name);
     const credit = usableCredit(course.credit)
       ? course.credit
-      : usableCredit(exactGrade?.credit)
-        ? exactGrade!.credit
-        : usableCredit(learningCourse?.credit)
-          ? learningCourse!.credit
-          : usableCredit(namedGrade?.credit)
-            ? namedGrade!.credit
-            : '—';
+      : usableCredit(selectedCourse?.credit)
+        ? selectedCourse!.credit
+        : usableCredit(namedSelectedCourse?.credit)
+          ? namedSelectedCourse!.credit
+          : usableCredit(exactGrade?.credit)
+            ? exactGrade!.credit
+            : usableCredit(learningCourse?.credit)
+              ? learningCourse!.credit
+              : usableCredit(namedGrade?.credit)
+                ? namedGrade!.credit
+                : '—';
     if (!exactGrade) return { ...course, credit };
     return {
       ...course,
@@ -1810,23 +1914,23 @@ async function requestPersonApi(path: string, data: Record<string, string>): Pro
 
 function extractPublicContactLegacy(body: string, label: string): string {
   const escapedLabel = label;
+  const contactClass = label === '电话' ? '(?:phone|telephone|tel|mobile)' : '(?:email|mail)';
+  const normalize = label === '电话' ? normalizePublicPhone : normalizePublicEmail;
   const patterns = [
     new RegExp(`<label[^>]*>\\s*${escapedLabel}\\s*</label>([\\s\\S]{0,360})`, 'i'),
-    new RegExp(`<li[^>]*class=["'][^"']*(?:email|telephone)[^"']*["'][^>]*>([\\s\\S]{0,360})`, 'i'),
+    new RegExp(`<li[^>]*class=["'][^"']*${contactClass}[^"']*["'][^>]*>([\\s\\S]{0,360})`, 'i'),
   ];
   for (const pattern of patterns) {
     const match = body.match(pattern);
     if (!match?.[1]) continue;
     const segment = match[1].split(/<li\b/i)[0];
     const mailto = segment.match(/mailto:([^"' >]+)/i)?.[1];
-    if (mailto) return decodeHtml(mailto);
+    if (mailto && label === '邮箱') return normalize(decodeHtml(mailto));
     const value = cleanDisplayText(segment).replace(new RegExp(`^${escapedLabel}\\s*[:：]?\\s*`, 'i'), '').trim();
-    if (value) return value.slice(0, 180);
+    const normalized = normalize(value);
+    if (normalized) return normalized;
   }
-  const plainEmail = label === '邮箱'
-    ? cleanDisplayText(body).match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0]
-    : '';
-  return plainEmail || '';
+  return label === '邮箱' ? normalizePublicEmail(body) : '';
 }
 
 function extractPublicContact(body: string, label: string): string {
@@ -1837,6 +1941,7 @@ function extractPublicContact(body: string, label: string): string {
     ? '(?:办公电话|联系电话|工作电话|移动电话|电话|手机|座机)'
     : '(?:电子邮箱|邮箱|E-?mail)';
   const classPattern = label === '电话' ? '(?:telephone|phone|tel|mobile)' : '(?:email|mail)';
+  const normalize = label === '电话' ? normalizePublicPhone : normalizePublicEmail;
   const stripLabel = new RegExp('^' + labelPattern + '\\s*[:：]?\\s*', 'i');
   const nextFieldPattern = /\s+(?:电子邮箱|邮箱|E-?mail|地址|办公地址|研究方向)\s*[:：]?/i;
   const patterns = [
@@ -1848,16 +1953,18 @@ function extractPublicContact(body: string, label: string): string {
     if (!match?.[1]) continue;
     const segment = match[1].split(/<li\b/i)[0];
     const mailto = segment.match(/mailto:([^"' >]+)/i)?.[1];
-    if (mailto) return decodeHtml(mailto);
+    if (mailto && label === '邮箱') return normalize(decodeHtml(mailto));
     const value = cleanDisplayText(segment).replace(stripLabel, '').split(nextFieldPattern)[0].trim();
-    if (value) return value.slice(0, 180);
+    const normalized = normalize(value);
+    if (normalized) return normalized;
   }
 
   const plain = cleanDisplayText(body);
-  if (label === '邮箱') return plain.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] || '';
-  return plain.match(new RegExp(labelPattern + '\\s*[:：]?\\s*([^\\n]{3,180})', 'i'))?.[1]
+  if (label === '邮箱') return normalizePublicEmail(plain);
+  const plainValue = plain.match(new RegExp(labelPattern + '\\s*[:：]?\\s*([^\\n]{3,180})', 'i'))?.[1]
     ?.split(nextFieldPattern)[0]
     .trim() || '';
+  return normalizePublicPhone(plainValue);
 }
 
 function officialProfileUrl(mappingName: string): string {
@@ -1919,21 +2026,21 @@ export async function readPublicCollegeInfo(query: string, category: CampusPubli
     const college = field(item, ['college_name', 'collegeName'], '浙江大学');
     if (category === 'program' || category === 'labs') continue;
     const profileUrl = officialProfileUrl(mappingName);
-    let phone = field(item, ['phone', 'telephone', 'tel', 'mobile', 'mobile_phone', 'office_phone', 'work_phone', 'contact_phone']);
-    let email = field(item, ['email', 'mail', 'email_address', 'contact_email']);
+    let phone = normalizePublicPhone(field(item, ['phone', 'telephone', 'tel', 'mobile', 'mobile_phone', 'office_phone', 'work_phone', 'contact_phone']));
+    let email = normalizePublicEmail(field(item, ['email', 'mail', 'email_address', 'contact_email']));
     try {
       if (!phone || !email) {
         const profile = await followGet(profileUrl);
         if (profile.status >= 200 && profile.status < 300) {
           const body = responseText(profile);
-          phone = phone || extractPublicContact(body, '电话');
-          email = email || extractPublicContact(body, '邮箱');
+          phone = phone || normalizePublicPhone(extractPublicContact(body, '电话'));
+          email = email || normalizePublicEmail(extractPublicContact(body, '邮箱'));
         }
       }
     } catch {
       // Keep the official profile URL even if the optional detail page is unavailable.
     }
-    results.push({ id: String(item.id || mappingName), name, college, title, phone, email, profileUrl, sourceUrl: profileUrl, source: '浙江大学教师个人主页门户' });
+    results.push({ id: String(item.id || mappingName), name, college, title, phone: phone || '未公开', email, profileUrl, sourceUrl: profileUrl, source: '浙江大学教师个人主页门户' });
   }
   return {
     status: results.length || links.length > 2 ? 'ok' : 'not_found',
@@ -2255,6 +2362,7 @@ export async function readCampusInfo(studentId: string, password: string, option
     const term = termValue(options.term || academicTerm().term);
     const warnings: string[] = [];
     let courses: CampusCourse[] = [];
+    let courseCredits: CourseCreditRecord[] = [];
     let courseOfferings: CampusCourseOffering[] = [];
     let learningCourses: CampusLearningCourse[] = [];
     let activities: CampusActivity[] = [];
@@ -2276,6 +2384,12 @@ export async function readCampusInfo(studentId: string, password: string, option
     } catch (error) {
       if (isFatalModuleError(error)) throw error;
       warnings.push(`课表：${errorText(error)}`);
+    }
+    try {
+      courseCredits = await readSelectedCourseCredits(year, term);
+    } catch (error) {
+      if (isFatalModuleError(error)) throw error;
+      warnings.push(`课程学分：${errorText(error)}`);
     }
     courseOfferings = [...new Map(courses.map((course) => [course.id, normalizeCourseOffering(course, `${year}-${term}`)])).values()];
     try { exams = await readExams(); successfulModules += 1; } catch (error) { if (isFatalModuleError(error)) throw error; warnings.push(`考试：${errorText(error)}`); }
@@ -2305,7 +2419,7 @@ export async function readCampusInfo(studentId: string, password: string, option
     }
     if (!successfulModules && warnings.length) throw new CampusError(warnings.join('；'), 'response');
 
-    courses = enrichCoursesWithAcademicData(courses, grades, learningCourses);
+    courses = enrichCoursesWithAcademicData(courses, grades, learningCourses, courseCredits);
     courseOfferings = [...new Map(courses.map((course) => [course.id, normalizeCourseOffering(course, `${year}-${term}`)])).values()];
     gradeAlerts = makeGradeAlerts(grades);
     gpaCumulative = makeGpaSummary(grades);

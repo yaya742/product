@@ -105,7 +105,7 @@ function localTeacherMatches(query: string, campus: MobileCampusData | null) {
       name: teacher,
       college: '已同步校园课表',
       title: '课表中的授课教师',
-      phone: '',
+      phone: '未公开',
       email: '',
       profileUrl: '',
       sourceUrl: '',
