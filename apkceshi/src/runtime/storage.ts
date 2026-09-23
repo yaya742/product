@@ -215,6 +215,8 @@ function parseCampusData(value: unknown): MobileCampusData | null {
   const parseGpa = (item: unknown): CampusGpaSummary | null => {
     if (!isRecord(item) || typeof item.throughSemester !== 'string') return null;
     return {
+      ...(typeof item.academicYear === 'string' ? { academicYear: item.academicYear } : {}),
+      ...(typeof item.term === 'string' ? { term: item.term } : {}),
       ...(typeof item.semesterId === 'string' ? { semesterId: item.semesterId } : {}),
       throughSemester: item.throughSemester,
       gpa: typeof item.gpa === 'number' && Number.isFinite(item.gpa) ? item.gpa : null,

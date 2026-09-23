@@ -14,6 +14,7 @@ import {
   createInitialState,
   newId,
   type CampusPublicCategory,
+  type CampusGrade,
   type CampusNotice,
   type MobileAgendaItem,
   type MobileAttachment,
@@ -79,6 +80,7 @@ function Avatar({ value, className }: { value: string; className: string }) {
 function normalizeExternalUrl(value: string): string | null {
   let candidate = value.trim();
   while (/[.,!?;:，。！？；：、）》】」』'\"]$/.test(candidate)) candidate = candidate.slice(0, -1);
+  if (!/^[a-z][a-z\d+.-]*:\/\//i.test(candidate)) candidate = `https://${candidate}`;
   try {
     const parsed = new URL(candidate);
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
@@ -141,7 +143,7 @@ function externalLink(url: string, label?: ReactNode, key?: string | number): Re
 
 function inlineMarkdown(value: string): ReactNode {
   const nodes: ReactNode[] = [];
-  const linkPattern = /(\[([^\]\n]{1,200})\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<>"')\]]+))/gi;
+  const linkPattern = /(\[([^\]\n]{1,200})\(((?:https?:\/\/)?(?:[a-z0-9-]+\.)+[a-z]{2,}(?::\d+)?(?:[/?#][^\s)<>"']*)?)\)|((?:https?:\/\/)?(?:[a-z0-9-]+\.)+[a-z]{2,}(?::\d+)?(?:[/?#][^\s<>"')\]]*)?))/gi;
   let cursor = 0;
   let match: RegExpExecArray | null;
   while ((match = linkPattern.exec(value))) {
@@ -156,6 +158,88 @@ function inlineMarkdown(value: string): ReactNode {
   }
   if (cursor < value.length) nodes.push(inlineText(value.slice(cursor)));
   return nodes;
+}
+
+interface GradeSemesterInfo {
+  key: string;
+  label: string;
+  academicYear?: string;
+  term?: string;
+  started: boolean;
+}
+
+interface GradeGroup extends GradeSemesterInfo {
+  grades: CampusGrade[];
+}
+
+function gradeSemesterInfo(grade: CampusGrade): GradeSemesterInfo {
+  const raw = [grade.academicYear, grade.term, grade.semesterId].filter(Boolean).join(' ');
+  const range = raw.replace(/[—–]/g, '-').match(/(20\d{2})\s*-\s*(20?\d{2})/);
+  const singleYear = raw.match(/20\d{2}/)?.[0];
+  const academicYear = range
+    ? `${range[1]}-${range[2].length === 2 ? `${range[1].slice(0, 2)}${range[2]}` : range[2]}`
+    : singleYear ? `${singleYear}-${Number(singleYear) + 1}` : undefined;
+  const term = grade.term === '1' || grade.term === '2'
+    ? grade.term
+    : /春|夏/.test(raw) || /(?:^|[-_\s])2(?:$|[-_\s])/.test(raw)
+      ? '2'
+      : /秋|冬/.test(raw) || /(?:^|[-_\s])1(?:$|[-_\s])/.test(raw)
+        ? '1'
+        : undefined;
+  const key = academicYear && term ? `${academicYear}-${term}` : grade.semesterId?.trim() || 'unknown';
+  const label = academicYear && term
+    ? `${academicYear} · ${term === '1' ? '秋冬学期' : '春夏学期'}`
+    : grade.semesterId?.trim() || '学期未提供';
+  const startYear = Number(academicYear?.match(/20\d{2}/)?.[0]);
+  const started = !academicYear || !term || !Number.isFinite(startYear)
+    ? true
+    : new Date(startYear, term === '1' ? 7 : 1, 1).getTime() <= Date.now();
+  return { key, label, ...(academicYear ? { academicYear } : {}), ...(term ? { term } : {}), started };
+}
+
+function groupCampusGrades(grades: CampusGrade[]): GradeGroup[] {
+  const groups = new Map<string, GradeGroup>();
+  for (const grade of grades) {
+    const info = gradeSemesterInfo(grade);
+    if (!info.started) continue;
+    const group = groups.get(info.key) || { ...info, grades: [] };
+    group.grades.push(grade);
+    groups.set(info.key, group);
+  }
+  return [...groups.values()].sort((left, right) => {
+    const leftYear = Number(left.academicYear?.match(/20\d{2}/)?.[0] || 0);
+    const rightYear = Number(right.academicYear?.match(/20\d{2}/)?.[0] || 0);
+    return rightYear - leftYear || Number(right.term || 0) - Number(left.term || 0) || left.label.localeCompare(right.label, 'zh-CN');
+  });
+}
+
+function gradeNumber(value: string): number | undefined {
+  const number = Number(value.replace(/,/g, '').trim());
+  return Number.isFinite(number) ? number : undefined;
+}
+
+function gradeStats(grades: CampusGrade[]): { gpa: number | null; completedCredit: number; earnedCredit: number } {
+  const creditGrades = grades.flatMap((grade) => {
+    const credit = gradeNumber(grade.credit);
+    if (credit === undefined || credit <= 0 || /^(—|-|未录入|暂无|弃修|待录|缓考|无效)$/.test(grade.score.trim())) return [];
+    return [{ grade, credit }];
+  });
+  const completedCredit = creditGrades.filter(({ grade }) => !/^(未录入|暂无|待录|缓考)$/.test(grade.score.trim())).reduce((sum, item) => sum + item.credit, 0);
+  const earnedCredit = creditGrades.filter(({ grade }) => {
+    const score = gradeNumber(grade.score);
+    return score !== undefined ? score >= 60 : /优秀|良好|中等|通过|合格|免修|免考|优|良/.test(grade.score);
+  }).reduce((sum, item) => sum + item.credit, 0);
+  const counted = creditGrades.flatMap(({ grade, credit }) => {
+    const point = gradeNumber(grade.point);
+    if (grade.gpaIncluded === false || point === undefined || /^(合格|不合格)$/.test(grade.score.trim())) return [];
+    return [{ credit, point }];
+  });
+  const denominator = counted.reduce((sum, item) => sum + item.credit, 0);
+  return {
+    gpa: denominator ? counted.reduce((sum, item) => sum + item.credit * item.point, 0) / denominator : null,
+    completedCredit,
+    earnedCredit,
+  };
 }
 
 function messageTableCell(value: string): ReactNode {
@@ -375,6 +459,7 @@ export function App() {
   const [campusMessage, setCampusMessage] = useState('');
   const initialAcademicTerm = currentAcademicTerm();
   const [campusTab, setCampusTab] = useState<'overview' | 'schedule' | 'courses' | 'learning' | 'activities' | 'exams' | 'grades' | 'gpa' | 'todos' | 'practice' | 'holidays' | 'notices' | 'public'>('overview');
+  const [campusGradeScope, setCampusGradeScope] = useState('current');
   const [campusAcademicYear, setCampusAcademicYear] = useState(initialAcademicTerm.year);
   const [campusTerm, setCampusTerm] = useState(initialAcademicTerm.term);
   const [noticeQuery, setNoticeQuery] = useState('');
@@ -489,6 +574,7 @@ export function App() {
       updateState({ campus });
       setCampusAcademicYear(campus.academicYear);
       setCampusTerm(campus.term);
+      setCampusGradeScope('current');
       setCampusSaved(true);
       setCampusMessage(campus.warnings.length ? copy.campusPartial : copy.campusUpdated);
     } catch (error) {
@@ -1113,6 +1199,18 @@ export function App() {
   const upcomingExams = campus?.exams.filter((exam) => exam.status === 'upcoming') || [];
   const finishedExams = campus?.exams.filter((exam) => exam.status === 'finished') || [];
   const unknownExams = campus?.exams.filter((exam) => exam.status === 'unknown') || [];
+  const gradeGroups = useMemo(() => groupCampusGrades(campus?.grades || []), [campus?.grades]);
+  const campusAcademicYearLabel = campus ? `${campus.academicYear}-${Number(campus.academicYear) + 1}` : '';
+  const currentGradeScope = campus ? `${campusAcademicYearLabel}-${campus.term}` : '';
+  const selectedGradeScope = campusGradeScope === 'current' && gradeGroups.some((group) => group.key === currentGradeScope)
+    ? currentGradeScope
+    : campusGradeScope === 'current' ? 'all' : campusGradeScope;
+  const visibleGradeGroups = selectedGradeScope === 'all'
+    ? gradeGroups
+    : gradeGroups.filter((group) => group.key === selectedGradeScope);
+  const visibleGrades = visibleGradeGroups.flatMap((group) => group.grades);
+  const displayedGradeStats = gradeStats(visibleGrades);
+  const sportsGrades = campus?.grades.filter((grade) => /体育|体能|游泳|篮球|足球|网球|羽毛球|乒乓|排球|武术|健身/.test(grade.name)) || [];
   const scopeLabel = turnControls.retention === 'session_only'
     ? '本轮不保存'
     : turnControls.memoryMode === 'current_sources_only'
@@ -1612,13 +1710,17 @@ export function App() {
 
                 {campusTab === 'grades' && (
                   <section className="profile-section campus-data-card">
-                    <div className="setting-label"><strong>{copy.campusGrades}</strong><span>{campus.grades.length ? `${campus.grades.length}` : copy.campusEmpty}</span></div>
-                    <div className="campus-grade-summary"><div><span>{copy.campusGpa}</span><strong>{campus.gpa === null ? '—' : campus.gpa.toFixed(2)}</strong></div><div><span>{copy.campusCompletedCredit}</span><strong>{campus.completedCredit.toFixed(1)}</strong></div><div><span>{copy.campusEarnedCredit}</span><strong>{campus.earnedCredit.toFixed(1)}</strong></div></div>
-                    {campus.grades.length ? campus.grades.map((grade) => (
+                    <div className="setting-label"><strong>{copy.campusGrades}</strong><span>{visibleGrades.length ? `${visibleGrades.length}` : copy.campusEmpty}</span></div>
+                    <div className="campus-grade-scopes" role="tablist" aria-label="成绩范围">
+                      <button className={selectedGradeScope === 'all' ? 'selected' : ''} role="tab" aria-selected={selectedGradeScope === 'all'} onClick={() => setCampusGradeScope('all')}>总情况<span>{gradeGroups.reduce((sum, group) => sum + group.grades.length, 0)}</span></button>
+                      {gradeGroups.map((group) => <button key={group.key} className={selectedGradeScope === group.key ? 'selected' : ''} role="tab" aria-selected={selectedGradeScope === group.key} onClick={() => setCampusGradeScope(group.key)}>{group.label}<span>{group.grades.length}</span></button>)}
+                    </div>
+                    <div className="campus-grade-summary"><div><span>{copy.campusGpa}</span><strong>{displayedGradeStats.gpa === null ? '—' : displayedGradeStats.gpa.toFixed(2)}</strong></div><div><span>{copy.campusCompletedCredit}</span><strong>{displayedGradeStats.completedCredit.toFixed(1)}</strong></div><div><span>{copy.campusEarnedCredit}</span><strong>{displayedGradeStats.earnedCredit.toFixed(1)}</strong></div></div>
+                    {visibleGrades.length ? visibleGrades.map((grade) => (
                       <div className="campus-record campus-grade-record" key={grade.id}>
                         <strong>{grade.name}</strong><span>{grade.score}</span><small>学分：{grade.credit} · 绩点：{grade.point}</small>
                       </div>
-                    )) : <p className="empty-history">{copy.campusEmpty}</p>}
+                    )) : <p className="empty-history">{selectedGradeScope === 'all' ? copy.campusEmpty : '该学期暂无已返回成绩'}</p>}
                   </section>
                 )}
 
@@ -1653,13 +1755,20 @@ export function App() {
                         <div><span>{copy.campusPracticePoints} · 四课</span><strong>{campus.practiceSummary.fourthClassPoints ?? '—'}</strong></div>
                       </div>
                     )}
+                    <div className="campus-group-label"><strong>体育课程成绩</strong><span>{sportsGrades.length}</span></div>
+                    {sportsGrades.length ? sportsGrades.map((grade) => (
+                      <div className="campus-record" key={`sports-${grade.id}`}>
+                        <strong>{grade.name}</strong><span>{grade.score}</span><small>学分：{grade.credit} · 绩点：{grade.point}</small>
+                      </div>
+                    )) : <p className="empty-history">教务成绩中暂无可识别的体育课程记录。</p>}
                     {campus.practiceProjects?.length ? campus.practiceProjects.map((project) => (
                       <div className="campus-record" key={project.id}>
                         <strong>{project.name}</strong>
                         <span>{[project.category, project.projectType, project.qualityType].filter(Boolean).join(' · ')}</span>
                         <small>{project.score === null ? '—' : `${project.score} · `}{project.approved ? copy.campusPracticePassed : copy.campusPracticePending}{project.activityTime ? ` · ${project.activityTime}` : ''}</small>
                       </div>
-                    )) : <p className="empty-history">{copy.campusPracticeEmpty}</p>}
+                    )) : <p className="empty-history">{copy.campusPracticeEmpty}；如果素拓接口读取失败，请查看上方的部分读取提示。</p>}
+                    <small className="connection-message">体育课程成绩来自教务网成绩；第二、三、四课堂项目来自素质拓展平台。</small>
                   </section>
                 )}
 

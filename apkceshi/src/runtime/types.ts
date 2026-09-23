@@ -115,6 +115,8 @@ export interface CampusGrade {
   score: string;
   credit: string;
   point: string;
+  academicYear?: string;
+  term?: string;
   semesterId?: string;
   courseKey?: string;
   creditIncluded?: boolean;
@@ -134,6 +136,8 @@ export interface CampusGradeAlert {
 }
 
 export interface CampusGpaSummary {
+  academicYear?: string;
+  term?: string;
   semesterId?: string;
   throughSemester: string;
   gpa: number | null;

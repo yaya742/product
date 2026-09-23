@@ -305,6 +305,11 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .campus-record span, .campus-record small { color: var(--text-soft); font-size: 11px; line-height: 1.45; }
 .campus-grade-record { grid-template-columns: 1fr auto; align-items: center; column-gap: 10px; }
 .campus-grade-record small { grid-column: 1 / -1; }
+.campus-grade-scopes { display: flex; gap: 6px; overflow-x: auto; margin: 4px 0 7px; padding: 2px 0 5px; scrollbar-width: none; }
+.campus-grade-scopes::-webkit-scrollbar { display: none; }
+.campus-grade-scopes button { display: inline-flex; align-items: center; gap: 5px; flex: 0 0 auto; min-height: 29px; padding: 0 9px; color: var(--text-soft); border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: 10px; white-space: nowrap; }
+.campus-grade-scopes button span { color: var(--text-faint); font-size: 9px; }
+.campus-grade-scopes button.selected { color: var(--text); border-color: var(--accent); background: var(--accent-soft); }
 .campus-exam-group + .campus-exam-group { margin-top: 13px; padding-top: 3px; border-top: 1px solid var(--line); }
 .campus-group-label { display: flex; align-items: center; justify-content: space-between; padding: 11px 0 2px; color: var(--text-soft); }
 .campus-group-label strong { color: var(--text); font-size: 12px; }

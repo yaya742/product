@@ -991,6 +991,7 @@ function normalizePracticeProject(value: Record<string, unknown>, index: number)
   const statusLabel = field(status, ['label'], field(currentState, ['name'], '状态未知'));
   const statusValue = Number(status.value);
   const approved = statusValue === 5 || statusLabel === '审核通过';
+  if (practiceBoolean(value.sfsc) === true) return null;
   return {
     id: `${id}-${index}`,
     name: field(project, ['mc'], '未命名项目'),
@@ -1045,7 +1046,9 @@ async function readPractice(): Promise<{ summary: CampusPracticeSummary | null; 
     const payload = parseJson(response, '素质拓展汇总');
     const root = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload as Record<string, unknown> : {};
     const extend = root.extend && typeof root.extend === 'object' && !Array.isArray(root.extend) ? root.extend as Record<string, unknown> : {};
-    const myInfo = extend.myInfo && typeof extend.myInfo === 'object' && !Array.isArray(extend.myInfo) ? extend.myInfo as Record<string, unknown> : {};
+    const data = root.data && typeof root.data === 'object' && !Array.isArray(root.data) ? root.data as Record<string, unknown> : {};
+    const myInfoCandidate = extend.myInfo || root.myInfo || data.myInfo || data;
+    const myInfo = myInfoCandidate && typeof myInfoCandidate === 'object' && !Array.isArray(myInfoCandidate) ? myInfoCandidate as Record<string, unknown> : {};
     summary = normalizePracticeSummary(myInfo);
   } catch (error) {
     if (error instanceof CampusError && (error.code === 'authentication' || error.code === 'captcha')) throw error;
@@ -1056,9 +1059,15 @@ async function readPractice(): Promise<{ summary: CampusPracticeSummary | null; 
     if (response.status !== 200) throw new CampusError(`素质拓展项目请求失败（HTTP ${response.status}）。`, 'response');
     const payload = parseJson(response, '素质拓展项目');
     const root = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload as Record<string, unknown> : {};
-    if (root.success !== true || Number(root.code) !== 0 || !Array.isArray(root.data)) throw new CampusError('素质拓展项目返回了无法识别的数据。', 'response');
+    if (root.success === false || (root.code !== undefined && Number(root.code) !== 0)) throw new CampusError('素质拓展项目返回了未认证或无法识别的数据。', 'response');
+    const data = Array.isArray(root.data)
+      ? root.data
+      : root.data && typeof root.data === 'object' && !Array.isArray(root.data)
+        ? listFromPayload(root.data, ['items', 'rows', 'list', 'records', 'data'])
+        : listFromPayload(root, ['items', 'rows', 'list', 'records']);
+    if (!Array.isArray(data)) throw new CampusError('素质拓展项目响应缺少项目列表。', 'response');
     const seen = new Set<string>();
-    root.data.forEach((item, index) => {
+    data.forEach((item, index) => {
       if (!item || typeof item !== 'object' || Array.isArray(item)) return;
       const normalized = normalizePracticeProject(item as Record<string, unknown>, index);
       if (!normalized || seen.has(normalized.id)) return;
@@ -1110,6 +1119,48 @@ function academicYearValue(value: string | undefined): string {
 
 function termValue(value: string | undefined): string {
   return value === '2' ? '2' : '1';
+}
+
+function academicYearLabel(value: string): string {
+  const normalized = value.replace(/[—–]/g, '-').trim();
+  const range = normalized.match(/(20\d{2})\s*-\s*(20?\d{2})/);
+  if (range) {
+    const endYear = range[2].length === 2 ? Number(`${range[1].slice(0, 2)}${range[2]}`) : Number(range[2]);
+    return Number.isFinite(endYear) ? `${range[1]}-${endYear}` : `${range[1]}-${Number(range[1]) + 1}`;
+  }
+  const year = normalized.match(/20\d{2}/)?.[0];
+  return year ? `${year}-${Number(year) + 1}` : '';
+}
+
+function semesterTermValue(value: string): string {
+  const normalized = value.replace(/\s+/g, '');
+  if (/春|夏/.test(normalized) || /(?:^|[-_])2(?:$|[-_])/.test(normalized)) return '2';
+  if (/秋|冬/.test(normalized) || /(?:^|[-_])1(?:$|[-_])/.test(normalized)) return '1';
+  return '';
+}
+
+function normalizeGradeSemester(item: Record<string, unknown>): { academicYear?: string; term?: string; semesterId: string } {
+  const rawSemester = field(item, ['semester_id', 'semesterId', 'semester', 'xq_id']);
+  const rawAcademicYear = field(item, ['xnmmc', 'xnxq', 'academic_year_name', 'academicYearName', 'academic_year', 'academicYear', 'xnm', 'xn']);
+  const rawTerm = field(item, ['xqmmc', 'semester_name', 'semesterName', 'term_name', 'termName', 'xqm', 'xq', 'term']);
+  const academicYear = academicYearLabel(rawAcademicYear || rawSemester);
+  const term = semesterTermValue(rawTerm || rawSemester);
+  const semesterId = academicYear && term
+    ? `${academicYear}-${term}`
+    : rawSemester || [academicYear, rawTerm].filter(Boolean).join(' · ');
+  return {
+    ...(academicYear ? { academicYear } : {}),
+    ...(term ? { term } : {}),
+    semesterId,
+  };
+}
+
+function isStartedAcademicTerm(academicYear?: string, term?: string): boolean {
+  if (!academicYear || (term !== '1' && term !== '2')) return true;
+  const startYear = Number(academicYear.match(/20\d{2}/)?.[0]);
+  if (!Number.isFinite(startYear)) return true;
+  const start = new Date(startYear, term === '1' ? 7 : 1, 1, 0, 0, 0, 0);
+  return start.getTime() <= Date.now();
 }
 
 function inferYearLevel(studentId: string, academicYear: string): string {
@@ -1541,6 +1592,7 @@ function normalizeGrade(item: Record<string, unknown>, index: number): CampusGra
   const score = field(item, ['cj', 'score', 'original_score', 'cjbj'], '—');
   const point = field(item, ['jd', 'point', 'five_point', 'gpa'], '—');
   const credit = creditField(item);
+  const semester = normalizeGradeSemester(item);
   const creditIncluded = gradeCreditIncluded(score);
   const gpaPolicyIncluded = gradeGpaPolicyIncluded(score, id);
   const gpaIncluded = gpaPolicyIncluded && numberValue(credit) !== undefined && numberValue(point) !== undefined;
@@ -1550,7 +1602,9 @@ function normalizeGrade(item: Record<string, unknown>, index: number): CampusGra
     score,
     credit,
     point,
-    semesterId: field(item, ['semester_id', 'semester', 'xq_id', 'xqmmc', 'xnm'], ''),
+    ...(semester.academicYear ? { academicYear: semester.academicYear } : {}),
+    ...(semester.term ? { term: semester.term } : {}),
+    ...(semester.semesterId ? { semesterId: semester.semesterId } : {}),
     courseKey: field(item, ['xkkh', 'course_key', 'kch', 'kch_id'], ''),
     creditIncluded,
     gpaIncluded,
@@ -2383,11 +2437,14 @@ function makeGradeAlerts(grades: CampusGrade[]): CampusGradeAlert[] {
 function makeGpaSummary(grades: CampusGrade[], semesterId?: string): CampusGpaSummary | null {
   const scoped = semesterId ? grades.filter((grade) => grade.semesterId === semesterId) : grades;
   if (!scoped.length) return null;
+  const representative = scoped[0];
   const eligible = scoped.filter((grade) => usableCredit(grade.credit) && gradeCreditIncluded(grade.score));
   const counted = eligible.filter((grade) => gradeGpaPolicyIncluded(grade.score, grade.id) && numberValue(grade.point) !== undefined);
   const denominator = counted.reduce((sum, grade) => sum + (numberValue(grade.credit) || 0), 0);
   const gpa = denominator ? counted.reduce((sum, grade) => sum + (numberValue(grade.credit) || 0) * (numberValue(grade.point) || 0), 0) / denominator : null;
   return {
+    ...(representative.academicYear ? { academicYear: representative.academicYear } : {}),
+    ...(representative.term ? { term: representative.term } : {}),
     ...(semesterId ? { semesterId } : {}),
     throughSemester: semesterId || 'all_available',
     gpa: gpa === null ? null : Number(gpa.toFixed(3)),
@@ -2515,6 +2572,9 @@ export async function readCampusInfo(studentId: string, password: string, option
     }
     if (!successfulModules && warnings.length) throw new CampusError(warnings.join('；'), 'response');
 
+    const startedGrades = grades.filter((grade) => isStartedAcademicTerm(grade.academicYear, grade.term));
+    if (startedGrades.length !== grades.length) warnings.push(`成绩：已隐藏${grades.length - startedGrades.length}条尚未开始学期的记录。`);
+    grades = startedGrades;
     courses = enrichCoursesWithAcademicData(courses, grades, learningCourses, courseCredits);
     const missingCourseCredits = courses.filter((course) => !usableCredit(course.credit)).length;
     if (missingCourseCredits) {
