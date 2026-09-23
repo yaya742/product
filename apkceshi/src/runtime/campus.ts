@@ -914,11 +914,17 @@ function isAuthenticatedSztzContext(body: string): boolean {
 }
 
 async function clearSztzSessionCookie(): Promise<void> {
-  if (campusTransport !== 'direct') return;
+  // In WebVPN mode every proxied campus host shares the gateway hostname.
+  // The academic system, courses and practice platform can therefore all
+  // overwrite a cookie named SESSION in the native store. Clear both the
+  // direct target and the gateway copy before starting the practice CAS flow;
+  // the gateway login cookies use other names and remain available.
   activeCookieJar?.remove('SESSION', 'sztz.zju.edu.cn');
+  activeCookieJar?.remove('SESSION', WEBVPN_HOST);
   await Promise.allSettled([
     CapacitorCookies.deleteCookie({ url: SZTZ_SERVICE, key: 'SESSION' }),
     CapacitorCookies.deleteCookie({ url: SZTZ_CTX, key: 'SESSION' }),
+    CapacitorCookies.deleteCookie({ url: WEBVPN_ROOT, key: 'SESSION' }),
   ]);
   await waitForNativeCookieSync();
 }
@@ -984,11 +990,13 @@ async function loginSztz(allowWebVpnRefresh = true) {
       await activateWebVpn();
       return loginSztz(false);
     }
-    throw new CampusError('素质拓展平台没有建立正式登录会话。', 'authentication');
+    throw new CampusError(`素质拓展平台没有建立正式登录会话（${campusTransport === 'webvpn' ? 'WebVPN' : '直连'}；回调HTTP ${callbackResponse.status}；SESSION ${callbackSessionReady ? '已取得' : '未取得'}）。`, 'authentication');
   }
   const sztzCookieHeader = activeCookieJar?.headerFor(routedUrl(SZTZ_CTX)) || '';
   const contextOrigins = campusTransport === 'webvpn' ? [WEBVPN_ROOT, 'https://sztz.zju.edu.cn'] : ['https://sztz.zju.edu.cn'];
   let contextAuthenticated = false;
+  let contextStatus = 0;
+  let contextIdentity = '未解析';
   for (const origin of contextOrigins) {
     const contextResponse = await request({
       url: SZTZ_CTX,
@@ -1009,7 +1017,12 @@ async function loginSztz(allowWebVpnRefresh = true) {
       useCookieJar: true,
       cookieHeader: sztzCookieHeader,
     });
-    if (contextResponse.status === 200 && isAuthenticatedSztzContext(responseText(contextResponse))) {
+    contextStatus = contextResponse.status;
+    const contextBody = responseText(contextResponse);
+    const parsedContext = parseSztzContext(contextBody);
+    const authenticated = parsedContext !== null && isAuthenticatedSztzContext(contextBody);
+    contextIdentity = parsedContext === null ? '响应无效' : authenticated ? '已登录' : '匿名';
+    if (contextResponse.status === 200 && authenticated) {
       contextAuthenticated = true;
       break;
     }
@@ -1019,7 +1032,7 @@ async function loginSztz(allowWebVpnRefresh = true) {
       await activateWebVpn();
       return loginSztz(false);
     }
-    throw new CampusError('素质拓展平台身份确认未完成。', 'authentication');
+    throw new CampusError(`素质拓展平台身份确认未完成（${campusTransport === 'webvpn' ? 'WebVPN' : '直连'}；回调HTTP ${callbackResponse.status}；SESSION ${sztzCookieHeader ? '已取得' : '未取得'}；ctx HTTP ${contextStatus || '无'}，${contextIdentity}）。`, 'authentication');
   }
   return sztzCookieHeader;
 }
