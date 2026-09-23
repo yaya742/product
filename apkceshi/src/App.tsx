@@ -76,7 +76,33 @@ function Avatar({ value, className }: { value: string; className: string }) {
   return <span className={className}>{image ? <img className="avatar-image" src={value} alt="" /> : (value || '在')}</span>;
 }
 
-function inlineMarkdown(value: string): ReactNode {
+function normalizeExternalUrl(value: string): string | null {
+  let candidate = value.trim();
+  while (/[.,!?;:，。！？；：、）》】」』'\"]$/.test(candidate)) candidate = candidate.slice(0, -1);
+  try {
+    const parsed = new URL(candidate);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
+async function openExternalUrl(value: string): Promise<void> {
+  const url = normalizeExternalUrl(value);
+  if (!url) return;
+  try {
+    await Browser.open({ url });
+  } catch {
+    // Browser.open is unavailable in a browser preview or on a device without
+    // a supported browser; keep a web fallback and avoid silently swallowing
+    // the click when popup blocking prevents a new tab.
+    const popup = window.open(url, '_blank', 'noopener,noreferrer');
+    if (!popup) window.location.assign(url);
+  }
+}
+
+function inlineText(value: string): ReactNode {
   const safe = value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   return safe.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((piece, index) => {
     if (piece.startsWith('**') && piece.endsWith('**')) return <strong key={index}>{piece.slice(2, -2)}</strong>;
@@ -96,23 +122,46 @@ function messageLinkLabel(url: string): string {
   }
 }
 
+function externalLink(url: string, label?: ReactNode, key?: string | number): ReactNode {
+  return (
+    <a
+      className="message-link"
+      href={url}
+      title={url}
+      key={key}
+      onClick={(event) => {
+        event.preventDefault();
+        void openExternalUrl(url);
+      }}
+    >
+      {label || messageLinkLabel(url)}
+    </a>
+  );
+}
+
+function inlineMarkdown(value: string): ReactNode {
+  const nodes: ReactNode[] = [];
+  const linkPattern = /(\[([^\]\n]{1,200})\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s<>"')\]]+))/gi;
+  let cursor = 0;
+  let match: RegExpExecArray | null;
+  while ((match = linkPattern.exec(value))) {
+    if (match.index > cursor) nodes.push(inlineText(value.slice(cursor, match.index)));
+    const url = normalizeExternalUrl(match[3] || match[4] || '');
+    if (!url) {
+      nodes.push(inlineText(match[0]));
+    } else {
+      nodes.push(externalLink(url, match[2] ? inlineText(match[2]) : undefined, `link-${match.index}`));
+    }
+    cursor = match.index + match[0].length;
+  }
+  if (cursor < value.length) nodes.push(inlineText(value.slice(cursor)));
+  return nodes;
+}
+
 function messageTableCell(value: string): ReactNode {
   const candidate = value.trim();
-  if (/^https:\/\/[^\s|]+$/i.test(candidate)) {
-    return (
-      <a
-        className="message-link"
-        href={candidate}
-        title={candidate}
-        onClick={(event) => {
-          event.preventDefault();
-          void Browser.open({ url: candidate }).catch(() => window.open(candidate, '_blank', 'noopener,noreferrer'));
-        }}
-      >
-        {messageLinkLabel(candidate)}
-      </a>
-    );
-  }
+  const url = /^https:\/\/[^\s|]+$/i.test(candidate) ? normalizeExternalUrl(candidate) : null;
+  if (url) return externalLink(url);
   return inlineMarkdown(value);
 }
 
@@ -482,24 +531,19 @@ export function App() {
   }
 
   async function openNoticeInBrowser(url: string) {
-    try {
-      const parsed = new URL(url);
-      if (parsed.protocol !== 'https:' || parsed.hostname.toLowerCase() !== 'zdbk.zju.edu.cn') return;
-      await Browser.open({ url: parsed.toString() });
-    } catch {
-      // Browser.open is unavailable in a browser preview; keep a web fallback.
-      window.open(url, '_blank', 'noopener,noreferrer');
-    }
+    const normalized = normalizeExternalUrl(url);
+    if (!normalized) return;
+    const parsed = new URL(normalized);
+    if (parsed.protocol !== 'https:' || parsed.hostname.toLowerCase() !== 'zdbk.zju.edu.cn') return;
+    await openExternalUrl(parsed.toString());
   }
 
   async function openPublicInfoInBrowser(url: string) {
-    try {
-      const parsed = new URL(url);
-      if (parsed.protocol !== 'https:' || !(parsed.hostname.toLowerCase() === 'person.zju.edu.cn' || parsed.hostname.toLowerCase() === 'www.zju.edu.cn' || parsed.hostname.toLowerCase().endsWith('.zju.edu.cn'))) return;
-      await Browser.open({ url: parsed.toString() });
-    } catch {
-      window.open(url, '_blank', 'noopener,noreferrer');
-    }
+    const normalized = normalizeExternalUrl(url);
+    if (!normalized) return;
+    const parsed = new URL(normalized);
+    if (parsed.protocol !== 'https:' || !(parsed.hostname.toLowerCase() === 'person.zju.edu.cn' || parsed.hostname.toLowerCase() === 'www.zju.edu.cn' || parsed.hostname.toLowerCase().endsWith('.zju.edu.cn'))) return;
+    await openExternalUrl(parsed.toString());
   }
 
   function selectCampusTab(tab: 'overview' | 'schedule' | 'courses' | 'learning' | 'activities' | 'exams' | 'grades' | 'gpa' | 'todos' | 'practice' | 'holidays' | 'notices' | 'public') {
