@@ -461,6 +461,7 @@ async function request(options: {
   disableRedirects?: boolean;
   allowWebVpn?: boolean;
   useCookieJar?: boolean;
+  cookieHeader?: string;
 }): Promise<HttpResult> {
   if (isMobileVmOffline()) throw new CampusError('虚拟机已模拟断网，校园请求未发送。', 'network');
   assertNative();
@@ -478,9 +479,9 @@ async function request(options: {
     // target SESSION still rely on the native CookieHandler to avoid
     // duplicating the gateway ticket.
     const hasProxiedSztzSession = campusTransport === 'webvpn' && activeCookieJar?.has('SESSION', WEBVPN_HOST);
-    if (options.useCookieJar && !headerValue(requestHeaders, 'cookie') && (campusTransport === 'direct' || hasProxiedSztzSession)) {
-      const cookieHeader = activeCookieJar?.headerFor(url);
-      if (cookieHeader) requestHeaders.Cookie = cookieHeader;
+    const cookieHeader = options.cookieHeader?.trim() || (options.useCookieJar && (campusTransport === 'direct' || hasProxiedSztzSession) ? activeCookieJar?.headerFor(url) : '');
+    if (cookieHeader && !headerValue(requestHeaders, 'cookie')) {
+      requestHeaders.Cookie = cookieHeader;
     }
     const headers: Record<string, string> = {
       'User-Agent': 'Zaichang-ZJU-Connector/0.2 (Android; read-only)',
@@ -985,30 +986,42 @@ async function loginSztz(allowWebVpnRefresh = true) {
     }
     throw new CampusError('素质拓展平台没有建立正式登录会话。', 'authentication');
   }
-  const contextResponse = await request({
-    url: SZTZ_CTX,
-    method: 'POST',
-    data: {},
-    headers: {
-      Accept: 'application/json, text/plain, */*',
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Origin: campusTransport === 'webvpn' ? WEBVPN_ROOT : 'https://sztz.zju.edu.cn',
-      Referer: SZTZ_SERVICE,
-      'X-Requested-With': 'XMLHttpRequest',
-      'Cache-Control': 'no-cache',
-      Pragma: 'no-cache',
-    },
-    responseType: 'text',
-    disableRedirects: true,
-    useCookieJar: true,
-  });
-  if (contextResponse.status !== 200 || !isAuthenticatedSztzContext(responseText(contextResponse))) {
+  const sztzCookieHeader = activeCookieJar?.headerFor(routedUrl(SZTZ_CTX)) || '';
+  const contextOrigins = campusTransport === 'webvpn' ? [WEBVPN_ROOT, 'https://sztz.zju.edu.cn'] : ['https://sztz.zju.edu.cn'];
+  let contextAuthenticated = false;
+  for (const origin of contextOrigins) {
+    const contextResponse = await request({
+      url: SZTZ_CTX,
+      method: 'POST',
+      data: {},
+      headers: {
+        Accept: 'application/json, text/plain, */*',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Origin: origin,
+        Referer: SZTZ_SERVICE,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
+        ...(sztzCookieHeader ? { Cookie: sztzCookieHeader } : {}),
+      },
+      responseType: 'text',
+      disableRedirects: true,
+      useCookieJar: true,
+      cookieHeader: sztzCookieHeader,
+    });
+    if (contextResponse.status === 200 && isAuthenticatedSztzContext(responseText(contextResponse))) {
+      contextAuthenticated = true;
+      break;
+    }
+  }
+  if (!contextAuthenticated) {
     if (allowWebVpnRefresh) {
       await activateWebVpn();
       return loginSztz(false);
     }
     throw new CampusError('素质拓展平台身份确认未完成。', 'authentication');
   }
+  return sztzCookieHeader;
 }
 
 function practiceBoolean(value: unknown): boolean | null {
@@ -1071,7 +1084,7 @@ function isRetryablePracticeSessionError(error: unknown): boolean {
   return error.code === 'authentication' && /素质拓展|登录会话|登录跳转|认证回调|身份确认|WebVPN/i.test(error.message);
 }
 
-async function ensurePracticeSession(): Promise<void> {
+async function ensurePracticeSession(): Promise<string> {
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
@@ -1079,8 +1092,7 @@ async function ensurePracticeSession(): Promise<void> {
       // wrapper. The first pass must not recursively refresh the session;
       // otherwise one failed ctx response can trigger several overlapping
       // WebVPN logins and overwrite the same CookieJar.
-      await loginSztz(false);
-      return;
+      return await loginSztz(false);
     } catch (error) {
       lastError = error;
       if (!isRetryablePracticeSessionError(error) || attempt === 1) throw error;
@@ -1094,12 +1106,12 @@ async function ensurePracticeSession(): Promise<void> {
 }
 
 async function readPractice(): Promise<{ summary: CampusPracticeSummary | null; projects: CampusPracticeProject[]; warnings: string[] }> {
-  await ensurePracticeSession();
+  const sztzCookieHeader = await ensurePracticeSession();
   let summary: CampusPracticeSummary | null = null;
   const projects: CampusPracticeProject[] = [];
   const warnings: string[] = [];
   try {
-    const response = await request({ url: SZTZ_SUMMARY, responseType: 'text', headers: { Accept: 'application/json, text/plain, */*', 'Cache-Control': 'no-cache', Pragma: 'no-cache', Referer: SZTZ_SERVICE }, disableRedirects: true, useCookieJar: true });
+    const response = await request({ url: SZTZ_SUMMARY, responseType: 'text', headers: { Accept: 'application/json, text/plain, */*', 'Cache-Control': 'no-cache', Pragma: 'no-cache', Referer: SZTZ_SERVICE, Cookie: sztzCookieHeader }, disableRedirects: true, useCookieJar: true, cookieHeader: sztzCookieHeader });
     if (response.status !== 200) throw new CampusError(`素质拓展汇总请求失败（HTTP ${response.status}）。`, 'response');
     const payload = parseJson(response, '素质拓展汇总');
     const root = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload as Record<string, unknown> : {};
@@ -1113,7 +1125,7 @@ async function readPractice(): Promise<{ summary: CampusPracticeSummary | null; 
     warnings.push(`素质拓展汇总：${error instanceof Error ? error.message : '读取失败'}`);
   }
   try {
-    const response = await request({ url: SZTZ_PROJECTS, responseType: 'text', headers: { Accept: 'application/json, text/html, */*', 'Cache-Control': 'no-cache', Pragma: 'no-cache', Referer: SZTZ_SERVICE }, disableRedirects: true, useCookieJar: true });
+    const response = await request({ url: SZTZ_PROJECTS, responseType: 'text', headers: { Accept: 'application/json, text/html, */*', 'Cache-Control': 'no-cache', Pragma: 'no-cache', Referer: SZTZ_SERVICE, Cookie: sztzCookieHeader }, disableRedirects: true, useCookieJar: true, cookieHeader: sztzCookieHeader });
     if (response.status !== 200) throw new CampusError(`素质拓展项目请求失败（HTTP ${response.status}）。`, 'response');
     const payload = parseJson(response, '素质拓展项目');
     const root = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload as Record<string, unknown> : {};
