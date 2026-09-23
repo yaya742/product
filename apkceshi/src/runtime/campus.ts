@@ -1197,12 +1197,16 @@ function creditField(value: Record<string, unknown>): string {
     const match = text.match(/^(\d+(?:\.\d+)?)(?:\s*学分)?$/);
     return match?.[1] || '';
   };
-  for (const key of ['xf', 'credit', 'credits', 'course_credit', 'kcxzxf', 'kczxf', 'xkxf', 'zxf', '学分']) {
+  for (const key of ['xf', 'credit', 'credits', 'course_credit', 'courseCredit', 'courseCredits', 'creditValue', 'kcxzxf', 'kczxf', 'xkxf', 'zxf', 'xuefen', 'xue_fen', '学分']) {
     const known = parseCredit(value[key]);
     if (known) return known;
   }
+  const courseInfo = cleanDisplayText(value.kcxx);
+  const compositeCredit = courseInfo.split('~')[1];
+  const parsedCompositeCredit = parseCredit(compositeCredit);
+  if (parsedCompositeCredit) return parsedCompositeCredit;
   for (const [key, candidate] of Object.entries(value)) {
-    if (!/(?:^|[_-])(?:xf|credit|credits)(?:$|[_-])/i.test(key) && !/学分/.test(key)) continue;
+    if (!/(?:^|[_-])(?:xf|credit|credits|xuefen)(?:$|[_-])/i.test(key) && !/学分|学分数/i.test(key)) continue;
     const parsed = parseCredit(candidate);
     if (parsed) return parsed;
   }
@@ -1229,6 +1233,14 @@ function listFromPayload(value: unknown, keys: string[] = []): Record<string, un
     if (Array.isArray(candidate) && candidate.length) return candidate.filter((item): item is Record<string, unknown> => !!item && typeof item === 'object' && !Array.isArray(item));
   }
   for (const key of ['data', 'result', 'rows']) {
+    if (typeof record[key] === 'string') {
+      try {
+        const nested = listFromPayload(JSON.parse(record[key] as string) as unknown, keys);
+        if (nested.length) return nested;
+      } catch {
+        // Some campus endpoints wrap the JSON list in a string field.
+      }
+    }
     if (record[key] && typeof record[key] === 'object') {
       const nested = listFromPayload(record[key], keys);
       if (nested.length) return nested;
@@ -1698,7 +1710,7 @@ async function readSelectedCourseCredits(year: string, term: string): Promise<Co
       const body = responseText(response);
       if (response.status === 401 || response.status === 403 || isAuthenticationPage(body)) throw new CampusError('教务网登录态已失效，请重新读取。', 'authentication');
       const payload = parseJson(response, '教务网已选课程');
-      const items = listFromPayload(payload, ['items', 'rows', 'result', 'data', 'chosen', 'xkList', 'courseList', 'courses', 'list']);
+      const items = listFromPayload(payload, ['items', 'rows', 'result', 'data', 'chosen', 'xkList', 'courseList', 'courses', 'kbList', 'list']);
       const records = items
         .map(normalizeCourseCreditRecord)
         .filter((item): item is CourseCreditRecord => item !== null);
@@ -2420,6 +2432,12 @@ export async function readCampusInfo(studentId: string, password: string, option
     if (!successfulModules && warnings.length) throw new CampusError(warnings.join('；'), 'response');
 
     courses = enrichCoursesWithAcademicData(courses, grades, learningCourses, courseCredits);
+    const missingCourseCredits = courses.filter((course) => !usableCredit(course.credit)).length;
+    if (missingCourseCredits) {
+      warnings.push(courseCredits.length
+        ? `课程学分：教务已返回${courseCredits.length}条课程记录，但仍有${missingCourseCredits}门课未能匹配。`
+        : `课程学分：教务已选课程接口未返回可用学分，仍有${missingCourseCredits}门课未显示。`);
+    }
     courseOfferings = [...new Map(courses.map((course) => [course.id, normalizeCourseOffering(course, `${year}-${term}`)])).values()];
     gradeAlerts = makeGradeAlerts(grades);
     gpaCumulative = makeGpaSummary(grades);
