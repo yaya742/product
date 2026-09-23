@@ -461,7 +461,6 @@ async function request(options: {
   disableRedirects?: boolean;
   allowWebVpn?: boolean;
   useCookieJar?: boolean;
-  captureCookies?: boolean;
 }): Promise<HttpResult> {
   if (isMobileVmOffline()) throw new CampusError('虚拟机已模拟断网，校园请求未发送。', 'network');
   assertNative();
@@ -503,12 +502,10 @@ async function request(options: {
       readTimeout: 30_000,
     });
     const normalizedHeaders = (result.headers || {}) as Record<string, string>;
-    if (options.captureCookies !== false) {
-      activeCookieJar?.capture(normalizedHeaders, url);
-      // Do not start the next CAS/WebVPN request until the native cookie store
-      // has had time to expose the Set-Cookie values to HttpURLConnection.
-      if (await persistNativeResponseCookies(normalizedHeaders, url)) await waitForNativeCookieSync();
-    }
+    activeCookieJar?.capture(normalizedHeaders, url);
+    // Do not start the next CAS/WebVPN request until the native cookie store
+    // has had time to expose the Set-Cookie values to HttpURLConnection.
+    if (await persistNativeResponseCookies(normalizedHeaders, url)) await waitForNativeCookieSync();
     return { status: result.status, data: result.data, headers: normalizedHeaders, url: result.url || url };
   } catch (error) {
     if (error instanceof CampusError) throw error;
@@ -967,25 +964,12 @@ async function loginSztz(allowWebVpnRefresh = true) {
     throw new CampusError('素质拓展平台返回了不受信任的认证回调。', 'authentication');
   }
   // CAS callbacks may set the authenticated SESSION on a 302 and then point
-  // at /dekt/. That shell can set a new anonymous SESSION, so do not use the
-  // generic redirect follower here. Keep the callback response's cookies and
-  // only load the next page without allowing it to overwrite them.
+  // at /dekt/. That shell can set a new anonymous SESSION. Do not follow the
+  // redirect: the callback response itself is enough to establish the
+  // session, and /dekt/ctx can be called directly with that SESSION.
   const callbackHeaders = { Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Cache-Control': 'no-cache', Pragma: 'no-cache', Referer: ticketResponse.url };
-  let callbackResponse = await request({ url: callback, headers: callbackHeaders, responseType: 'text', disableRedirects: true, useCookieJar: true });
-  if (callbackResponse.status >= 300 && callbackResponse.status < 400) {
-    const callbackLocation = headerValue(callbackResponse.headers, 'location');
-    if (!callbackLocation) throw new CampusError('素质拓展认证回调缺少目标页面。', 'authentication');
-    const nextCallback = routedUrl(callbackLocation, callbackResponse.url);
-    const hasCallbackSession = activeCookieJar?.has('SESSION', campusCookieHost('sztz.zju.edu.cn')) === true;
-    callbackResponse = await request({
-      url: nextCallback,
-      headers: callbackHeaders,
-      responseType: 'text',
-      disableRedirects: true,
-      useCookieJar: true,
-      captureCookies: !hasCallbackSession,
-    });
-  }
+  const callbackResponse = await request({ url: callback, headers: callbackHeaders, responseType: 'text', disableRedirects: true, useCookieJar: true });
+  const callbackSessionReady = activeCookieJar?.has('SESSION', campusCookieHost('sztz.zju.edu.cn')) === true;
   if (isWebVpnLoginPage(responseText(callbackResponse))) {
     if (allowWebVpnRefresh) {
       await activateWebVpn();
@@ -993,7 +977,8 @@ async function loginSztz(allowWebVpnRefresh = true) {
     }
     throw new CampusError('素质拓展平台没有建立登录会话。', 'authentication');
   }
-  if (callbackResponse.status !== 200 || (campusTransport === 'direct' && !activeCookieJar?.has('SESSION', campusCookieHost('sztz.zju.edu.cn')))) {
+  const callbackStatusOkay = callbackResponse.status === 200 || (callbackResponse.status >= 300 && callbackResponse.status < 400 && callbackSessionReady);
+  if (!callbackStatusOkay || (campusTransport === 'direct' && !callbackSessionReady)) {
     if (allowWebVpnRefresh) {
       await activateWebVpn();
       return loginSztz(false);
