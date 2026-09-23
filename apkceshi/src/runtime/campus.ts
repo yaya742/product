@@ -173,6 +173,15 @@ class CookieJar {
     }
   }
 
+  remove(name: string, hostSuffix?: string) {
+    const normalizedSuffix = hostSuffix?.replace(/^\./, '').toLowerCase();
+    for (const [key, cookie] of this.cookies.entries()) {
+      if (cookie.name !== name) continue;
+      if (normalizedSuffix && !hostMatches(cookie.domain, normalizedSuffix)) continue;
+      this.cookies.delete(key);
+    }
+  }
+
   has(name: string, hostSuffix?: string): boolean {
     const normalizedSuffix = hostSuffix?.replace(/^\./, '').toLowerCase();
     return [...this.cookies.values()].some((cookie) => {
@@ -460,7 +469,12 @@ async function request(options: {
     const requestHeaders: Record<string, string> = { ...options.headers };
     const referer = headerValue(requestHeaders, 'referer');
     if (referer) requestHeaders.Referer = routedUrl(referer);
-    if (options.useCookieJar && !headerValue(requestHeaders, 'cookie')) {
+    // Direct campus requests need the JS fallback because some Android
+    // Capacitor versions do not expose a freshly captured target cookie to
+    // HttpURLConnection quickly enough. WebVPN requests must rely on its
+    // native CookieHandler: sending the JS and native jars together can
+    // duplicate SESSION and make the gateway select an old ticket.
+    if (options.useCookieJar && campusTransport === 'direct' && !headerValue(requestHeaders, 'cookie')) {
       const cookieHeader = activeCookieJar?.headerFor(url);
       if (cookieHeader) requestHeaders.Cookie = cookieHeader;
     }
@@ -473,10 +487,6 @@ async function request(options: {
       'Accept-Encoding': 'identity',
       ...requestHeaders,
     };
-    // CapacitorCookies installs the Android CookieHandler used by
-    // CapacitorHttp. Do not also send the JS CookieJar as a Cookie header:
-    // duplicate session names can make WebVPN choose a stale ticket and
-    // return its short interstitial page without a session-bound _csrf field.
     const result = await CapacitorHttp.request({
       url,
       method: options.method || 'GET',
@@ -856,24 +866,63 @@ async function loginZdbk(allowWebVpnRefresh = true) {
 }
 
 function decodeBase64Utf8(value: string): string {
-  const binary = atob(value.replace(/\s/g, '') + '='.repeat((4 - value.length % 4) % 4));
+  const normalized = value.replace(/\s/g, '').replace(/-/g, '+').replace(/_/g, '/');
+  const binary = atob(normalized + '='.repeat((4 - normalized.length % 4) % 4));
   const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
   return new TextDecoder().decode(bytes);
 }
 
-function isAuthenticatedSztzContext(body: string): boolean {
+function parseSztzContext(body: string): { payload: Record<string, unknown>; context: Record<string, unknown> } | null {
   try {
     const payload = JSON.parse(body) as Record<string, unknown>;
-    if (payload.success !== true || Number(payload.code) !== 0 || typeof payload.data !== 'string') return false;
-    const context = JSON.parse(decodeBase64Utf8(payload.data)) as Record<string, unknown>;
-    const userId = typeof context.userId === 'string' ? context.userId.trim() : '';
-    return context.anonymous === false && !!userId && userId.toUpperCase() !== 'ANONYMOUS' && !JSON.stringify(context.roles || '').includes('ANONYMOUS_USER_ROLE');
+    if (payload.success !== true || Number(payload.code) !== 0) return null;
+    const rawData = payload.data;
+    let context: unknown = rawData;
+    if (typeof rawData === 'string') {
+      const trimmed = rawData.trim();
+      try {
+        context = JSON.parse(trimmed);
+      } catch {
+        context = JSON.parse(decodeBase64Utf8(trimmed));
+      }
+    }
+    if (!context || typeof context !== 'object' || Array.isArray(context)) return null;
+    return { payload, context: context as Record<string, unknown> };
   } catch {
-    return false;
+    return null;
   }
 }
 
+function isAuthenticatedSztzContext(body: string): boolean {
+  const parsed = parseSztzContext(body);
+  if (!parsed) return false;
+  const { payload, context } = parsed;
+  const userId = String(context.userId ?? context.user_id ?? context.id ?? '').trim();
+  const roles = JSON.stringify([context.roles, (payload.extend as Record<string, unknown> | undefined)?.roles]);
+  const anonymousValue = context.anonymous;
+  const isAnonymous = anonymousValue === true
+    || anonymousValue === 1
+    || (typeof anonymousValue === 'string' && anonymousValue.trim().toLowerCase() === 'true')
+    || userId.toUpperCase() === 'ANONYMOUS'
+    || roles.includes('ANONYMOUS_USER_ROLE');
+  return !isAnonymous && !!userId;
+}
+
+async function clearSztzSessionCookie(): Promise<void> {
+  if (campusTransport !== 'direct') return;
+  activeCookieJar?.remove('SESSION', 'sztz.zju.edu.cn');
+  await Promise.allSettled([
+    CapacitorCookies.deleteCookie({ url: SZTZ_SERVICE, key: 'SESSION' }),
+    CapacitorCookies.deleteCookie({ url: SZTZ_CTX, key: 'SESSION' }),
+  ]);
+  await waitForNativeCookieSync();
+}
+
 async function loginSztz(allowWebVpnRefresh = true) {
+  // A previous anonymous SESSION can survive a partial CAS callback on
+  // Android. Remove only this target cookie so the shared ZJU/CAS session is
+  // preserved while the new ticket creates a fresh authenticated SESSION.
+  await clearSztzSessionCookie();
   const serviceLogin = `${LOGIN_URL}?service=${encodeURIComponent(SZTZ_SERVICE)}`;
   let ticketResponse: HttpResult;
   try {
@@ -935,8 +984,9 @@ async function loginSztz(allowWebVpnRefresh = true) {
     headers: {
       Accept: 'application/json, text/plain, */*',
       'Content-Type': 'application/x-www-form-urlencoded',
-      Origin: 'https://sztz.zju.edu.cn',
+      Origin: campusTransport === 'webvpn' ? WEBVPN_ROOT : 'https://sztz.zju.edu.cn',
       Referer: SZTZ_SERVICE,
+      'X-Requested-With': 'XMLHttpRequest',
       'Cache-Control': 'no-cache',
       Pragma: 'no-cache',
     },
