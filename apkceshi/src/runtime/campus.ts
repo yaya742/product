@@ -26,6 +26,7 @@ const ZDBK_HOME = 'https://zdbk.zju.edu.cn/jwglxt/xtgl/index_initMenu.html';
 const ZDBK_SERVICE = 'https://zdbk.zju.edu.cn/jwglxt/xtgl/login_ssologin.html';
 const SCHEDULE_URL = 'https://zdbk.zju.edu.cn/jwglxt/kbcx/xskbcx_cxXsKb.html?gnmkdm=N2151';
 const CHOSEN_COURSES_URL = 'https://zdbk.zju.edu.cn/jwglxt/xsxk/zzxkghb_cxZzxkGhbChoosed.html?gnmkdm=N253530';
+const COURSE_CATALOG_URL = 'https://zdbk.zju.edu.cn/jwglxt/xsxk/zzxkghb_cxZzxkGhbDdkcList.html?gnmkdm=N253530';
 const EXAMS_URL = 'https://zdbk.zju.edu.cn/jwglxt/xskscx/kscx_cxXsgrksIndex.html?doType=query&queryModel.showCount=5000';
 const GRADES_URL = 'https://zdbk.zju.edu.cn/jwglxt/cxdy/xscjcx_cxXscjIndex.html?doType=query&queryModel.showCount=5000';
 const COURSES_HOME = 'https://courses.zju.edu.cn/user/index';
@@ -1738,6 +1739,64 @@ async function readSelectedCourseCredits(year: string, term: string): Promise<Co
   throw lastError instanceof Error ? lastError : new CampusError('教务网已选课程读取失败。', 'response');
 }
 
+async function readCourseCatalogCredits(year: string, term: string, courses: CampusCourse[]): Promise<CourseCreditRecord[]> {
+  await loginZdbk();
+  const academicYear = `${year}-${Number(year) + 1}`;
+  const queryNames = [...new Set(courses.map((course) => course.name.trim()).filter(Boolean))].slice(0, 30);
+  const records: CourseCreditRecord[] = [];
+  const seen = new Set<string>();
+  for (const name of queryNames) {
+    const requestBodies: Record<string, string>[] = [
+      {
+        xnxq: `(${academicYear}-${term})-`,
+        cx_ylcx: '0',
+        cx_zbgx: 'and',
+        kspage: '1',
+        jspage: '50',
+        'cxtjList[0].cxlb': 'kcmc',
+        'cxtjList[0].cxgx': 'like',
+        'cxtjList[0].cxnr': name,
+      },
+      {
+        xn: academicYear,
+        xq: term,
+        xnxq: `(${academicYear}-${term})-`,
+        cx_ylcx: '0',
+        cx_zbgx: 'and',
+        kspage: '1',
+        jspage: '50',
+        'cxtjList[0].cxlb': 'kcmc',
+        'cxtjList[0].cxgx': 'like',
+        'cxtjList[0].cxnr': name,
+      },
+    ];
+    let matched = false;
+    for (const data of requestBodies) {
+      try {
+        const response = await request({ url: COURSE_CATALOG_URL, method: 'POST', data, headers: ajaxHeaders(), responseType: 'text', disableRedirects: true });
+        const body = responseText(response);
+        if (response.status === 401 || response.status === 403 || isAuthenticationPage(body)) throw new CampusError('教务网登录态已失效，请重新读取。', 'authentication');
+        const payload = parseJson(response, '教务网课程目录');
+        const items = listFromPayload(payload, ['items', 'rows', 'result', 'data', 'courseList', 'courses', 'list']);
+        for (const item of items) {
+          const record = normalizeCourseCreditRecord(item, records.length);
+          if (!record || !relatedCourseNames(name, record.name)) continue;
+          const key = `${record.courseKey}|${record.name}|${record.credit}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            records.push(record);
+          }
+          matched = true;
+        }
+        if (matched) break;
+      } catch (error) {
+        if (error instanceof CampusError && (error.code === 'authentication' || error.code === 'credentials')) throw error;
+      }
+    }
+  }
+  return records;
+}
+
 async function readExams(): Promise<CampusExam[]> {
   await loginZdbk();
   const response = await request({ url: EXAMS_URL, method: 'POST', data: {}, headers: ajaxHeaders(), responseType: 'text', disableRedirects: true });
@@ -2412,6 +2471,19 @@ export async function readCampusInfo(studentId: string, password: string, option
     } catch (error) {
       if (isFatalModuleError(error)) throw error;
       warnings.push(`课程学分：${errorText(error)}`);
+    }
+    if (courses.length && courseCredits.length < courses.length) {
+      try {
+        const catalogCredits = await readCourseCatalogCredits(year, term, courses);
+        const mergedCredits = new Map<string, CourseCreditRecord>();
+        for (const record of [...courseCredits, ...catalogCredits]) {
+          mergedCredits.set(`${record.courseKey}|${record.name}|${record.credit}`, record);
+        }
+        courseCredits = [...mergedCredits.values()];
+      } catch (error) {
+        if (isFatalModuleError(error)) throw error;
+        warnings.push(`课程目录学分：${errorText(error)}`);
+      }
     }
     courseOfferings = [...new Map(courses.map((course) => [course.id, normalizeCourseOffering(course, `${year}-${term}`)])).values()];
     try { exams = await readExams(); successfulModules += 1; } catch (error) { if (isFatalModuleError(error)) throw error; warnings.push(`考试：${errorText(error)}`); }
