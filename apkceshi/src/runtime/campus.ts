@@ -1283,6 +1283,77 @@ function periodRangeFromText(value: string): { start?: number; end?: number } {
   return {};
 }
 
+function coursePeriodRangeFromNormalized(course: CampusCourse): { start?: number; end?: number } {
+  if (course.startPeriod && course.endPeriod) {
+    return { start: course.startPeriod, end: course.endPeriod };
+  }
+  return periodRangeFromText(course.time);
+}
+
+function periodLabel(start: number, end: number): string {
+  return start === end ? `第${start}节` : `第${start}-${end}节`;
+}
+
+function courseIdentity(course: CampusCourse): string {
+  const normalizedId = course.id.trim();
+  if (normalizedId && !normalizedId.startsWith('course-')) return `id:${normalizedId}`;
+  return [
+    normalizedCourseName(course.name),
+    course.teacher.trim(),
+    course.location.trim(),
+    String(course.weekday || weekdayNumber(course.time) || ''),
+    course.weeks.trim(),
+  ].join('|');
+}
+
+function sameCourseSlot(left: CampusCourse, right: CampusCourse): boolean {
+  return courseIdentity(left) === courseIdentity(right)
+    && (left.weekday || weekdayNumber(left.time)) === (right.weekday || weekdayNumber(right.time))
+    && left.weeks.trim() === right.weeks.trim()
+    && left.teacher.trim() === right.teacher.trim()
+    && left.location.trim() === right.location.trim();
+}
+
+function updateCoursePeriod(course: CampusCourse, start: number, end: number): CampusCourse {
+  const label = periodLabel(start, end);
+  const time = /第\s*\d{1,2}(?:\s*[-~至—–－]\s*\d{1,2})?\s*节/.test(course.time)
+    ? course.time.replace(/第\s*\d{1,2}(?:\s*[-~至—–－]\s*\d{1,2})?\s*节/, label)
+    : [course.weekday ? weekdayLabel(String(course.weekday)) : '', label].filter(Boolean).join(' · ');
+  return { ...course, time, startPeriod: start, endPeriod: end };
+}
+
+function mergeContiguousCourses(courses: CampusCourse[]): CampusCourse[] {
+  const merged: CampusCourse[] = [];
+  for (const course of sortCourses(courses)) {
+    const currentRange = coursePeriodRangeFromNormalized(course);
+    const previous = merged[merged.length - 1];
+    const previousRange = previous ? coursePeriodRangeFromNormalized(previous) : {};
+    if (
+      previous
+      && currentRange.start
+      && currentRange.end
+      && previousRange.start
+      && previousRange.end
+      && sameCourseSlot(previous, course)
+      && currentRange.start <= previousRange.end + 1
+    ) {
+      const start = Math.min(previousRange.start, currentRange.start);
+      const end = Math.max(previousRange.end, currentRange.end);
+      const names = [...new Set([previous.name, course.name].map((name) => name.trim()).filter(Boolean))];
+      merged[merged.length - 1] = updateCoursePeriod({
+        ...previous,
+        // Keep an unexpected source-name conflict visible instead of silently
+        // dropping one of the names while still presenting one continuous slot.
+        name: names.join(' / '),
+        completed: previous.completed || course.completed,
+      }, start, end);
+      continue;
+    }
+    merged.push(course);
+  }
+  return sortCourses(merged);
+}
+
 function coursePeriodRange(item: Record<string, unknown>): { start?: number; end?: number } {
   const initialText = field(item, ['djj', 'start_period', 'startPeriod']);
   const initial = integerValue(initialText);
@@ -1314,8 +1385,8 @@ function normalizeCourse(item: Record<string, unknown>, index: number): CampusCo
   const dayNumber = weekdayNumber(field(item, ['xqj', 'xqjmc', 'week_day', 'weekday', 'weekdayName']));
   const day = dayNumber ? weekdayLabel(String(dayNumber)) : '';
   const { start: firstPeriod, end: lastPeriod } = coursePeriodRange(item);
-  const periodLabel = firstPeriod && lastPeriod
-    ? `第${firstPeriod}-${lastPeriod}节`
+  const displayPeriodLabel = firstPeriod && lastPeriod
+    ? periodLabel(firstPeriod, lastPeriod)
     : field(item, ['jcs', 'period', 'skjc'], '时间未提供');
   const oddEven = field(item, ['dsz', 'odd_even']);
   const explicitWeeks = field(item, ['zcxx', 'zcd', 'zc', 'zcmc', 'zcsm', 'weeks', 'week', 'week_range', 'weekRange', 'weekList']);
@@ -1327,7 +1398,7 @@ function normalizeCourse(item: Record<string, unknown>, index: number): CampusCo
     name: (rawName || parts[0] || '未命名课程').replace(/\(/g, '（').replace(/\)/g, '）'),
     teacher: rawTeacher || parts[2] || parts[1] || '教师未提供',
     location: rawLocation || parts[3] || '地点未提供',
-    time: [day, periodLabel].filter(Boolean).join(' · ') || '时间未提供',
+    time: [day, displayPeriodLabel].filter(Boolean).join(' · ') || '时间未提供',
     ...(dayNumber ? { weekday: dayNumber } : {}),
     ...(firstPeriod ? { startPeriod: firstPeriod } : {}),
     ...(lastPeriod ? { endPeriod: lastPeriod } : {}),
@@ -1516,7 +1587,7 @@ async function readSchedule(year: string, term: string): Promise<CampusCourse[]>
         }
         if (!payloadContainsList(payload, ['kbList', 'items', 'rows'])) throw new CampusError('教务网课表返回了无法识别的数据。', 'response');
         const items = listFromPayload(payload, ['kbList', 'items', 'rows']).filter((item) => field(item, ['sfyjskc']) !== '1');
-        const parsed = sortCourses(items.map(normalizeCourse).filter((item): item is CampusCourse => item !== null));
+        const parsed = mergeContiguousCourses(items.map(normalizeCourse).filter((item): item is CampusCourse => item !== null));
         // A non-empty list whose every row is unusable is not an empty
         // timetable. Retry it so a broken bridge response cannot silently
         // replace a complete schedule with “暂无数据”.
@@ -1545,7 +1616,7 @@ async function readSchedule(year: string, term: string): Promise<CampusCourse[]>
   }
   const unique = new Map<string, CampusCourse>();
   for (const course of result) unique.set(`${course.id}|${course.time}|${course.name}`, course);
-  return sortCourses([...unique.values()]);
+  return mergeContiguousCourses([...unique.values()]);
 }
 
 async function readExams(): Promise<CampusExam[]> {
