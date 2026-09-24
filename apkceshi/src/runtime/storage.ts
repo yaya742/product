@@ -364,6 +364,7 @@ export function loadMobileState(): MobileState {
     const memories = Array.isArray(value.memories)
       ? value.memories.filter((item): item is string => typeof item === 'string').map((item) => item.trim()).filter(Boolean).slice(0, 16)
       : [];
+    const campus = parseCampusData(value.campus);
     return {
       apiKey: typeof value.apiKey === 'string' ? value.apiKey : '',
       conversations,
@@ -371,7 +372,10 @@ export function loadMobileState(): MobileState {
       memories,
       agenda: parseAgenda(value.agenda),
       reminders: parseReminders(value.reminders),
-      campus: parseCampusData(value.campus),
+      campus,
+      // Existing installs with campus data have already completed a manual
+      // read, so preserve auto-refresh when they upgrade to this version.
+      campusAutoReadEnabled: typeof value.campusAutoReadEnabled === 'boolean' ? value.campusAutoReadEnabled : campus !== null,
       profile: parseProfile(value.profile),
     };
   } catch {

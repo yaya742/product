@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 import { MapPanel } from './MapPanel';
 import { WeatherPanel } from './WeatherPanel';
 import { runMobileAgent, type AgentStatus } from './runtime/agent';
@@ -460,8 +461,8 @@ export function App() {
   const initialAcademicTerm = currentAcademicTerm();
   const [campusTab, setCampusTab] = useState<'overview' | 'schedule' | 'courses' | 'learning' | 'activities' | 'exams' | 'grades' | 'gpa' | 'todos' | 'practice' | 'holidays' | 'notices' | 'public'>('overview');
   const [campusGradeScope, setCampusGradeScope] = useState('current');
-  const [campusAcademicYear, setCampusAcademicYear] = useState(initialAcademicTerm.year);
-  const [campusTerm, setCampusTerm] = useState(initialAcademicTerm.term);
+  const [campusAcademicYear, setCampusAcademicYear] = useState(initial.campus?.academicYear || initialAcademicTerm.year);
+  const [campusTerm, setCampusTerm] = useState(initial.campus?.term || initialAcademicTerm.term);
   const [noticeQuery, setNoticeQuery] = useState('');
   const [notices, setNotices] = useState<CampusNotice[]>([]);
   const [noticesPage, setNoticesPage] = useState(1);
@@ -475,6 +476,8 @@ export function App() {
   const [publicMessage, setPublicMessage] = useState('');
   const [scrollState, setScrollState] = useState({ canUp: false, canDown: false });
   const abortRef = useRef<AbortController | undefined>(undefined);
+  const campusReadInFlightRef = useRef(false);
+  const autoReadOnLaunchHandledRef = useRef(false);
   const translationAbortRef = useRef<AbortController | undefined>(undefined);
   const scrollRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLElement>(null);
@@ -497,6 +500,29 @@ export function App() {
       setSecretsHydrated(true);
     });
   }, [initial]);
+
+  useEffect(() => {
+    if (!secretsHydrated || autoReadOnLaunchHandledRef.current) return;
+    autoReadOnLaunchHandledRef.current = true;
+    if (Capacitor.isNativePlatform() && state.campusAutoReadEnabled && state.profile.studentId.trim() && state.profile.studentPassword) {
+      void refreshCampusInfo();
+    }
+  }, [secretsHydrated]);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || !secretsHydrated || !state.campusAutoReadEnabled) return;
+    let appWasHidden = false;
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        appWasHidden = true;
+      } else if (appWasHidden) {
+        appWasHidden = false;
+        void refreshCampusInfo();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [secretsHydrated, state.campusAutoReadEnabled, state.profile.studentId, state.profile.studentPassword, state.profile.language, campusAcademicYear, campusTerm]);
 
   useEffect(() => {
     if (secretsHydrated) saveMobileState(state);
@@ -557,11 +583,12 @@ export function App() {
   }
 
   async function refreshCampusInfo() {
-    if (campusLoading) return;
+    if (campusReadInFlightRef.current || campusLoading) return;
     if (!state.profile.studentId.trim() || !state.profile.studentPassword) {
       setCampusMessage(copy.campusNeedCredentials);
       return;
     }
+    campusReadInFlightRef.current = true;
     setCampusLoading(true);
     setCampusSaved(false);
     // Do not keep rendering a previous term while a new read is in flight.
@@ -571,7 +598,7 @@ export function App() {
     setCampusMessage(copy.campusLoading);
     try {
       const campus = await readCampusInfo(state.profile.studentId, state.profile.studentPassword, { academicYear: campusAcademicYear, term: campusTerm });
-      updateState({ campus });
+      updateState({ campus, campusAutoReadEnabled: true });
       setCampusAcademicYear(campus.academicYear);
       setCampusTerm(campus.term);
       setCampusGradeScope('current');
@@ -580,6 +607,7 @@ export function App() {
     } catch (error) {
       setCampusMessage(campusErrorMessage(error));
     } finally {
+      campusReadInFlightRef.current = false;
       setCampusLoading(false);
     }
   }
@@ -1587,6 +1615,11 @@ export function App() {
               </div>
               <button className="secondary-button campus-webvpn-button" disabled={campusLoading} onClick={() => void refreshCampusInfo()}>{copy.campusWebVpn}</button>
               <p className="campus-privacy-note">{copy.campusReadOnly}</p>
+              <p className="campus-privacy-note">{copy.campusAutoReadHint || (state.profile.language === 'en'
+                ? 'Read manually once. After a successful read, campus information refreshes whenever you open the app.'
+                : state.profile.language === 'zh-TW'
+                  ? '首次請手動讀取；成功後，每次開啟應用都會自動更新校園資訊。'
+                  : '首次请手动读取；成功后，每次打开应用都会自动更新校园信息。')}</p>
               {campusMessage && <p className="connection-message">{campusMessage}</p>}
             </section>
 

@@ -46,6 +46,7 @@ export interface UiCopy {
   campusHint: string;
   campusTitle: string;
   campusReadOnly: string;
+  campusAutoReadHint?: string;
   campusRefresh: string;
   campusWebVpn: string;
   campusWebVpnOpened: string;
@@ -195,6 +196,7 @@ const SIMPLIFIED: UiCopy = {
   campusHint: '读取课表、考试、成绩、待办和体育与素拓，仅保存在本机',
   campusTitle: '校园信息',
   campusReadOnly: '只读读取，账号和校园数据仅保存在本机。',
+  campusAutoReadHint: '首次请手动读取；成功后，每次打开应用都会自动更新校园信息。',
   campusRefresh: '读取校园信息',
   campusWebVpn: '自动读取（含 WebVPN）',
   campusWebVpnOpened: '已尝试应用内 WebVPN 自动登录。',

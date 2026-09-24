@@ -286,6 +286,7 @@ export interface MobileState {
   agenda: MobileAgendaItem[];
   reminders: MobileReminder[];
   campus: MobileCampusData | null;
+  campusAutoReadEnabled: boolean;
   profile: MobileProfile;
 }
 
@@ -316,6 +317,7 @@ export function createInitialState(): MobileState {
     agenda: [],
     reminders: [],
     campus: null,
+    campusAutoReadEnabled: false,
     profile: { ...DEFAULT_PROFILE },
   };
 }
