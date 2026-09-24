@@ -300,6 +300,7 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .campus-overview-links svg { width: 15px; height: 15px; color: var(--text-faint); fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .campus-data-card { display: grid; gap: 0; }
 .campus-data-card .setting-label { margin-bottom: 3px; }
+.campus-calendar-link { width: 100%; margin: 8px 0 12px; padding: 13px 14px; border-radius: 11px; }
 .campus-record { display: grid; gap: 6px; padding: 13px 0; border-top: 1px solid var(--line); }
 .campus-record strong { color: var(--text); font-size: 14px; line-height: 1.45; font-weight: 600; }
 .campus-record span { color: var(--text-soft); font-size: 12px; line-height: 1.5; }

@@ -2515,7 +2515,7 @@ function readHolidayEvents(body: string, academicYear: string, source: string): 
   return events;
 }
 
-export async function readPublicHolidays(academicYear: string): Promise<CampusHoliday[]> {
+export async function readPublicHolidays(academicYear: string): Promise<{ holidays: CampusHoliday[]; calendarUrl: string }> {
   assertNative();
   const safeYear = /^20\d{2}-20\d{2}$/.test(academicYear) ? academicYear : currentAcademicTerm().year + '-' + (Number(currentAcademicTerm().year) + 1);
   let index = await request({ url: CALENDAR_LIST_URL, responseType: 'text', disableRedirects: true });
@@ -2531,10 +2531,21 @@ export async function readPublicHolidays(academicYear: string): Promise<CampusHo
     } catch { return []; }
   });
   const page = links[0];
-  if (!page) return [];
+  if (!page) throw new CampusError(`本科生院没有找到${safeYear}学年校历。`, 'response');
   const pageResponse = await followGet(page.url);
   if (pageResponse.status < 200 || pageResponse.status >= 300) throw new CampusError(`浙大官方校历页面暂时无法访问（HTTP ${pageResponse.status}）。`, 'network');
-  return readHolidayEvents(responseText(pageResponse), safeYear, page.url);
+  const pageBody = responseText(pageResponse);
+  const pdfSource = pageBody.match(/\bpdfsrc\s*=\s*["']([^"']+)["']/i)?.[1];
+  let calendarUrl = page.url;
+  if (pdfSource) {
+    try {
+      const parsedUrl = new URL(decodeHtml(pdfSource), page.url);
+      if (parsedUrl.protocol === 'https:' && parsedUrl.hostname.toLowerCase() === 'ugrs.zju.edu.cn') calendarUrl = parsedUrl.toString();
+    } catch {
+      // Keep the official calendar article URL as a safe fallback.
+    }
+  }
+  return { holidays: readHolidayEvents(pageBody, safeYear, page.url), calendarUrl };
 }
 
 function makeGradeAlerts(grades: CampusGrade[]): CampusGradeAlert[] {
@@ -2630,6 +2641,7 @@ export async function readCampusInfo(studentId: string, password: string, option
     let practiceSummary: CampusPracticeSummary | null = null;
     let practiceProjects: CampusPracticeProject[] = [];
     let holidays: CampusHoliday[] = [];
+    let calendarUrl: string | undefined;
     let successfulModules = 0;
 
     try {
@@ -2680,7 +2692,9 @@ export async function readCampusInfo(studentId: string, password: string, option
       warnings.push(`体育与素质拓展：${errorText(error)}`);
     }
     try {
-      holidays = await readPublicHolidays(`${year}-${Number(year) + 1}`);
+      const calendar = await readPublicHolidays(`${year}-${Number(year) + 1}`);
+      holidays = calendar.holidays;
+      calendarUrl = calendar.calendarUrl;
       successfulModules += 1;
     } catch (error) {
       warnings.push(`校历：${errorText(error)}`);
@@ -2738,6 +2752,7 @@ export async function readCampusInfo(studentId: string, password: string, option
       earnedCredit,
       yearLevel: inferYearLevel(cleanId, year),
       holidays,
+      ...(calendarUrl ? { calendarUrl } : {}),
       sourceStatus: {
         available: true,
         credentialsConfigured: true,

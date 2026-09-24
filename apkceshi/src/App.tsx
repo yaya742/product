@@ -1855,8 +1855,16 @@ export function App() {
 
                 {campusTab === 'holidays' && (
                   <section className="profile-section campus-data-card">
-                    <div className="setting-label"><strong>校历与假期</strong><span>{campus.holidays.length ? `${campus.holidays.length} 项` : copy.campusEmpty}</span></div>
-                    {campus.holidays.length ? campus.holidays.map((holiday) => <div className="campus-record" key={holiday.id}><strong>{holiday.title}</strong><span>{holiday.startDate} — {holiday.endDate}</span><small>{holiday.note}</small></div>) : <p className="empty-history">{copy.campusEmpty}</p>}
+                    <div className="setting-label"><strong>校历与假期</strong><span>{campus.holidays.length ? `${campus.holidays.length} 项` : campus.calendarUrl ? '官方 PDF 可用' : copy.campusEmpty}</span></div>
+                    {campus.calendarUrl && (
+                      <button type="button" className="profile-link campus-calendar-link" onClick={() => void openExternalUrl(campus.calendarUrl || '')}>
+                        <span><strong>查看本科生院官方校历</strong><small>完整学年安排 · PDF</small></span>
+                        <ArrowIcon />
+                      </button>
+                    )}
+                    {campus.holidays.length
+                      ? campus.holidays.map((holiday) => <div className="campus-record" key={holiday.id}><strong>{holiday.title}</strong><span>{holiday.startDate} — {holiday.endDate}</span><small>{holiday.note}</small></div>)
+                      : <p className="empty-history">{campus.calendarUrl ? '完整学年安排由本科生院以 PDF 发布，请打开上方入口查看。' : copy.campusEmpty}</p>}
                     <small className="connection-message">{campus.sourceStatus.note}</small>
                   </section>
                 )}

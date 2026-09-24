@@ -247,6 +247,7 @@ export interface MobileCampusData {
   earnedCredit: number;
   yearLevel: string;
   holidays: CampusHoliday[];
+  calendarUrl?: string;
   sourceStatus: CampusSourceStatus;
   warnings: string[];
 }

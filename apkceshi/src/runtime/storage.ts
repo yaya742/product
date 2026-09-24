@@ -52,6 +52,16 @@ function hasCourseCredit(value: string): boolean {
   return Number.isFinite(numeric) && numeric > 0;
 }
 
+function parseOfficialCalendarUrl(value: unknown): string | undefined {
+  if (typeof value !== 'string' || value.length > 2048) return undefined;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && url.hostname.toLowerCase() === 'ugrs.zju.edu.cn' ? url.toString() : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function parseTranslations(value: unknown): MobileMessage['translations'] | undefined {
   if (!isRecord(value)) return undefined;
   const translations: MobileMessage['translations'] = {};
@@ -295,6 +305,7 @@ function parseCampusData(value: unknown): MobileCampusData | null {
     earnedCredit: typeof value.earnedCredit === 'number' && Number.isFinite(value.earnedCredit) ? value.earnedCredit : totalCredit,
     yearLevel: typeof value.yearLevel === 'string' ? normalizeYearLevel(value.yearLevel) : '',
     holidays,
+    calendarUrl: parseOfficialCalendarUrl(value.calendarUrl),
     sourceStatus: {
       available: rawSourceStatus.available === true,
       credentialsConfigured: rawSourceStatus.credentialsConfigured === true,
