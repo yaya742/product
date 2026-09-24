@@ -73,6 +73,46 @@ function formatCampusUpdated(value: string, language: MobileLanguage): string {
   return new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
 }
 
+function formatCampusActivityTime(deadline: string, startTime: string, language: MobileLanguage): string {
+  const value = deadline || startTime;
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  const timeZone = 'Asia/Shanghai';
+  const parts = new Intl.DateTimeFormat('en', {
+    timeZone,
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date);
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value;
+  const year = Number(part('year'));
+  const currentYear = Number(new Intl.DateTimeFormat('en', { timeZone, year: 'numeric' }).format(new Date()));
+  const isDateOnly = !/[T ]\d{1,2}:\d{2}/.test(value);
+  const isMidnight = part('hour') === '00' && part('minute') === '00';
+  const locale = language === 'en' ? 'en-US' : language;
+  const formatted = new Intl.DateTimeFormat(locale, {
+    timeZone,
+    ...(year !== currentYear ? { year: 'numeric' as const } : {}),
+    month: 'numeric',
+    day: 'numeric',
+    ...(!isDateOnly && !isMidnight ? { hour: '2-digit' as const, minute: '2-digit' as const } : {}),
+  }).format(date);
+  const label = deadline
+    ? (language === 'en' ? 'Due' : language === 'zh-TW' ? '截止' : '截止')
+    : (language === 'en' ? 'Starts' : language === 'zh-TW' ? '開始' : '开始');
+  return `${label} · ${formatted}`;
+}
+
+function formatPracticePoints(score: number | null, approved: boolean, language: MobileLanguage): string {
+  if (score === null) return '';
+  if (language === 'en') return `${approved ? 'Awarded' : 'Claimed'} ${score} ${score === 1 ? 'point' : 'points'}`;
+  const prefix = approved ? (language === 'zh-TW' ? '已認定' : '已认定') : (language === 'zh-TW' ? '申報' : '申报');
+  return `${prefix} ${score} ${language === 'zh-TW' ? '記點' : '记点'}`;
+}
+
 function Avatar({ value, className }: { value: string; className: string }) {
   const image = /^data:image\//i.test(value);
   return <span className={className}>{image ? <img className="avatar-image" src={value} alt="" /> : (value || '在')}</span>;
@@ -1718,11 +1758,17 @@ export function App() {
                 {campusTab === 'activities' && (
                   <section className="profile-section campus-data-card">
                     <div className="setting-label"><strong>课程活动</strong><span>{campus.activities.length ? `${campus.activities.length} 项` : '默认同步只读取课程列表'}</span></div>
-                    {campus.activities.length ? campus.activities.map((activity) => (
-                      <div className="campus-record" key={activity.id}>
-                        <strong>{activity.title}</strong><span>{[activity.type, activity.deadline || activity.startTime].filter(Boolean).join(' · ')}</span><small>{activity.status || '状态未提供'}</small>
-                      </div>
-                    )) : <p className="empty-history">暂无已缓存活动；在对话中询问指定课程的作业或活动后会按课程读取。</p>}
+                    {campus.activities.length ? campus.activities.map((activity) => {
+                      const courseName = campus.learningCourses.find((course) => course.id === activity.courseId)?.name;
+                      const activityTime = formatCampusActivityTime(activity.deadline, activity.startTime, state.profile.language);
+                      return (
+                        <div className="campus-record campus-activity-record" key={activity.id}>
+                          <strong>{activity.title}</strong>
+                          {courseName && <span className="campus-activity-course">{courseName}</span>}
+                          {activityTime && <small className="campus-activity-time">{activityTime}</small>}
+                        </div>
+                      );
+                    }) : <p className="empty-history">暂无已缓存活动；在对话中询问指定课程的作业或活动后会按课程读取。</p>}
                   </section>
                 )}
 
@@ -1795,13 +1841,15 @@ export function App() {
                       </div>
                     )) : <p className="empty-history">教务成绩中暂无可识别的体育课程记录。</p>}
                     {campus.practiceProjects?.length ? campus.practiceProjects.map((project) => (
-                      <div className="campus-record" key={project.id}>
+                      <div className="campus-record campus-practice-record" key={project.id}>
                         <strong>{project.name}</strong>
-                        <span>{[project.category, project.projectType, project.qualityType].filter(Boolean).join(' · ')}</span>
-                        <small>{project.score === null ? '—' : `${project.score} · `}{project.approved ? copy.campusPracticePassed : copy.campusPracticePending}{project.activityTime ? ` · ${project.activityTime}` : ''}</small>
+                        <small className="campus-practice-meta">
+                          {project.score !== null && <span className="campus-practice-points">{formatPracticePoints(project.score, project.approved, state.profile.language)}</span>}
+                          <span className={`campus-practice-status ${project.approved ? 'approved' : 'pending'}`}>{project.approved ? copy.campusPracticePassed : project.status || copy.campusPracticePending}</span>
+                        </small>
                       </div>
-                    )) : <p className="empty-history">{copy.campusPracticeEmpty}；如果素拓接口读取失败，请查看上方的部分读取提示。</p>}
-                    <small className="connection-message">体育课程成绩来自教务网成绩；第二、三、四课堂项目来自素质拓展平台。</small>
+                    )) : <p className="empty-history">{copy.campusPracticeEmpty}</p>}
+                    <small className="connection-message">体育成绩来自教务，素拓项目来自素拓平台。</small>
                   </section>
                 )}
 
