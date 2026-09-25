@@ -466,7 +466,6 @@ export function App() {
   const [draft, setDraft] = useState('');
   const [attachmentDraft, setAttachmentDraft] = useState<MobileAttachment | null>(null);
   const [attachmentMessage, setAttachmentMessage] = useState('');
-  const [memoryDraft, setMemoryDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [, setStatus] = useState<AgentStatus | '空闲'>('空闲');
   const [connectionMessage, setConnectionMessage] = useState('');
@@ -1073,7 +1072,6 @@ export function App() {
         state.apiKey,
         history,
         text,
-        activeConversation.memories,
         conversationLanguage,
         controller.signal,
         (delta) => {
@@ -1087,7 +1085,6 @@ export function App() {
           agenda: state.agenda,
           reminders: state.reminders,
           controls,
-          allowMemoryWrite: controls.retention === 'purpose_scoped' && controls.memoryMode === 'relevant',
           allowLocalWrites: controls.retention !== 'session_only',
           campus: state.campus,
           readLearningActivities: async (courseId) => readLearningActivities(state.profile.studentId, state.profile.studentPassword, courseId),
@@ -1095,16 +1092,6 @@ export function App() {
           createReminder: createReminderRecord,
           prepareAction: createAgendaRecord,
           updateAction: updateAgendaRecord,
-          saveMemory: async (memory) => {
-            setState((current) => ({
-              ...current,
-              conversations: current.conversations.map((conversation) => conversation.id !== conversationId ? conversation : {
-                ...conversation,
-                memories: [...conversation.memories.filter((item) => item !== memory), memory].slice(-16),
-              }),
-            }));
-            return { status: 'ok', saved: memory };
-          },
         },
         controls,
       );
@@ -1184,45 +1171,6 @@ export function App() {
     }
   }
 
-  function addMemory() {
-    const text = memoryDraft.trim().slice(0, 300);
-    if (!text || !activeConversation) return;
-    setState((current) => ({
-      ...current,
-      conversations: current.conversations.map((conversation) => conversation.id !== activeConversation.id ? conversation : {
-        ...conversation,
-        memories: [...conversation.memories.filter((item) => item !== text), text].slice(-16),
-      }),
-    }));
-    setMemoryDraft('');
-  }
-
-  function removeMemory(text: string) {
-    if (!activeConversation) return;
-    setState((current) => ({
-      ...current,
-      conversations: current.conversations.map((conversation) => conversation.id !== activeConversation.id ? conversation : {
-        ...conversation,
-        memories: conversation.memories.filter((item) => item !== text),
-      }),
-    }));
-  }
-
-  function removeLegacyMemory(text: string) {
-    updateState({ memories: state.memories.filter((item) => item !== text) });
-  }
-
-  function exportLocalData() {
-    const payload = JSON.stringify({ ...state, apiKey: undefined, profile: { ...state.profile, studentPassword: undefined } }, null, 2);
-    const url = URL.createObjectURL(new Blob([payload], { type: 'application/json' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `zaichang-mobile-${new Date().toISOString().slice(0, 10)}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-    setDataMessage('已导出本机资料（已排除 API Key 和校园密码）。');
-  }
-
   function clearLocalData() {
     if (!clearConfirm) {
       setClearConfirm(true);
@@ -1231,7 +1179,7 @@ export function App() {
     clearMobileState();
     setState(createInitialState());
     setClearConfirm(false);
-    setDataMessage('本机对话、记忆、安排和校园缓存已清空。');
+    setDataMessage(copy.localDataCleared);
     setConnectionMessage('');
   }
 
@@ -1619,34 +1567,6 @@ export function App() {
                 <button className={state.profile.theme === 'dark' ? 'selected' : ''} onClick={() => updateProfile({ theme: 'dark' as MobileTheme })}>{copy.dark}</button>
               </div>
             </section>
-            <section className="profile-section memory-section">
-              <div className="setting-label"><strong>{copy.memoryTitle}</strong><span>{copy.memoryEyebrow}</span></div>
-              {activeConversation.memories.length > 0 && (
-                <div className="memory-list">
-                  {activeConversation.memories.map((memory) => (
-                    <div className="memory-item" key={memory}>
-                      <span>{memory}</span>
-                      <button type="button" aria-label={copy.memoryRemove} onClick={() => removeMemory(memory)}><CloseIcon /></button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div className="memory-row">
-                <input value={memoryDraft} maxLength={300} placeholder={copy.memoryPlaceholder} onChange={(event) => setMemoryDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addMemory(); } }} />
-                <button className="primary-button" disabled={!memoryDraft.trim()} onClick={addMemory}>{copy.save}</button>
-              </div>
-              {state.memories.length > 0 && (
-                <div className="memory-list memory-legacy-list">
-                  <div className="setting-label"><strong>{copy.memoryLegacyTitle}</strong><span>{copy.memoryLegacyHint}</span></div>
-                  {state.memories.map((memory) => (
-                    <div className="memory-item" key={memory}>
-                      <span>{memory}</span>
-                      <button type="button" aria-label={copy.memoryRemove} onClick={() => removeLegacyMemory(memory)}><CloseIcon /></button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
             <button className="profile-link" onClick={openReminders}>
               <span><strong>{copy.reminders}</strong><small>{copy.remindersHint}</small></span><BellIcon />
             </button>
@@ -1679,15 +1599,13 @@ export function App() {
               {connectionMessage && <p className="connection-message">{connectionMessage}</p>}
               {secretsStorageUnavailable && <p className="campus-storage-warning" role="alert">{copy.campusSecureStorageWarning}<small>{copy.campusSecureStorageDiagnostic}: {secretsStorageDiagnostic || 'secure_storage_migration_failed'}</small></p>}
             </section>
-            <section className="profile-section data-section">
-              <div className="setting-label"><strong>本机资料</strong><span>导出的 JSON 不包含 API Key 和校园密码；清空后无法恢复。</span></div>
-              <div className="campus-account-actions">
-                <button className="secondary-button" onClick={exportLocalData}>导出资料</button>
-                <button className="danger-button" onClick={clearLocalData}>{clearConfirm ? '确认清空' : '清空本机资料'}</button>
-              </div>
-              {clearConfirm && <p className="connection-message">再次点击将删除本机对话、记忆、安排、提醒和校园缓存。</p>}
+            <div className="local-data-actions">
+              <button className={`local-data-clear-button ${clearConfirm ? 'confirm' : ''}`} onClick={clearLocalData}>
+                {clearConfirm ? copy.confirmClearLocalData : copy.clearLocalData}
+              </button>
+              {clearConfirm && <p className="local-data-clear-hint">{copy.clearLocalDataHint}</p>}
               {dataMessage && <p className="connection-message">{dataMessage}</p>}
-            </section>
+            </div>
           </div>
         </section>
       )}

@@ -240,16 +240,11 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .setting-label { display: grid; gap: 4px; margin-bottom: 13px; }
 .setting-label strong { color: var(--text); font-size: 14px; }
 .setting-label span { color: var(--text-soft); font-size: 11px; line-height: 1.45; }
-.key-row, .memory-row { display: flex; gap: 8px; }
-.memory-section { display: grid; gap: 11px; }
-.memory-section .setting-label { margin-bottom: 0; }
-.memory-list { display: grid; gap: 6px; }
-.memory-legacy-list { margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
-.memory-item { display: flex; align-items: center; gap: 8px; padding: 9px 10px; color: var(--text); border-radius: 10px; background: var(--surface-muted); font-size: 12px; line-height: 1.45; }
-.memory-item span { min-width: 0; flex: 1; }
-.memory-item button { width: 25px; height: 25px; display: grid; place-items: center; flex: 0 0 auto; color: var(--text-faint); border: 0; border-radius: 7px; background: transparent; }
-.memory-item button:hover { color: var(--danger); background: var(--surface); }
-.memory-item svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.key-row { display: flex; gap: 8px; }
+.local-data-actions { width: min(100%, 580px); margin: 2px auto 0; text-align: center; }
+.local-data-clear-button { min-height: 34px; padding: 6px 10px; color: var(--text-faint); border: 0; border-radius: 9px; background: transparent; font-size: 11px; }
+.local-data-clear-button:hover, .local-data-clear-button.confirm { color: var(--danger); background: var(--surface-muted); }
+.local-data-clear-hint { margin: 2px auto 8px; color: var(--text-soft); font-size: 11px; line-height: 1.5; }
 .primary-button, .secondary-button { min-height: 42px; padding: 0 14px; border: 0; border-radius: 12px; white-space: nowrap; }
 .primary-button { color: #fff; background: var(--accent); }
 .secondary-button { color: var(--text); background: var(--surface-strong); }

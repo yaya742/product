@@ -248,19 +248,6 @@ export const LOCAL_TOOL_SPECS: DeepSeekToolSpec[] = [
       },
     },
   },
-  {
-    type: 'function',
-    function: {
-      name: 'save_memory',
-      description: '只把用户明确要求记住的信息保存到当前对话；不同对话互不共享。没有明确的“记住、保存、以后都这样”等意思时不要使用。',
-      parameters: {
-        type: 'object',
-        properties: { text: { type: 'string', description: '要保存的简短信息' } },
-        required: ['text'],
-        additionalProperties: false,
-      },
-    },
-  },
 ];
 
 function apiErrorMessage(payload: unknown): string | undefined {

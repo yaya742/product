@@ -24,11 +24,10 @@ export interface UiCopy {
   testConnection: string;
   testing: string;
   connectionSuccess: string;
-  memoryEyebrow: string;
-  memoryTitle: string;
-  memoryPlaceholder: string;
-  memoryLegacyTitle: string;
-  memoryLegacyHint: string;
+  clearLocalData: string;
+  confirmClearLocalData: string;
+  clearLocalDataHint: string;
+  localDataCleared: string;
   save: string;
   historyTitle: string;
   historyEmpty: string;
@@ -162,7 +161,6 @@ export interface UiCopy {
   reminderSaved: string;
   notificationDenied: string;
   webReminderNote: string;
-  memoryRemove: string;
   historySearchPlaceholder: string;
 }
 
@@ -180,7 +178,7 @@ const SIMPLIFIED: UiCopy = {
   suggestions: ['帮我理一下今天要做的事', '我现在在哪里？', '给我一个简单的学习安排'],
   ready: '本机已准备好',
   needKey: '先在设置里连接 DeepSeek',
-  privacy: '直连 DeepSeek · 对话、记忆和 Key 保存在本机',
+  privacy: '直连 DeepSeek · 对话和 Key 保存在本机',
   stop: '停止',
   settingsEyebrow: '设置',
   profileTitle: '个人设置',
@@ -190,11 +188,10 @@ const SIMPLIFIED: UiCopy = {
   testConnection: '测试连接',
   testing: '测试中',
   connectionSuccess: '连接成功。Key 只保存在这台设备。',
-  memoryEyebrow: '仅在当前对话使用',
-  memoryTitle: '当前对话记忆',
-  memoryPlaceholder: '例如：这次讨论里需要记住的约定',
-  memoryLegacyTitle: '旧版通用记忆（已停用）',
-  memoryLegacyHint: '为保持对话独立，这些内容不会自动带入对话；需要时可手动加入当前对话。',
+  clearLocalData: '清空本机资料',
+  confirmClearLocalData: '再次点击确认清空',
+  clearLocalDataHint: '将删除本机对话、账号设置、提醒、安排和校园缓存，无法恢复。',
+  localDataCleared: '本机数据已清空。',
   save: '保存',
   historyTitle: '历史对话',
   historyEmpty: '还没有历史对话',
@@ -328,7 +325,6 @@ const SIMPLIFIED: UiCopy = {
   reminderSaved: '已保存到本机',
   notificationDenied: '已保存，但系统通知权限未开启。',
   webReminderNote: '浏览器预览不会发送系统通知，安装 APK 后才会提醒。',
-  memoryRemove: '移除记忆',
   historySearchPlaceholder: '搜索历史对话',
 };
 
@@ -338,11 +334,11 @@ const TRADITIONAL: UiCopy = {
   settings: '設定', newConversation: '新對話', onlineKicker: '',
   welcomeTitle: '把此刻，放在這裏。', welcomeBody: '說說你正在經歷的事。我會先聽懂，再陪你找到下一步。',
   suggestions: ['幫我理一下今天要做的事', '我現在在哪裏？', '給我一個簡單的學習安排'],
-  ready: '本機已準備好', needKey: '先在設定裏連接 DeepSeek', privacy: '直連 DeepSeek · 對話、記憶和 Key 保存在本機',
+  ready: '本機已準備好', needKey: '先在設定裏連接 DeepSeek', privacy: '直連 DeepSeek · 對話和 Key 保存在本機',
   stop: '停止', settingsEyebrow: '設定', profileTitle: '個人設定', close: '關閉',
   secureNote: '你的 Key 只保存在這台裝置，訊息直接發送到 DeepSeek。', apiKey: 'DeepSeek API Key',
   testConnection: '測試連接', testing: '測試中', connectionSuccess: '連接成功。Key 只保存在這台裝置。',
-  memoryEyebrow: '僅在目前對話使用', memoryTitle: '目前對話記憶', memoryPlaceholder: '例如：這次討論中需要記住的約定', memoryLegacyTitle: '舊版通用記憶（已停用）', memoryLegacyHint: '為保持對話獨立，這些內容不會自動帶入對話；需要時可手動加入目前對話。', save: '儲存',
+  clearLocalData: '清空本機資料', confirmClearLocalData: '再次點擊確認清空', clearLocalDataHint: '將刪除本機對話、帳號設定、提醒、安排和校園快取，無法復原。', localDataCleared: '本機資料已清空。', save: '儲存',
   historyTitle: '歷史對話', historyEmpty: '還沒有歷史對話', rename: '修改標題', delete: '刪除',
   renamePlaceholder: '輸入新的標題', cancel: '取消', done: '完成', profileEyebrow: '個人設定', avatar: '頭像',
   avatarHint: '從相簿選擇一張圖片作為頭像', language: '語言', appearance: '外觀', light: '淺色', dark: '深色',
@@ -357,7 +353,7 @@ const TRADITIONAL: UiCopy = {
   assistant: '在場', user: '你', typing: '正在整理…', draftPlaceholder: '', titleFallback: '未命名對話',
   attachFile: '添加附件', removeAttachment: '移除附件', attachmentTooLarge: '附件太大，請選擇較小的檔案。', attachmentInvalid: '暫不支援這個檔案，請選擇圖片或文字檔案。',
   imageReady: '請看看這張圖片', textAttachmentReady: '請閱讀這個文字附件', reminders: '日程提醒', remindersHint: '只保存在本機，到時間提醒你', remindersTitle: '日程提醒', reminderEmpty: '還沒有安排提醒',
-  reminderTitle: '提醒內容', reminderNotes: '備註（可選）', reminderTime: '提醒時間', addReminder: '添加提醒', complete: '完成', reminderSaved: '已儲存到本機', notificationDenied: '已儲存，但系統通知權限未開啟。', webReminderNote: '瀏覽器預覽不會發送系統通知，安裝 APK 後才會提醒。', memoryRemove: '移除記憶', historySearchPlaceholder: '搜尋歷史對話',
+  reminderTitle: '提醒內容', reminderNotes: '備註（可選）', reminderTime: '提醒時間', addReminder: '添加提醒', complete: '完成', reminderSaved: '已儲存到本機', notificationDenied: '已儲存，但系統通知權限未開啟。', webReminderNote: '瀏覽器預覽不會發送系統通知，安裝 APK 後才會提醒。', historySearchPlaceholder: '搜尋歷史對話',
 };
 
 const ENGLISH: UiCopy = {
@@ -370,10 +366,11 @@ const ENGLISH: UiCopy = {
   settings: 'Settings', newConversation: 'New chat', onlineKicker: '',
   welcomeTitle: 'Put this moment here.', welcomeBody: 'Tell me what you are going through. I will listen first, then help you find the next step.',
   suggestions: ['Help me plan today', 'Where am I right now?', 'Make me a simple study plan'], ready: 'Ready on this device',
-  needKey: 'Connect DeepSeek in Settings', privacy: 'Direct to DeepSeek · Your chats, memories and key stay on this device', stop: 'Stop',
+  needKey: 'Connect DeepSeek in Settings', privacy: 'Direct to DeepSeek · Your chats and key stay on this device', stop: 'Stop',
   settingsEyebrow: 'Settings', profileTitle: 'Make Zaichang yours', close: 'Close', secureNote: 'Your key stays on this device and messages go directly to DeepSeek.',
   apiKey: 'DeepSeek API Key', testConnection: 'Test connection', testing: 'Testing', connectionSuccess: 'Connected. Your key stays on this device.',
-  memoryEyebrow: 'Only used in this conversation', memoryTitle: 'This conversation’s memory', memoryPlaceholder: 'For example: remember this decision for this chat', memoryLegacyTitle: 'Legacy shared memories (disabled)', memoryLegacyHint: 'To keep chats independent, these are no longer added automatically. Add one to this conversation manually if needed.', save: 'Save',
+  clearLocalData: 'Clear local data', confirmClearLocalData: 'Tap again to confirm', clearLocalDataHint: 'This permanently deletes chats, account settings, reminders, plans and campus cache.', localDataCleared: 'Local data cleared.',
+  save: 'Save',
   historyTitle: 'Chat history', historyEmpty: 'No conversations yet', rename: 'Rename', delete: 'Delete', renamePlaceholder: 'Enter a new title',
   cancel: 'Cancel', done: 'Done', profileEyebrow: 'Profile settings', avatar: 'Avatar', avatarHint: 'Choose an image from your gallery', language: 'Language',
   appearance: 'Appearance', light: 'Light', dark: 'Dark', campus: 'Campus information', campusHint: 'Read schedule, exams, grades, to-dos and sports/practice; stored on this device', campusTitle: 'Campus information',
@@ -382,7 +379,7 @@ const ENGLISH: UiCopy = {
   readingTime: 'Reading phone time', locating: 'Requesting location', composing: 'Preparing reply', assistant: 'Zaichang', user: 'You', typing: 'Preparing…',
   draftPlaceholder: '', titleFallback: 'Untitled chat',
   attachFile: 'Add attachment', removeAttachment: 'Remove attachment', attachmentTooLarge: 'The attachment is too large. Choose a smaller file.', attachmentInvalid: 'This file is not supported. Choose an image or text file.', imageReady: 'Please look at this image', textAttachmentReady: 'Please read this text attachment',
-  reminders: 'Reminders', remindersHint: 'Stored on this device and shown on time', remindersTitle: 'Reminders', reminderEmpty: 'No reminders yet', reminderTitle: 'Reminder', reminderNotes: 'Notes (optional)', reminderTime: 'Time', addReminder: 'Add reminder', complete: 'Done', reminderSaved: 'Saved on this device', notificationDenied: 'Saved, but system notifications are disabled.', webReminderNote: 'Browser preview cannot send system notifications; install the APK to receive them.', memoryRemove: 'Remove memory', historySearchPlaceholder: 'Search chat history',
+  reminders: 'Reminders', remindersHint: 'Stored on this device and shown on time', remindersTitle: 'Reminders', reminderEmpty: 'No reminders yet', reminderTitle: 'Reminder', reminderNotes: 'Notes (optional)', reminderTime: 'Time', addReminder: 'Add reminder', complete: 'Done', reminderSaved: 'Saved on this device', notificationDenied: 'Saved, but system notifications are disabled.', webReminderNote: 'Browser preview cannot send system notifications; install the APK to receive them.', historySearchPlaceholder: 'Search chat history',
 };
 
 export function getUiCopy(language: MobileLanguage): UiCopy {

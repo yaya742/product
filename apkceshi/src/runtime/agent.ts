@@ -12,14 +12,13 @@ import { isMobileVmLocationAvailable, isMobileVmSession, mobileVmLocation } from
 import { CAMPUS_COORDINATE, fetchWeather, readDeviceLocation } from './weather';
 import type { MobileAgendaItem, MobileAttachment, MobileCampusData, MobileConversation, MobileLanguage, MobileMessage, MobileReminder, MobileTurnControls } from './types';
 
-export type AgentStatus = '联系 DeepSeek' | '读取手机时间' | '请求手机定位' | '查询天气' | '查询校园地图' | '规划路线' | '读取校园信息' | '读取课程活动' | '搜索校园公告' | '搜索院系公开资料' | '保存本地提醒' | '读取本地提醒' | '保存本地安排' | '读取本地安排' | '完成本地安排' | '撤销本地安排' | '搜索历史记录' | '保存当前对话记忆' | '整理回复';
+export type AgentStatus = '联系 DeepSeek' | '读取手机时间' | '请求手机定位' | '查询天气' | '查询校园地图' | '规划路线' | '读取校园信息' | '读取课程活动' | '搜索校园公告' | '搜索院系公开资料' | '保存本地提醒' | '读取本地提醒' | '保存本地安排' | '读取本地安排' | '完成本地安排' | '撤销本地安排' | '搜索历史记录' | '整理回复';
 
 export interface MobileAgentContext {
   conversation: MobileConversation;
   agenda: MobileAgendaItem[];
   reminders: MobileReminder[];
   controls?: MobileTurnControls;
-  allowMemoryWrite: boolean;
   allowLocalWrites: boolean;
   campus: MobileCampusData | null;
   readLearningActivities?: (courseId: string) => Promise<MobileCampusData['activities']>;
@@ -27,7 +26,6 @@ export interface MobileAgentContext {
   createReminder: (input: { title: string; dueAt: string; notes: string }) => Promise<Record<string, unknown>>;
   prepareAction: (input: { title: string; detail: string; startsAt?: string; durationMinutes?: number }) => Promise<Record<string, unknown>>;
   updateAction: (id: string, status: 'done' | 'cancelled') => Promise<Record<string, unknown>>;
-  saveMemory: (text: string) => Promise<Record<string, unknown>>;
 }
 
 function messageContent(message: MobileMessage): DeepSeekContent {
@@ -340,13 +338,6 @@ async function runLocalTool(call: DeepSeekToolCall, signal: AbortSignal, context
       })).slice(-20);
     return { status: results.length ? 'ok' : 'not_found', query, results };
   }
-  if (call.function.name === 'save_memory') {
-    if (!context) return { status: 'unavailable', reason: '手机端记忆存储暂不可用。' };
-    if (!context.allowMemoryWrite) return { status: 'draft_only', reason: '当前策略不允许保存记忆，这条内容没有保存。' };
-    const text = typeof toolArguments(call).text === 'string' ? String(toolArguments(call).text).trim().slice(0, 300) : '';
-    if (!text) return { status: 'invalid', reason: '没有提供要保存的内容。' };
-    return context.saveMemory(text);
-  }
   return { status: 'unavailable', reason: '手机端没有提供这项能力。' };
 }
 
@@ -367,7 +358,6 @@ export async function runMobileAgent(
   apiKey: string,
   messages: MobileMessage[],
   userText: string,
-  memories: string[],
   language: MobileLanguage,
   signal: AbortSignal,
   onText: (text: string) => void,
@@ -376,7 +366,7 @@ export async function runMobileAgent(
   controls: MobileTurnControls = { memoryMode: 'relevant', retention: 'purpose_scoped', audience: 'self' },
 ): Promise<string> {
   const wire: DeepSeekMessage[] = [
-    { role: 'system', content: buildSystemPrompt(memories, language) },
+    { role: 'system', content: buildSystemPrompt(language) },
     ...(controls.memoryMode === 'relevant' ? modelHistory(messages) : []),
     { role: 'user', content: context?.currentAttachment ? messageContent({
       id: 'current-user',
@@ -435,9 +425,7 @@ export async function runMobileAgent(
                             ? '撤销本地安排'
                             : call.function.name === 'search_local_history'
                       ? '搜索历史记录'
-                      : call.function.name === 'save_memory'
-                        ? '保存当前对话记忆'
-                        : '请求手机定位',
+                      : '请求手机定位',
       );
       let result: Record<string, unknown>;
       try {
