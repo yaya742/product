@@ -374,6 +374,9 @@ function parseConversations(value: unknown): MobileConversation[] {
       id: item.id,
       title: typeof item.title === 'string' && item.title.trim() ? item.title.trim().slice(0, 60) : '新对话',
       messages,
+      memories: Array.isArray(item.memories)
+        ? item.memories.filter((memory): memory is string => typeof memory === 'string').map((memory) => memory.trim().slice(0, 300)).filter(Boolean).slice(-16)
+        : [],
       createdAt,
       updatedAt,
     }];

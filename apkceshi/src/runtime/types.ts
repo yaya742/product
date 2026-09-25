@@ -268,6 +268,7 @@ export interface MobileConversation {
   id: string;
   title: string;
   messages: MobileMessage[];
+  memories: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -306,7 +307,7 @@ export function newId(prefix: string): string {
 
 export function createConversation(title = '新对话'): MobileConversation {
   const now = new Date().toISOString();
-  return { id: newId('conversation'), title, messages: [], createdAt: now, updatedAt: now };
+  return { id: newId('conversation'), title, messages: [], memories: [], createdAt: now, updatedAt: now };
 }
 
 export function createInitialState(): MobileState {

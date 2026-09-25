@@ -383,15 +383,6 @@ function MoreIcon() {
   );
 }
 
-function SettingsIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z" />
-      <path d="m19.4 13.5 1.1.9-1.7 2.9-1.4-.5a7.7 7.7 0 0 1-1.4.8l-.3 1.5h-3.4l-.3-1.5a7.7 7.7 0 0 1-1.4-.8l-1.4.5-1.7-2.9 1.1-.9a7.1 7.1 0 0 1 0-1.6l-1.1-.9 1.7-2.9 1.4.5a7.7 7.7 0 0 1 1.4-.8l.3-1.5h3.4l.3 1.5a7.7 7.7 0 0 1 1.4.8l1.4-.5 1.7 2.9-1.1.9a7.1 7.1 0 0 1 0 1.6Z" />
-    </svg>
-  );
-}
-
 function CloseIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -477,8 +468,6 @@ export function App() {
   const [attachmentMessage, setAttachmentMessage] = useState('');
   const [memoryDraft, setMemoryDraft] = useState('');
   const [busy, setBusy] = useState(false);
-  const [turnControls, setTurnControls] = useState<MobileTurnControls>(DEFAULT_TURN_CONTROLS);
-  const [scopeOpen, setScopeOpen] = useState(false);
   const [, setStatus] = useState<AgentStatus | '空闲'>('空闲');
   const [connectionMessage, setConnectionMessage] = useState('');
   const [testing, setTesting] = useState(false);
@@ -1000,6 +989,17 @@ export function App() {
     }));
   }
 
+  function updateConversationMessages(conversationId: string, change: (messages: MobileMessage[]) => MobileMessage[]) {
+    setState((current) => ({
+      ...current,
+      conversations: current.conversations.map((conversation) => conversation.id !== conversationId ? conversation : {
+        ...conversation,
+        messages: change(conversation.messages),
+        updatedAt: new Date().toISOString(),
+      }),
+    }));
+  }
+
   async function generateConversationTitle(conversationId: string, apiKey: string, userText: string) {
     const fallback = compactTitle(userText, copy.titleFallback);
     let title = fallback;
@@ -1037,7 +1037,7 @@ export function App() {
     const conversationId = activeConversation.id;
     const history = messages;
     const conversationLanguage = state.profile.language;
-    const controls = turnControls;
+    const controls = DEFAULT_TURN_CONTROLS;
     const ephemeral = controls.retention === 'session_only';
     const shouldGenerateTitle = history.length === 0 && !ephemeral;
     const userMessage: MobileMessage = {
@@ -1065,7 +1065,7 @@ export function App() {
     setAttachmentMessage('');
     setBusy(true);
     setStatus('联系 DeepSeek');
-    updateActiveMessages((current) => [...current, userMessage, assistantMessage]);
+    updateConversationMessages(conversationId, (current) => [...current, userMessage, assistantMessage]);
     const controller = new AbortController();
     abortRef.current = controller;
     try {
@@ -1073,17 +1073,17 @@ export function App() {
         state.apiKey,
         history,
         text,
-        state.memories,
+        activeConversation.memories,
         conversationLanguage,
         controller.signal,
         (delta) => {
-          updateActiveMessages((current) => current.map((message) =>
+          updateConversationMessages(conversationId, (current) => current.map((message) =>
             message.id === assistantId ? { ...message, content: message.content + delta } : message,
           ));
         },
         setStatus,
         {
-          conversations: state.conversations,
+          conversation: { ...activeConversation, messages: [...history, userMessage] },
           agenda: state.agenda,
           reminders: state.reminders,
           controls,
@@ -1096,13 +1096,19 @@ export function App() {
           prepareAction: createAgendaRecord,
           updateAction: updateAgendaRecord,
           saveMemory: async (memory) => {
-            setState((current) => ({ ...current, memories: [...current.memories.filter((item) => item !== memory), memory].slice(-16) }));
+            setState((current) => ({
+              ...current,
+              conversations: current.conversations.map((conversation) => conversation.id !== conversationId ? conversation : {
+                ...conversation,
+                memories: [...conversation.memories.filter((item) => item !== memory), memory].slice(-16),
+              }),
+            }));
             return { status: 'ok', saved: memory };
           },
         },
         controls,
       );
-      updateActiveMessages((current) => current.map((message) =>
+      updateConversationMessages(conversationId, (current) => current.map((message) =>
         message.id === assistantId ? {
           ...message,
           status: 'done',
@@ -1112,7 +1118,7 @@ export function App() {
       if (shouldGenerateTitle) void generateConversationTitle(conversationId, state.apiKey, text);
     } catch (error) {
       const message = friendlyError(error);
-      updateActiveMessages((current) => current.map((item) =>
+      updateConversationMessages(conversationId, (current) => current.map((item) =>
         item.id === assistantId ? {
           ...item,
           content: item.content || message,
@@ -1131,8 +1137,6 @@ export function App() {
       abortRef.current = undefined;
       setBusy(false);
       setStatus('空闲');
-      setTurnControls(DEFAULT_TURN_CONTROLS);
-      setScopeOpen(false);
     }
   }
 
@@ -1181,13 +1185,30 @@ export function App() {
   }
 
   function addMemory() {
-    const text = memoryDraft.trim();
-    if (!text) return;
-    updateState({ memories: [...state.memories.filter((item) => item !== text), text].slice(-16) });
+    const text = memoryDraft.trim().slice(0, 300);
+    if (!text || !activeConversation) return;
+    setState((current) => ({
+      ...current,
+      conversations: current.conversations.map((conversation) => conversation.id !== activeConversation.id ? conversation : {
+        ...conversation,
+        memories: [...conversation.memories.filter((item) => item !== text), text].slice(-16),
+      }),
+    }));
     setMemoryDraft('');
   }
 
   function removeMemory(text: string) {
+    if (!activeConversation) return;
+    setState((current) => ({
+      ...current,
+      conversations: current.conversations.map((conversation) => conversation.id !== activeConversation.id ? conversation : {
+        ...conversation,
+        memories: conversation.memories.filter((item) => item !== text),
+      }),
+    }));
+  }
+
+  function removeLegacyMemory(text: string) {
     updateState({ memories: state.memories.filter((item) => item !== text) });
   }
 
@@ -1411,14 +1432,6 @@ export function App() {
   const visibleGrades = visibleGradeGroups.flatMap((group) => group.grades);
   const displayedGradeStats = gradeStats(visibleGrades);
   const sportsGrades = campus?.grades.filter((grade) => /体育|体能|游泳|篮球|足球|网球|羽毛球|乒乓|排球|武术|健身/.test(grade.name)) || [];
-  const scopeLabel = turnControls.retention === 'session_only'
-    ? '本轮不保存'
-    : turnControls.memoryMode === 'current_sources_only'
-      ? '只看本条与附件'
-      : turnControls.memoryMode === 'none'
-        ? '不参考历史与记忆'
-        : '按需参考本机资料';
-
   return (
     <main className={`app-shell ${themeClass}`}>
       <header className="topbar">
@@ -1493,9 +1506,6 @@ export function App() {
             accept="image/*,.txt,.md,.json,.csv,.log"
             onChange={(event) => { const file = event.target.files?.[0]; if (file) void handleAttachmentFile(file); event.currentTarget.value = ''; }}
           />
-          <button className={`scope-button ${scopeOpen ? 'selected' : ''}`} type="button" onClick={() => setScopeOpen((open) => !open)} aria-label="设置本轮资料范围">
-            {scopeLabel}
-          </button>
           <textarea
             value={draft}
             disabled={busy}
@@ -1519,26 +1529,6 @@ export function App() {
             </button>
           )}
         </div>
-        {scopeOpen && (
-          <section className="scope-popover" aria-label="本轮资料范围">
-            <label><span>可以参考什么</span><select value={turnControls.memoryMode} onChange={(event) => setTurnControls((current) => ({ ...current, memoryMode: event.target.value as MobileTurnControls['memoryMode'] }))}>
-              <option value="relevant">按需参考相关本机资料</option>
-              <option value="current_sources_only">只看本条消息与附件</option>
-              <option value="none">不参考历史与长期记忆</option>
-            </select></label>
-            <label><span>这条消息怎样保留</span><select value={turnControls.retention} onChange={(event) => setTurnControls((current) => ({ ...current, retention: event.target.value as MobileTurnControls['retention'] }))}>
-              <option value="purpose_scoped">保留对话，按需整理记忆</option>
-              <option value="history_no_inference">保留对话，不形成长期记忆</option>
-              <option value="session_only">本轮不保存</option>
-            </select></label>
-            <label><span>回复受众</span><select value={turnControls.audience} onChange={(event) => setTurnControls((current) => ({ ...current, audience: event.target.value as MobileTurnControls['audience'] }))}>
-              <option value="self">只给我看</option>
-              <option value="group">准备给群里看的草稿</option>
-              <option value="public">准备公开的草稿</option>
-            </select></label>
-            {turnControls.audience !== 'self' && <p>只生成草稿，不会自动发送。</p>}
-          </section>
-        )}
       </footer>
 
       {historyOpen && (
@@ -1584,7 +1574,7 @@ export function App() {
             <button className="profile-entry" onClick={openProfile}>
               <Avatar className="profile-avatar" value={state.profile.avatar} />
               <span className="profile-entry-copy"><strong>{copy.profileEyebrow}</strong></span>
-              <SettingsIcon />
+              <ArrowIcon />
             </button>
           </aside>
         </>
@@ -1631,9 +1621,9 @@ export function App() {
             </section>
             <section className="profile-section memory-section">
               <div className="setting-label"><strong>{copy.memoryTitle}</strong><span>{copy.memoryEyebrow}</span></div>
-              {state.memories.length > 0 && (
+              {activeConversation.memories.length > 0 && (
                 <div className="memory-list">
-                  {state.memories.map((memory) => (
+                  {activeConversation.memories.map((memory) => (
                     <div className="memory-item" key={memory}>
                       <span>{memory}</span>
                       <button type="button" aria-label={copy.memoryRemove} onClick={() => removeMemory(memory)}><CloseIcon /></button>
@@ -1642,9 +1632,20 @@ export function App() {
                 </div>
               )}
               <div className="memory-row">
-                <input value={memoryDraft} placeholder={copy.memoryPlaceholder} onChange={(event) => setMemoryDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addMemory(); } }} />
+                <input value={memoryDraft} maxLength={300} placeholder={copy.memoryPlaceholder} onChange={(event) => setMemoryDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addMemory(); } }} />
                 <button className="primary-button" disabled={!memoryDraft.trim()} onClick={addMemory}>{copy.save}</button>
               </div>
+              {state.memories.length > 0 && (
+                <div className="memory-list memory-legacy-list">
+                  <div className="setting-label"><strong>{copy.memoryLegacyTitle}</strong><span>{copy.memoryLegacyHint}</span></div>
+                  {state.memories.map((memory) => (
+                    <div className="memory-item" key={memory}>
+                      <span>{memory}</span>
+                      <button type="button" aria-label={copy.memoryRemove} onClick={() => removeLegacyMemory(memory)}><CloseIcon /></button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
             <button className="profile-link" onClick={openReminders}>
               <span><strong>{copy.reminders}</strong><small>{copy.remindersHint}</small></span><BellIcon />

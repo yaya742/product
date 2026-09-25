@@ -11,7 +11,22 @@ interface CampusCalendarViewerProps {
   onClose: () => void;
 }
 
-function CalendarPdfPage({ page, number }: { page: PDFPageProxy; number: number }) {
+const MIN_CALENDAR_ZOOM = 0.75;
+const MAX_CALENDAR_ZOOM = 3;
+const CALENDAR_ZOOM_STEP = 0.25;
+
+function clampCalendarZoom(value: number): number {
+  return Math.min(MAX_CALENDAR_ZOOM, Math.max(MIN_CALENDAR_ZOOM, value));
+}
+
+function getTouchDistance(touches: TouchList): number {
+  const first = touches.item(0);
+  const second = touches.item(1);
+  if (!first || !second) return 0;
+  return Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY);
+}
+
+function CalendarPdfPage({ page, number, zoom }: { page: PDFPageProxy; number: number; zoom: number }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState(false);
 
@@ -29,7 +44,9 @@ function CalendarPdfPage({ page, number }: { page: PDFPageProxy; number: number 
       try {
         const baseViewport = page.getViewport({ scale: 1 });
         const viewport = page.getViewport({ scale: width / baseViewport.width });
-        const outputScale = Math.max(1, window.devicePixelRatio || 1);
+        const requestedOutputScale = Math.min(2, window.devicePixelRatio || 1);
+        const pixelBudgetScale = Math.sqrt(12_000_000 / (viewport.width * viewport.height));
+        const outputScale = Math.min(requestedOutputScale, pixelBudgetScale);
         const canvas = document.createElement('canvas');
         canvas.width = Math.ceil(viewport.width * outputScale);
         canvas.height = Math.ceil(viewport.height * outputScale);
@@ -74,7 +91,7 @@ function CalendarPdfPage({ page, number }: { page: PDFPageProxy; number: number 
     };
   }, [page, number]);
 
-  return <div className="campus-calendar-page" ref={hostRef}>{error && <p role="status">无法显示第 {number} 页。</p>}</div>;
+  return <div className="campus-calendar-page" ref={hostRef} style={{ width: `${zoom * 100}%` }}>{error && <p role="status">无法显示第 {number} 页。</p>}</div>;
 }
 
 export function CampusCalendarViewer({ url, copy, onClose }: CampusCalendarViewerProps) {
@@ -82,6 +99,11 @@ export function CampusCalendarViewer({ url, copy, onClose }: CampusCalendarViewe
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [retryToken, setRetryToken] = useState(0);
+  const [zoom, setZoom] = useState(1);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const zoomRef = useRef(zoom);
+  zoomRef.current = zoom;
+  const pinchRef = useRef<{ startDistance: number; startZoom: number; lastZoom: number } | null>(null);
   const errorCopyRef = useRef(copy.campusCalendarError);
   errorCopyRef.current = copy.campusCalendarError;
 
@@ -128,6 +150,57 @@ export function CampusCalendarViewer({ url, copy, onClose }: CampusCalendarViewe
     return () => document.removeEventListener('keydown', closeOnEscape);
   }, [onClose]);
 
+  useEffect(() => {
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+
+    const startPinch = (event: TouchEvent) => {
+      if (event.touches.length !== 2) {
+        pinchRef.current = null;
+        return;
+      }
+      pinchRef.current = {
+        startDistance: getTouchDistance(event.touches),
+        startZoom: zoomRef.current,
+        lastZoom: zoomRef.current,
+      };
+    };
+    const movePinch = (event: TouchEvent) => {
+      const pinch = pinchRef.current;
+      if (!pinch || event.touches.length !== 2) return;
+      event.preventDefault();
+      if (!pinch.startDistance) return;
+      const rawZoom = pinch.startZoom * getTouchDistance(event.touches) / pinch.startDistance;
+      const nextZoom = Math.round(clampCalendarZoom(rawZoom) * 10) / 10;
+      if (Math.abs(nextZoom - pinch.lastZoom) < 0.09) return;
+      pinch.lastZoom = nextZoom;
+      setZoom(nextZoom);
+    };
+    const endPinch = (event: TouchEvent) => {
+      if (event.touches.length < 2) pinchRef.current = null;
+    };
+
+    scroller.addEventListener('touchstart', startPinch, { passive: true });
+    scroller.addEventListener('touchmove', movePinch, { passive: false });
+    scroller.addEventListener('touchend', endPinch, { passive: true });
+    scroller.addEventListener('touchcancel', endPinch, { passive: true });
+    return () => {
+      scroller.removeEventListener('touchstart', startPinch);
+      scroller.removeEventListener('touchmove', movePinch);
+      scroller.removeEventListener('touchend', endPinch);
+      scroller.removeEventListener('touchcancel', endPinch);
+      pinchRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (zoom <= 1 && scrollRef.current) scrollRef.current.scrollLeft = 0;
+  }, [zoom]);
+
+  const changeZoom = (amount: number) => {
+    setZoom((current) => Math.round(clampCalendarZoom(current + amount) * 100) / 100);
+  };
+
   return (
     <section className="full-screen-panel campus-calendar-viewer" role="dialog" aria-modal="true" aria-label={copy.campusCalendarOpen}>
       <header className="secondary-topbar">
@@ -135,13 +208,20 @@ export function CampusCalendarViewer({ url, copy, onClose }: CampusCalendarViewe
         <h2>{copy.campusCalendarOpen}</h2>
         <span className="topbar-spacer" />
       </header>
-      <div className="campus-calendar-scroll">
+      <div className="campus-calendar-zoom-toolbar" role="toolbar" aria-label={copy.campusCalendarZoom}>
+        <button type="button" className="campus-calendar-zoom-button" aria-label={copy.campusCalendarZoomOut} disabled={zoom <= MIN_CALENDAR_ZOOM} onClick={() => changeZoom(-CALENDAR_ZOOM_STEP)}>−</button>
+        <output className="campus-calendar-zoom-value" aria-live="polite">{Math.round(zoom * 100)}%</output>
+        <button type="button" className="campus-calendar-zoom-button" aria-label={copy.campusCalendarZoomIn} disabled={zoom >= MAX_CALENDAR_ZOOM} onClick={() => changeZoom(CALENDAR_ZOOM_STEP)}>+</button>
+        <button type="button" className="campus-calendar-fit-button" onClick={() => setZoom(1)} disabled={zoom === 1}>{copy.campusCalendarFitWidth}</button>
+        <span className="campus-calendar-pinch-hint">{copy.campusCalendarPinchHint}</span>
+      </div>
+      <div className="campus-calendar-scroll" ref={scrollRef}>
         {loading && <p className="campus-calendar-message" role="status">{copy.campusCalendarLoading}</p>}
         {!loading && error && <div className="campus-calendar-message" role="alert"><p>{error || copy.campusCalendarError}</p><button type="button" className="secondary-button" onClick={() => setRetryToken((value) => value + 1)}>{copy.campusCalendarRetry}</button></div>}
         {!loading && !error && pdfDocument && (
-          <div className="campus-calendar-pages">
+          <div className="campus-calendar-pages" data-zoomed={zoom > 1 ? 'true' : 'false'}>
             {Array.from({ length: pdfDocument.numPages }, (_, index) => index + 1).map((number) => (
-              <CalendarPage key={number} document={pdfDocument} number={number} />
+              <CalendarPage key={number} document={pdfDocument} number={number} zoom={zoom} />
             ))}
           </div>
         )}
@@ -150,7 +230,7 @@ export function CampusCalendarViewer({ url, copy, onClose }: CampusCalendarViewe
   );
 }
 
-function CalendarPage({ document, number }: { document: PDFDocumentProxy; number: number }) {
+function CalendarPage({ document, number, zoom }: { document: PDFDocumentProxy; number: number; zoom: number }) {
   const [page, setPage] = useState<PDFPageProxy | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -159,5 +239,7 @@ function CalendarPage({ document, number }: { document: PDFDocumentProxy; number
     }).catch(() => {});
     return () => { cancelled = true; };
   }, [document, number]);
-  return page ? <CalendarPdfPage page={page} number={number} /> : <div className="campus-calendar-page-placeholder" aria-hidden="true" />;
+  return page
+    ? <CalendarPdfPage page={page} number={number} zoom={zoom} />
+    : <div className="campus-calendar-page-placeholder" aria-hidden="true" style={{ width: `${zoom * 100}%` }} />;
 }

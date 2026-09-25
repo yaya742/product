@@ -239,7 +239,7 @@ export const LOCAL_TOOL_SPECS: DeepSeekToolSpec[] = [
     type: 'function',
     function: {
       name: 'search_local_history',
-      description: '搜索当前手机保存的历史对话。只在用户明确要求查找以前聊过的内容时使用。',
+      description: '仅搜索当前对话中较早的消息，不得读取其他对话。只在用户明确要求查找本对话先前内容时使用。',
       parameters: {
         type: 'object',
         properties: { query: { type: 'string', description: '要搜索的关键词或问题' } },
@@ -252,7 +252,7 @@ export const LOCAL_TOOL_SPECS: DeepSeekToolSpec[] = [
     type: 'function',
     function: {
       name: 'save_memory',
-      description: '保存一条用户明确要求长期记住的信息。没有明确的“记住、保存、以后都这样”等意思时不要使用。',
+      description: '只把用户明确要求记住的信息保存到当前对话；不同对话互不共享。没有明确的“记住、保存、以后都这样”等意思时不要使用。',
       parameters: {
         type: 'object',
         properties: { text: { type: 'string', description: '要保存的简短信息' } },
