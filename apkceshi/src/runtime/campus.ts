@@ -104,6 +104,7 @@ interface IsolatedHttpPlugin {
     body?: string;
     responseType?: 'text' | 'arraybuffer';
     disableRedirects?: boolean;
+    maxResponseBytes?: number;
   }): Promise<HttpResult>;
 }
 
@@ -598,10 +599,11 @@ async function followGet(
   headers?: Record<string, string>,
   responseType: 'text' | 'arraybuffer' = 'text',
   useCookieJar = false,
+  isolated = false,
 ): Promise<HttpResult> {
   let current = routedUrl(startUrl);
   for (let attempt = 0; attempt < 10; attempt += 1) {
-    const result = await request({ url: current, headers, responseType, disableRedirects: true, allowWebVpn: campusTransport === 'webvpn', useCookieJar });
+    const result = await request({ url: current, headers, responseType, disableRedirects: true, allowWebVpn: campusTransport === 'webvpn', useCookieJar, isolated });
     if (result.status < 300 || result.status >= 400) return result;
     const location = headerValue(result.headers, 'location');
     if (!location) throw new CampusError('校园系统跳转缺少目标地址。', 'response');
@@ -2561,34 +2563,102 @@ function readHolidayEvents(body: string, academicYear: string, source: string): 
 export async function readPublicHolidays(academicYear: string): Promise<{ holidays: CampusHoliday[]; calendarUrl: string }> {
   assertNative();
   const safeYear = /^20\d{2}-20\d{2}$/.test(academicYear) ? academicYear : currentAcademicTerm().year + '-' + (Number(currentAcademicTerm().year) + 1);
-  let index = await request({ url: CALENDAR_LIST_URL, responseType: 'text', disableRedirects: true });
-  if (index.status < 200 || index.status >= 300) index = await request({ url: CALENDAR_LIST_FALLBACK_URL, responseType: 'text', disableRedirects: true });
-  if (index.status < 200 || index.status >= 300) throw new CampusError(`浙大官方校历列表暂时无法访问（HTTP ${index.status}）。`, 'network');
-  const indexBody = responseText(index);
-  const links = [...indexBody.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)].flatMap((match) => {
-    const title = cleanDisplayText(match[2] || '');
-    if (!title.replace(/[—–]/g, '-').includes(`${safeYear}学年校历`) && !match[1].includes(safeYear)) return [];
-    try {
-      const url = routedUrl(decodeHtml(match[1]), CALENDAR_LIST_URL);
-      return [{ title, url }];
-    } catch { return []; }
-  });
-  const page = links[0];
-  if (!page) throw new CampusError(`本科生院没有找到${safeYear}学年校历。`, 'response');
-  const pageResponse = await followGet(page.url);
-  if (pageResponse.status < 200 || pageResponse.status >= 300) throw new CampusError(`浙大官方校历页面暂时无法访问（HTTP ${pageResponse.status}）。`, 'network');
-  const pageBody = responseText(pageResponse);
-  const pdfSource = pageBody.match(/\bpdfsrc\s*=\s*["']([^"']+)["']/i)?.[1];
-  let calendarUrl = page.url;
-  if (pdfSource) {
-    try {
-      const parsedUrl = new URL(decodeHtml(pdfSource), page.url);
-      if (parsedUrl.protocol === 'https:' && parsedUrl.hostname.toLowerCase() === 'ugrs.zju.edu.cn') calendarUrl = parsedUrl.toString();
-    } catch {
-      // Keep the official calendar article URL as a safe fallback.
+  const previousTransport = campusTransport;
+  campusTransport = 'direct';
+  try {
+    let index = await request({ url: CALENDAR_LIST_URL, responseType: 'text', disableRedirects: true, isolated: true });
+    if (index.status < 200 || index.status >= 300) index = await request({ url: CALENDAR_LIST_FALLBACK_URL, responseType: 'text', disableRedirects: true, isolated: true });
+    if (index.status < 200 || index.status >= 300) throw new CampusError(`浙大官方校历列表暂时无法访问（HTTP ${index.status}）。`, 'network');
+    const indexBody = responseText(index);
+    const links = [...indexBody.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)].flatMap((match) => {
+      const title = cleanDisplayText(match[2] || '');
+      if (!title.replace(/[—–]/g, '-').includes(`${safeYear}学年校历`) && !match[1].includes(safeYear)) return [];
+      try {
+        const url = routedUrl(decodeHtml(match[1]), CALENDAR_LIST_URL);
+        return [{ title, url }];
+      } catch { return []; }
+    });
+    const page = links[0];
+    if (!page) throw new CampusError(`本科生院没有找到${safeYear}学年校历。`, 'response');
+    const pageResponse = await followGet(page.url, undefined, 'text', false, true);
+    if (pageResponse.status < 200 || pageResponse.status >= 300) throw new CampusError(`浙大官方校历页面暂时无法访问（HTTP ${pageResponse.status}）。`, 'network');
+    const pageBody = responseText(pageResponse);
+    const pdfSource = pageBody.match(/\bpdfsrc\s*=\s*["']([^"']+)["']/i)?.[1]
+      || pageBody.match(/\bhref\s*=\s*["']([^"']+\.pdf(?:\?[^"']*)?)["']/i)?.[1];
+    let calendarUrl = '';
+    if (pdfSource) {
+      try {
+        const parsedUrl = new URL(decodeHtml(pdfSource), page.url);
+        if (parsedUrl.protocol === 'https:' && parsedUrl.hostname.toLowerCase() === 'ugrs.zju.edu.cn') calendarUrl = parsedUrl.toString();
+      } catch {
+        // Do not expose an article page as a downloadable PDF fallback.
+      }
     }
+    return { holidays: readHolidayEvents(pageBody, safeYear, page.url), calendarUrl };
+  } finally {
+    campusTransport = previousTransport;
   }
-  return { holidays: readHolidayEvents(pageBody, safeYear, page.url), calendarUrl };
+}
+
+const MAX_OFFICIAL_CALENDAR_PDF_BYTES = 16 * 1024 * 1024;
+
+/** Read the public academic calendar from the official undergraduate-school host. */
+export async function readOfficialCalendarPdf(value: string): Promise<Uint8Array> {
+  assertNative();
+  let current: URL;
+  try {
+    current = new URL(value);
+  } catch {
+    throw new CampusError('校历地址无效，请重新读取校园信息。', 'response');
+  }
+  const isOfficialCalendarUrl = (url: URL) => url.protocol === 'https:'
+    && url.origin === 'https://ugrs.zju.edu.cn'
+    && !url.username
+    && !url.password;
+  if (!isOfficialCalendarUrl(current)) {
+    throw new CampusError('校历地址不是本科生院的官方地址，已停止读取。', 'response');
+  }
+
+  try {
+    for (let attempt = 0; attempt <= 5; attempt += 1) {
+      const result = await IsolatedHttp.request({
+        url: current.toString(),
+        method: 'GET',
+        headers: {
+          Accept: 'application/pdf,application/octet-stream;q=0.9,*/*;q=0.5',
+          'Accept-Encoding': 'identity',
+        },
+        responseType: 'arraybuffer',
+        disableRedirects: true,
+        maxResponseBytes: MAX_OFFICIAL_CALENDAR_PDF_BYTES,
+      });
+      if (result.status >= 300 && result.status < 400) {
+        const location = headerValue(result.headers, 'location');
+        if (!location || attempt === 5) throw new CampusError('本科生院校历跳转异常，请稍后重试。', 'response');
+        const next = new URL(location, current);
+        if (!isOfficialCalendarUrl(next)) {
+          throw new CampusError('校历跳转到非本科生院地址，已停止读取。', 'response');
+        }
+        current = next;
+        continue;
+      }
+      if (result.status < 200 || result.status >= 300) {
+        throw new CampusError(`本科生院校历暂时无法读取（HTTP ${result.status}）。`, 'network');
+      }
+      if (typeof result.data !== 'string') throw new CampusError('本科生院返回的校历格式无法识别。', 'response');
+      const bytes = decodeBase64Bytes(result.data);
+      if (bytes.byteLength > MAX_OFFICIAL_CALENDAR_PDF_BYTES) throw new CampusError('校历文件超过安全读取上限。', 'response');
+      const signature = new TextDecoder('latin1').decode(bytes.subarray(0, Math.min(bytes.length, 1024)));
+      if (!signature.includes('%PDF-')) throw new CampusError('本科生院返回的内容不是可识别的 PDF 校历。', 'response');
+      return bytes;
+    }
+  } catch (error) {
+    if (error instanceof CampusError) throw error;
+    throw new CampusError(error instanceof Error && error.message === 'campus_response_too_large'
+      ? '校历文件超过 16 MB，暂时无法在手机内打开。'
+      : error instanceof Error ? error.message : '校历下载失败，请检查网络后重试。', 'network');
+  }
+  throw new CampusError('本科生院校历跳转次数过多，已停止读取。', 'response');
 }
 
 function makeGradeAlerts(grades: CampusGrade[]): CampusGradeAlert[] {

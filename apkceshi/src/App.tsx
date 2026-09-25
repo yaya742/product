@@ -3,6 +3,7 @@ import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { MapPanel } from './MapPanel';
 import { WeatherPanel } from './WeatherPanel';
+import { CampusCalendarViewer } from './CampusCalendarViewer';
 import { runMobileAgent, type AgentStatus } from './runtime/agent';
 import { completeDeepSeek, DeepSeekError, testDeepSeekConnection, translateText } from './runtime/deepseek';
 import { CampusError, currentAcademicTerm, readCampusInfo, readLearningActivities, readPublicCollegeInfo, readPublicNotices, type CampusPublicInfoResult } from './runtime/campus';
@@ -501,6 +502,8 @@ export function App() {
   const [campusSaved, setCampusSaved] = useState(false);
   const [campusLoading, setCampusLoading] = useState(false);
   const [campusMessage, setCampusMessage] = useState('');
+  const [showCampusPassword, setShowCampusPassword] = useState(false);
+  const [campusCalendarViewerUrl, setCampusCalendarViewerUrl] = useState<string | null>(null);
   const initialAcademicTerm = currentAcademicTerm();
   const [campusTab, setCampusTab] = useState<'overview' | 'schedule' | 'courses' | 'learning' | 'activities' | 'exams' | 'grades' | 'gpa' | 'todos' | 'practice' | 'holidays' | 'notices' | 'public'>('overview');
   const [campusGradeScope, setCampusGradeScope] = useState('current');
@@ -569,6 +572,18 @@ export function App() {
     setCampusAcademicYear(state.campus.academicYear);
     setCampusTerm(state.campus.term);
   }, [state.campus?.fetchedAt]);
+
+  useEffect(() => {
+    if (!campusOpen) setShowCampusPassword(false);
+  }, [campusOpen]);
+
+  useEffect(() => {
+    const concealPasswordWhenHidden = () => {
+      if (document.visibilityState === 'hidden') setShowCampusPassword(false);
+    };
+    document.addEventListener('visibilitychange', concealPasswordWhenHidden);
+    return () => document.removeEventListener('visibilitychange', concealPasswordWhenHidden);
+  }, []);
 
   useEffect(() => {
     if (!secretsHydrated || autoReadOnLaunchHandledRef.current) return;
@@ -661,13 +676,10 @@ export function App() {
     }
     campusReadInFlightRef.current = true;
     campusRefreshAttemptAtRef.current = Date.now();
+    setShowCampusPassword(false);
     setCampusLoading(true);
     setCampusSaved(false);
-    // Keep same-term data visible during an automatic refresh. When the user
-    // explicitly switches terms, clear the previous term to avoid mislabeling.
-    if (state.campus && (state.campus.academicYear !== campusAcademicYear || state.campus.term !== campusTerm)) {
-      updateState({ campus: null });
-    }
+    // Keep the last complete result visible until the next read succeeds.
     setCampusMessage(copy.campusLoading);
     try {
       const campus = await readCampusInfo(state.profile.studentId, state.profile.studentPassword, { academicYear: campusAcademicYear, term: campusTerm });
@@ -1673,19 +1685,24 @@ export function App() {
             <section className="profile-section campus-account-card">
               <div className="setting-label"><strong>{copy.campus}</strong><span>{copy.campusHint}</span></div>
               <label className="field-label" htmlFor="student-id">{copy.studentId}</label>
-              <input id="student-id" value={state.profile.studentId} placeholder={copy.studentId} onChange={(event) => { updateProfile({ studentId: event.target.value }); updateState({ campus: null }); setCampusSaved(false); }} />
+              <input id="student-id" value={state.profile.studentId} placeholder={copy.studentId} onChange={(event) => { updateProfile({ studentId: event.target.value }); setCampusSaved(false); }} />
               <label className="field-label" htmlFor="student-password">{copy.studentPassword}</label>
-              <input id="student-password" type="password" value={state.profile.studentPassword} placeholder={copy.passwordPlaceholder} onChange={(event) => { updateProfile({ studentPassword: event.target.value }); updateState({ campus: null }); setCampusSaved(false); }} />
+              <div className="password-field">
+                <input id="student-password" type={showCampusPassword ? 'text' : 'password'} autoComplete="current-password" value={state.profile.studentPassword} placeholder={copy.passwordPlaceholder} onChange={(event) => { updateProfile({ studentPassword: event.target.value }); setCampusSaved(false); }} />
+                <button className="password-visibility-button" type="button" aria-label={showCampusPassword ? copy.hidePassword : copy.showPassword} aria-pressed={showCampusPassword} onClick={() => setShowCampusPassword((visible) => !visible)}>
+                  {showCampusPassword ? copy.hidePassword : copy.showPassword}
+                </button>
+              </div>
               <div className="campus-read-options">
                 <label className="field-label" htmlFor="campus-academic-year">{copy.campusAcademicYear}</label>
-                <select id="campus-academic-year" value={campusAcademicYear} onChange={(event) => { setCampusAcademicYear(event.target.value); updateState({ campus: null }); setCampusSaved(false); }}>
+                <select id="campus-academic-year" value={campusAcademicYear} onChange={(event) => { setCampusAcademicYear(event.target.value); setCampusSaved(false); }}>
                   {[0, 1, 2, 3].map((offset) => {
                     const year = String(Number(initialAcademicTerm.year) - 1 + offset);
                     return <option key={year} value={year}>{year}–{Number(year) + 1}</option>;
                   })}
                 </select>
                 <label className="field-label" htmlFor="campus-term">{copy.campusTerm}</label>
-                <select id="campus-term" value={campusTerm} onChange={(event) => { setCampusTerm(event.target.value); updateState({ campus: null }); setCampusSaved(false); }}>
+                <select id="campus-term" value={campusTerm} onChange={(event) => { setCampusTerm(event.target.value); setCampusSaved(false); }}>
                   <option value="1">{copy.campusAutumnTerm}</option>
                   <option value="2">{copy.campusSpringTerm}</option>
                 </select>
@@ -1898,14 +1915,14 @@ export function App() {
                   <section className="profile-section campus-data-card">
                     <div className="setting-label"><strong>校历与假期</strong><span>{campus.holidays.length ? `${campus.holidays.length} 项` : campus.calendarUrl ? '官方 PDF 可用' : copy.campusEmpty}</span></div>
                     {campus.calendarUrl && (
-                      <button type="button" className="profile-link campus-calendar-link" onClick={() => void openExternalUrl(campus.calendarUrl || '')}>
-                        <span><strong>查看本科生院官方校历</strong><small>完整学年安排 · PDF</small></span>
+                      <button type="button" className="profile-link campus-calendar-link" onClick={() => setCampusCalendarViewerUrl(campus.calendarUrl || '')}>
+                        <span><strong>{copy.campusCalendarOpen}</strong><small>{copy.campusCalendarHint}</small></span>
                         <ArrowIcon />
                       </button>
                     )}
                     {campus.holidays.length
                       ? campus.holidays.map((holiday) => <div className="campus-record" key={holiday.id}><strong>{holiday.title}</strong><span>{holiday.startDate} — {holiday.endDate}</span><small>{holiday.note}</small></div>)
-                      : <p className="empty-history">{campus.calendarUrl ? '完整学年安排由本科生院以 PDF 发布，请打开上方入口查看。' : copy.campusEmpty}</p>}
+                      : <p className="empty-history">{campus.calendarUrl ? copy.campusCalendarHint : copy.campusEmpty}</p>}
                     <small className="connection-message">{campus.sourceStatus.note}</small>
                   </section>
                 )}
@@ -1986,6 +2003,7 @@ export function App() {
 
       {mapOpen && <MapPanel language={state.profile.language} onClose={() => setMapOpen(false)} />}
       {weatherOpen && <WeatherPanel language={state.profile.language} onClose={() => setWeatherOpen(false)} />}
+      {campusCalendarViewerUrl && <CampusCalendarViewer url={campusCalendarViewerUrl} copy={copy} onClose={() => setCampusCalendarViewerUrl(null)} />}
     </main>
   );
 }

@@ -30,6 +30,7 @@ public class IsolatedHttp extends Plugin {
     private static final Object COOKIE_HANDLER_LOCK = new Object();
     private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
     private static final int MAX_BACKGROUND_RESPONSE_BYTES = 4 * 1024 * 1024;
+    private static final int MAX_FOREGROUND_RESPONSE_BYTES = 20 * 1024 * 1024;
 
     @PluginMethod
     public void request(PluginCall call) {
@@ -37,6 +38,7 @@ public class IsolatedHttp extends Plugin {
         final String method = call.getString("method", "GET");
         final String responseType = call.getString("responseType", "text");
         final boolean disableRedirects = call.getBoolean("disableRedirects", true);
+        final int maxResponseBytes = call.getInt("maxResponseBytes", 0);
         final String body = call.getString("body", null);
         final JSObject headers = call.getObject("headers");
 
@@ -44,10 +46,14 @@ public class IsolatedHttp extends Plugin {
             call.reject("IsolatedHttp requires a URL");
             return;
         }
+        if (maxResponseBytes < 0 || maxResponseBytes > MAX_FOREGROUND_RESPONSE_BYTES) {
+            call.reject("IsolatedHttp response limit is outside the allowed range");
+            return;
+        }
 
         EXECUTOR.execute(() -> {
             try {
-                call.resolve(performRequest(url, method, responseType, disableRedirects, body, headers));
+                call.resolve(performRequest(url, method, responseType, disableRedirects, body, headers, maxResponseBytes));
             } catch (Exception error) {
                 call.reject(error.getMessage() == null ? "Isolated HTTP request failed" : error.getMessage(), error);
             }
@@ -60,9 +66,10 @@ public class IsolatedHttp extends Plugin {
         String responseType,
         boolean disableRedirects,
         String body,
-        JSObject headers
+        JSObject headers,
+        int maxResponseBytes
     ) throws Exception {
-        return performRequestInternal(url, method, responseType, disableRedirects, body, headers, 0);
+        return performRequestInternal(url, method, responseType, disableRedirects, body, headers, maxResponseBytes);
     }
 
     static JSObject performBackgroundRequest(

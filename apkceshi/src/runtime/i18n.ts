@@ -65,6 +65,11 @@ export interface UiCopy {
   campusPracticePassed: string;
   campusPracticePending: string;
   campusPracticeEmpty: string;
+  campusCalendarOpen: string;
+  campusCalendarHint: string;
+  campusCalendarLoading: string;
+  campusCalendarError: string;
+  campusCalendarRetry: string;
   campusCoursesCount: string;
   campusExamsCount: string;
   campusGradesCount: string;
@@ -105,6 +110,8 @@ export interface UiCopy {
   studentId: string;
   studentPassword: string;
   passwordPlaceholder: string;
+  showPassword: string;
+  hidePassword: string;
   saved: string;
   translatingConversation: string;
   translatedConversation: string;
@@ -215,6 +222,11 @@ const SIMPLIFIED: UiCopy = {
   campusPracticePassed: '通过',
   campusPracticePending: '待审核',
   campusPracticeEmpty: '暂无素拓项目记录',
+  campusCalendarOpen: '在应用内查看本科生院校历',
+  campusCalendarHint: '完整学年安排 · PDF',
+  campusCalendarLoading: '正在加载校历…',
+  campusCalendarError: '校历暂时无法打开，请检查网络后重试。',
+  campusCalendarRetry: '重试校历',
   campusCoursesCount: '门课程',
   campusExamsCount: '场考试',
   campusGradesCount: '条成绩',
@@ -255,6 +267,8 @@ const SIMPLIFIED: UiCopy = {
   studentId: '学号',
   studentPassword: '密码',
   passwordPlaceholder: '输入校园密码',
+  showPassword: '显示',
+  hidePassword: '隐藏',
   saved: '已保存',
   translatingConversation: '正在翻译当前对话…',
   translatedConversation: '对话语言已切换。',
@@ -316,7 +330,8 @@ const TRADITIONAL: UiCopy = {
   avatarHint: '從相簿選擇一張圖片作為頭像', language: '語言', appearance: '外觀', light: '淺色', dark: '深色',
   campus: '校園資訊', campusHint: '讀取課表、考試、成績、待辦和體育與素拓，僅保存在本機', campusTitle: '校園資訊',
   campusReadOnly: '僅讀取，帳號和校園資料僅保存在本機。', campusRefresh: '讀取校園資訊', campusWebVpn: '自動讀取（含 WebVPN）', campusWebVpnOpened: '已嘗試應用內 WebVPN 自動登入。', campusLoading: '正在讀取校園資訊…', campusUpdated: '校園資訊已更新。', campusPartial: '校園資訊已更新，但部分模組讀取失敗。', campusNeedCredentials: '請先填寫學號和校園密碼。', campusOverview: '概覽', campusSchedule: '課表', campusExams: '考試', campusGrades: '成績', campusTodos: '待辦', campusCoursesCount: '門課程', campusExamsCount: '場考試', campusGradesCount: '筆成績', campusTodosCount: '項待辦', campusGpa: '均績（近似）', campusTotalCredit: '總學分', campusCompletedCredit: '已修學分', campusEarnedCredit: '取得學分', campusYearLevel: '年級', campusAcademicYear: '讀取學年', campusTerm: '學期', campusAutumnTerm: '秋冬學期', campusSpringTerm: '春夏學期', campusCourseCredit: '課程學分', campusCourseCompleted: '已有成績', campusPublic: '院系資料', campusPublicHint: '教師與院系公開資料，僅來自官方頁面', campusPublicSearchPlaceholder: '搜尋教師姓名或院系，例如「莫群」', campusPublicSearch: '查詢', campusPublicLoading: '正在讀取官方資料…', campusPublicEmpty: '官方資料中沒有找到符合結果', campusPublicOpen: '開啟官方主頁', campusUpcoming: '尚未開始的考試', campusFinished: '已結束的考試', campusUnknown: '時間待定', campusEmpty: '暫無資料', campusNoLocation: '地點未提供', campusNoDeadline: '截止時間未提供', campusNotices: '公告', campusNoticeHint: '公開通知，無需校園登入', campusNoticeSearchPlaceholder: '搜尋學院、選課、考試、開學等公告', campusNoticeSearch: '搜尋', campusNoticeLoading: '正在讀取官方公告…', campusNoticeEmpty: '暫無符合公告', campusNoticeOpen: '查看原文', campusNoticePrevious: '上一頁', campusNoticeNext: '下一頁', studentId: '學號',
-  studentPassword: '密碼', passwordPlaceholder: '輸入校園密碼', saved: '已儲存',
+  studentPassword: '密碼', passwordPlaceholder: '輸入校園密碼', showPassword: '顯示', hidePassword: '隱藏', saved: '已儲存',
+  campusCalendarOpen: '在應用程式內查看本科生院校曆', campusCalendarHint: '完整學年安排 · PDF', campusCalendarLoading: '正在載入校曆…', campusCalendarError: '校曆暫時無法開啟，請檢查網絡後重試。', campusCalendarRetry: '重試校曆',
   translatingConversation: '正在翻譯目前對話…', translatedConversation: '對話語言已切換。', translationNeedKey: '切換對話語言需要先設定 DeepSeek API Key。', translationFailed: '部分訊息翻譯失敗，已保留原文。', back: '返回',
   contacting: '聯絡 DeepSeek', readingTime: '讀取手機時間', locating: '請求手機定位', composing: '整理回覆',
   assistant: '在場', user: '你', typing: '正在整理…', draftPlaceholder: '', titleFallback: '未命名對話',
@@ -327,6 +342,8 @@ const TRADITIONAL: UiCopy = {
 
 const ENGLISH: UiCopy = {
   ...SIMPLIFIED,
+  showPassword: 'Show', hidePassword: 'Hide',
+  campusCalendarOpen: 'View undergraduate calendar in app', campusCalendarHint: 'Full academic-year schedule · PDF', campusCalendarLoading: 'Loading calendar…', campusCalendarError: 'The calendar could not be opened. Check your connection and try again.', campusCalendarRetry: 'Retry calendar',
   appName: 'Zaichang', connected: 'Connected', waiting: 'Waiting', offline: 'Offline', history: 'History',
   settings: 'Settings', newConversation: 'New chat', onlineKicker: '',
   welcomeTitle: 'Put this moment here.', welcomeBody: 'Tell me what you are going through. I will listen first, then help you find the next step.',
