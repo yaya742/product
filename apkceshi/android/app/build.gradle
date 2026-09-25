@@ -8,8 +8,8 @@ android {
         applicationId "studio.zaichang.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 31
-        versionName "0.1.30-calendar-zoom-chat-isolation"
+        versionCode 32
+        versionName "0.1.31-calendar-zoom-performance"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
