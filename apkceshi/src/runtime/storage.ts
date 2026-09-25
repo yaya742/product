@@ -27,7 +27,7 @@ import {
 } from './types';
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
-import { secureGet, secureRemove, secureSet } from './secureStorage';
+import { secureGet, secureRemove, secureSet, secureStorageDiagnostic } from './secureStorage';
 import { disableCampusBackgroundSync } from './campusBackgroundSync';
 import { enrichCoursesWithAcademicData } from './campus';
 
@@ -490,6 +490,7 @@ function persistMobileState(state: MobileState): void {
 export interface MobileSecretsHydrationResult {
   state: MobileState;
   status: 'available' | 'unavailable';
+  diagnostic?: string;
 }
 
 export async function hydrateMobileSecrets(state: MobileState): Promise<MobileSecretsHydrationResult> {
@@ -535,14 +536,14 @@ export async function hydrateMobileSecrets(state: MobileState): Promise<MobileSe
       // The verified Keystore copy is already available if legacy cleanup fails.
     }
     return { state: nextState, status: 'available' };
-  } catch {
+  } catch (error) {
     // Do not fall back to plaintext if Android Keystore cannot be used.
     nativeSecureStorageReady = false;
     const sanitized = { ...state, apiKey: '', profile: { ...state.profile, studentId: '', studentPassword: '' } };
     // Keep legacy copies intact until a verified Keystore migration succeeds.
     // The app still receives a sanitized state and never reads those copies as a
     // plaintext fallback during this session.
-    return { state: sanitized, status: 'unavailable' };
+    return { state: sanitized, status: 'unavailable', diagnostic: secureStorageDiagnostic(error) };
   }
 }
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import PdfWorker from './pdf.worker.compat.ts?worker';
-import { installUint8ArrayToHexPolyfill } from './runtime/pdfCompatibility';
+import { installPdfCompatibility } from './runtime/pdfCompatibility';
 import type { PDFDocumentLoadingTask, PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 import { readOfficialCalendarPdf } from './runtime/campus';
 import type { UiCopy } from './runtime/i18n';
@@ -96,7 +96,7 @@ export function CampusCalendarViewer({ url, copy, onClose }: CampusCalendarViewe
       try {
         const data = await readOfficialCalendarPdf(url);
         if (cancelled) return;
-        installUint8ArrayToHexPolyfill();
+        installPdfCompatibility();
         const pdfjs = await import('pdfjs-dist');
         if (cancelled) return;
         pdfjs.GlobalWorkerOptions.workerPort ??= new PdfWorker();

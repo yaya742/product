@@ -11,6 +11,7 @@ import { enableCampusBackgroundSync, getCampusBackgroundSnapshot } from './runti
 import { getUiCopy } from './runtime/i18n';
 import { cancelLocalReminder, scheduleLocalReminder, withNotificationId } from './runtime/reminders';
 import { clearMobileState, hydrateMobileSecrets, loadMobileState, mergeBackgroundCampusData, persistApiKey, persistCampusCredentials, persistMobileSecrets, saveMobileState } from './runtime/storage';
+import { secureStorageDiagnostic } from './runtime/secureStorage';
 import { isMobileVmSession, launchMobileVm } from './runtime/mobileVm';
 import {
   createConversation,
@@ -470,6 +471,7 @@ export function App() {
   const [state, setState] = useState<MobileState>(initial);
   const [secretsHydrated, setSecretsHydrated] = useState(false);
   const [secretsStorageUnavailable, setSecretsStorageUnavailable] = useState(false);
+  const [secretsStorageDiagnostic, setSecretsStorageDiagnostic] = useState('');
   const [draft, setDraft] = useState('');
   const [attachmentDraft, setAttachmentDraft] = useState<MobileAttachment | null>(null);
   const [attachmentMessage, setAttachmentMessage] = useState('');
@@ -546,6 +548,7 @@ export function App() {
     void hydrateMobileSecrets(initial).then((result) => {
       setState(result.state);
       setSecretsStorageUnavailable(result.status === 'unavailable');
+      setSecretsStorageDiagnostic(result.diagnostic || '');
       setSecretsHydrated(true);
     });
   }, [initial]);
@@ -690,9 +693,10 @@ export function App() {
       try {
         if (secretsStorageUnavailable) await persistCampusCredentials(nextState);
         else await persistMobileSecrets(nextState);
-      } catch {
+      } catch (error) {
         secretsSaved = false;
         setSecretsStorageUnavailable(true);
+        setSecretsStorageDiagnostic(secureStorageDiagnostic(error));
       }
       try {
         await enableCampusBackgroundSync(campus.academicYear, campus.term);
@@ -741,6 +745,7 @@ export function App() {
       if (secretsStorageUnavailable) {
         await persistCampusCredentials(state);
         const result = await hydrateMobileSecrets(state);
+        setSecretsStorageDiagnostic(result.diagnostic || '');
         if (result.status === 'unavailable') {
           setCampusSaved(true);
           setCampusMessage(copy.campusSecureStorageWarning);
@@ -750,13 +755,15 @@ export function App() {
         setState(result.state);
       } else {
         await persistMobileSecrets(state);
+        setSecretsStorageDiagnostic('');
       }
       setSecretsStorageUnavailable(false);
       saveMobileState(stateToSave);
       setCampusSaved(true);
       setCampusMessage('');
-    } catch {
+    } catch (error) {
       setSecretsStorageUnavailable(true);
+      setSecretsStorageDiagnostic(secureStorageDiagnostic(error));
       setCampusSaved(false);
       setCampusMessage(copy.campusSecureStorageWarning);
     }
@@ -1639,7 +1646,7 @@ export function App() {
                 </button>
               </div>
               {connectionMessage && <p className="connection-message">{connectionMessage}</p>}
-              {secretsStorageUnavailable && <p className="campus-storage-warning" role="alert">{copy.campusSecureStorageWarning}</p>}
+              {secretsStorageUnavailable && <p className="campus-storage-warning" role="alert">{copy.campusSecureStorageWarning}<small>{copy.campusSecureStorageDiagnostic}: {secretsStorageDiagnostic || 'secure_storage_migration_failed'}</small></p>}
             </section>
             <section className="profile-section data-section">
               <div className="setting-label"><strong>本机资料</strong><span>导出的 JSON 不包含 API Key 和校园密码；清空后无法恢复。</span></div>
@@ -1756,7 +1763,7 @@ export function App() {
               </div>
               <button className="secondary-button campus-webvpn-button" disabled={campusLoading} onClick={() => void refreshCampusInfo()}>{copy.campusWebVpn}</button>
               <p className="campus-privacy-note">{copy.campusReadOnly}</p>
-              {secretsStorageUnavailable && <p className="campus-storage-warning" role="alert">{copy.campusSecureStorageWarning}</p>}
+              {secretsStorageUnavailable && <p className="campus-storage-warning" role="alert">{copy.campusSecureStorageWarning}<small>{copy.campusSecureStorageDiagnostic}: {secretsStorageDiagnostic || 'secure_storage_migration_failed'}</small></p>}
               <p className="campus-privacy-note">{copy.campusAutoReadHint || (state.profile.language === 'en'
                 ? 'Read manually once. After a successful read, campus information refreshes whenever you open the app.'
                 : state.profile.language === 'zh-TW'

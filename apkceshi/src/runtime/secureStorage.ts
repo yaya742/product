@@ -9,6 +9,19 @@ interface SecureStoragePlugin {
 
 const SecureStorage = registerPlugin<SecureStoragePlugin>('SecureStorage');
 
+/** Return only allowlisted operation/type codes; never surface native messages or stored values. */
+export function secureStorageDiagnostic(error: unknown): string {
+  const record = error && typeof error === 'object' ? error as Record<string, unknown> : undefined;
+  const candidates = [record?.message, error instanceof Error ? error.message : undefined, record?.code];
+  for (const candidate of candidates) {
+    if (typeof candidate !== 'string') continue;
+    const match = candidate.match(/(?:^|\s)(secure_storage_(get|set|remove)_failed)(?::([A-Za-z][A-Za-z0-9]*))?(?:$|\s)/);
+    if (match) return match[3] ? `${match[1]}:${match[3]}` : match[1];
+    if (candidate === 'secure_storage_migration_verification_failed') return candidate;
+  }
+  return 'secure_storage_migration_failed';
+}
+
 export async function secureGet(key: string): Promise<string | null> {
   if (!Capacitor.isNativePlatform()) return null;
   const result = await SecureStorage.get({ key });

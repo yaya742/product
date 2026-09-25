@@ -103,6 +103,15 @@ public class SecureStoragePlugin extends Plugin {
         return value;
     }
 
+    private static String safeErrorType(Exception error) {
+        Throwable root = error;
+        for (int depth = 0; depth < 8 && root.getCause() != null && root.getCause() != root; depth++) {
+            root = root.getCause();
+        }
+        String name = root.getClass().getSimpleName().replaceAll("[^A-Za-z0-9]", "");
+        return name.isEmpty() ? "Unknown" : name;
+    }
+
     @PluginMethod
     public void get(PluginCall call) {
         try {
@@ -112,7 +121,7 @@ public class SecureStoragePlugin extends Plugin {
             if (value != null) result.put("value", value);
             call.resolve(result);
         } catch (Exception error) {
-            call.reject("secure_storage_unavailable");
+            call.reject("secure_storage_get_failed:" + safeErrorType(error), "secure_storage_get_failed");
         }
     }
 
@@ -124,7 +133,7 @@ public class SecureStoragePlugin extends Plugin {
             writeStored(getContext(), key, value);
             call.resolve();
         } catch (Exception error) {
-            call.reject("secure_storage_unavailable");
+            call.reject("secure_storage_set_failed:" + safeErrorType(error), "secure_storage_set_failed");
         }
     }
 
@@ -136,7 +145,7 @@ public class SecureStoragePlugin extends Plugin {
             preferences(getContext()).edit().remove(key).apply();
             call.resolve();
         } catch (Exception error) {
-            call.reject("secure_storage_unavailable");
+            call.reject("secure_storage_remove_failed:" + safeErrorType(error), "secure_storage_remove_failed");
         }
     }
 
