@@ -54,6 +54,7 @@ export interface UiCopy {
   campusUpdated: string;
   campusPartial: string;
   campusNeedCredentials: string;
+  campusSecureStorageWarning: string;
   campusOverview: string;
   campusSchedule: string;
   campusExams: string;
@@ -211,6 +212,7 @@ const SIMPLIFIED: UiCopy = {
   campusUpdated: '校园信息已更新。',
   campusPartial: '校园信息已更新，但部分模块读取失败。',
   campusNeedCredentials: '请先填写学号和校园密码。',
+  campusSecureStorageWarning: '部分凭据尚未迁移到 Android 安全存储，旧副本未清除。重新输入后请在校园信息页点“保存”重试，暂勿卸载应用。',
   campusOverview: '概览',
   campusSchedule: '课表',
   campusExams: '考试',
@@ -329,6 +331,7 @@ const TRADITIONAL: UiCopy = {
   renamePlaceholder: '輸入新的標題', cancel: '取消', done: '完成', profileEyebrow: '個人設定', avatar: '頭像',
   avatarHint: '從相簿選擇一張圖片作為頭像', language: '語言', appearance: '外觀', light: '淺色', dark: '深色',
   campus: '校園資訊', campusHint: '讀取課表、考試、成績、待辦和體育與素拓，僅保存在本機', campusTitle: '校園資訊',
+  campusSecureStorageWarning: '部分憑據尚未遷移到 Android 安全儲存，舊副本未清除。重新輸入後請在校園資訊頁點「儲存」重試，暫勿解除安裝應用程式。',
   campusReadOnly: '僅讀取，帳號和校園資料僅保存在本機。', campusRefresh: '讀取校園資訊', campusWebVpn: '自動讀取（含 WebVPN）', campusWebVpnOpened: '已嘗試應用內 WebVPN 自動登入。', campusLoading: '正在讀取校園資訊…', campusUpdated: '校園資訊已更新。', campusPartial: '校園資訊已更新，但部分模組讀取失敗。', campusNeedCredentials: '請先填寫學號和校園密碼。', campusOverview: '概覽', campusSchedule: '課表', campusExams: '考試', campusGrades: '成績', campusTodos: '待辦', campusCoursesCount: '門課程', campusExamsCount: '場考試', campusGradesCount: '筆成績', campusTodosCount: '項待辦', campusGpa: '均績（近似）', campusTotalCredit: '總學分', campusCompletedCredit: '已修學分', campusEarnedCredit: '取得學分', campusYearLevel: '年級', campusAcademicYear: '讀取學年', campusTerm: '學期', campusAutumnTerm: '秋冬學期', campusSpringTerm: '春夏學期', campusCourseCredit: '課程學分', campusCourseCompleted: '已有成績', campusPublic: '院系資料', campusPublicHint: '教師與院系公開資料，僅來自官方頁面', campusPublicSearchPlaceholder: '搜尋教師姓名或院系，例如「莫群」', campusPublicSearch: '查詢', campusPublicLoading: '正在讀取官方資料…', campusPublicEmpty: '官方資料中沒有找到符合結果', campusPublicOpen: '開啟官方主頁', campusUpcoming: '尚未開始的考試', campusFinished: '已結束的考試', campusUnknown: '時間待定', campusEmpty: '暫無資料', campusNoLocation: '地點未提供', campusNoDeadline: '截止時間未提供', campusNotices: '公告', campusNoticeHint: '公開通知，無需校園登入', campusNoticeSearchPlaceholder: '搜尋學院、選課、考試、開學等公告', campusNoticeSearch: '搜尋', campusNoticeLoading: '正在讀取官方公告…', campusNoticeEmpty: '暫無符合公告', campusNoticeOpen: '查看原文', campusNoticePrevious: '上一頁', campusNoticeNext: '下一頁', studentId: '學號',
   studentPassword: '密碼', passwordPlaceholder: '輸入校園密碼', showPassword: '顯示', hidePassword: '隱藏', saved: '已儲存',
   campusCalendarOpen: '在應用程式內查看本科生院校曆', campusCalendarHint: '完整學年安排 · PDF', campusCalendarLoading: '正在載入校曆…', campusCalendarError: '校曆暫時無法開啟，請檢查網絡後重試。', campusCalendarRetry: '重試校曆',
@@ -342,6 +345,7 @@ const TRADITIONAL: UiCopy = {
 
 const ENGLISH: UiCopy = {
   ...SIMPLIFIED,
+  campusSecureStorageWarning: 'Some credentials could not be migrated to Android secure storage; the old copies were preserved. Re-enter them and tap Save on the campus page. Do not uninstall the app yet.',
   showPassword: 'Show', hidePassword: 'Hide',
   campusCalendarOpen: 'View undergraduate calendar in app', campusCalendarHint: 'Full academic-year schedule · PDF', campusCalendarLoading: 'Loading calendar…', campusCalendarError: 'The calendar could not be opened. Check your connection and try again.', campusCalendarRetry: 'Retry calendar',
   appName: 'Zaichang', connected: 'Connected', waiting: 'Waiting', offline: 'Offline', history: 'History',

@@ -460,6 +460,19 @@ export async function persistMobileSecrets(state: MobileState): Promise<void> {
   nativeSecureStorageReady = true;
 }
 
+export async function persistCampusCredentials(state: MobileState): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  await Promise.all([
+    secureSet(SECURE_STUDENT_ID, state.profile.studentId),
+    secureSet(SECURE_STUDENT_PASSWORD, state.profile.studentPassword),
+  ]);
+}
+
+export async function persistApiKey(apiKey: string): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  await secureSet(SECURE_API_KEY, apiKey);
+}
+
 function persistMobileState(state: MobileState): void {
   const native = Capacitor.isNativePlatform();
   const persisted: MobileState = {
@@ -474,8 +487,13 @@ function persistMobileState(state: MobileState): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
 }
 
-export async function hydrateMobileSecrets(state: MobileState): Promise<MobileState> {
-  if (!Capacitor.isNativePlatform()) return state;
+export interface MobileSecretsHydrationResult {
+  state: MobileState;
+  status: 'available' | 'unavailable';
+}
+
+export async function hydrateMobileSecrets(state: MobileState): Promise<MobileSecretsHydrationResult> {
+  if (!Capacitor.isNativePlatform()) return { state, status: 'available' };
   try {
     const [secureApiKey, secureStudentId, securePassword, legacyApiKey, legacyPassword] = await Promise.all([
       secureGet(SECURE_API_KEY),
@@ -500,34 +518,31 @@ export async function hydrateMobileSecrets(state: MobileState): Promise<MobileSt
     if (verifiedApiKey !== (nextApiKey || null) || verifiedStudentId !== (nextStudentId || null) || verifiedPassword !== (nextPassword || null)) {
       throw new Error('secure_storage_migration_verification_failed');
     }
-    await Promise.all([
-      Preferences.remove({ key: SECURE_API_KEY }),
-      Preferences.remove({ key: SECURE_STUDENT_PASSWORD }),
-    ]);
     const nextState = {
       ...state,
       apiKey: nextApiKey,
       profile: { ...state.profile, studentId: nextStudentId, studentPassword: nextPassword },
     };
     persistMobileState(nextState);
-    localStorage.removeItem('zaichang.mobile.local.v1');
     nativeSecureStorageReady = true;
-    return nextState;
-  } catch {
-    // Do not fall back to plaintext if Android Keystore cannot be used.
-    nativeSecureStorageReady = false;
     await Promise.allSettled([
       Preferences.remove({ key: SECURE_API_KEY }),
       Preferences.remove({ key: SECURE_STUDENT_PASSWORD }),
     ]);
-    const sanitized = { ...state, apiKey: '', profile: { ...state.profile, studentId: '', studentPassword: '' } };
     try {
-      persistMobileState(sanitized);
       localStorage.removeItem('zaichang.mobile.local.v1');
     } catch {
-      // Keep startup available even if browser storage itself is unavailable.
+      // The verified Keystore copy is already available if legacy cleanup fails.
     }
-    return sanitized;
+    return { state: nextState, status: 'available' };
+  } catch {
+    // Do not fall back to plaintext if Android Keystore cannot be used.
+    nativeSecureStorageReady = false;
+    const sanitized = { ...state, apiKey: '', profile: { ...state.profile, studentId: '', studentPassword: '' } };
+    // Keep legacy copies intact until a verified Keystore migration succeeds.
+    // The app still receives a sanitized state and never reads those copies as a
+    // plaintext fallback during this session.
+    return { state: sanitized, status: 'unavailable' };
   }
 }
 

@@ -10,7 +10,7 @@ import { CampusError, currentAcademicTerm, readCampusInfo, readLearningActivitie
 import { enableCampusBackgroundSync, getCampusBackgroundSnapshot } from './runtime/campusBackgroundSync';
 import { getUiCopy } from './runtime/i18n';
 import { cancelLocalReminder, scheduleLocalReminder, withNotificationId } from './runtime/reminders';
-import { clearMobileState, hydrateMobileSecrets, loadMobileState, mergeBackgroundCampusData, persistMobileSecrets, saveMobileState } from './runtime/storage';
+import { clearMobileState, hydrateMobileSecrets, loadMobileState, mergeBackgroundCampusData, persistApiKey, persistCampusCredentials, persistMobileSecrets, saveMobileState } from './runtime/storage';
 import { isMobileVmSession, launchMobileVm } from './runtime/mobileVm';
 import {
   createConversation,
@@ -469,6 +469,7 @@ export function App() {
   const initial = useMemo(() => loadMobileState(), []);
   const [state, setState] = useState<MobileState>(initial);
   const [secretsHydrated, setSecretsHydrated] = useState(false);
+  const [secretsStorageUnavailable, setSecretsStorageUnavailable] = useState(false);
   const [draft, setDraft] = useState('');
   const [attachmentDraft, setAttachmentDraft] = useState<MobileAttachment | null>(null);
   const [attachmentMessage, setAttachmentMessage] = useState('');
@@ -542,8 +543,9 @@ export function App() {
     : sortedConversations;
 
   useEffect(() => {
-    void hydrateMobileSecrets(initial).then((next) => {
-      setState(next);
+    void hydrateMobileSecrets(initial).then((result) => {
+      setState(result.state);
+      setSecretsStorageUnavailable(result.status === 'unavailable');
       setSecretsHydrated(true);
     });
   }, [initial]);
@@ -611,8 +613,8 @@ export function App() {
   }, [secretsHydrated, state.campusAutoReadEnabled, state.profile.studentId, state.profile.studentPassword, state.profile.language, campusAcademicYear, campusTerm]);
 
   useEffect(() => {
-    if (secretsHydrated) saveMobileState(state);
-  }, [secretsHydrated, state]);
+    if (secretsHydrated && !secretsStorageUnavailable) saveMobileState(state);
+  }, [secretsHydrated, secretsStorageUnavailable, state]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -684,19 +686,26 @@ export function App() {
     try {
       const campus = await readCampusInfo(state.profile.studentId, state.profile.studentPassword, { academicYear: campusAcademicYear, term: campusTerm });
       const nextState = { ...state, campus, campusAutoReadEnabled: true };
+      let secretsSaved = true;
       try {
-        await persistMobileSecrets(nextState);
+        if (secretsStorageUnavailable) await persistCampusCredentials(nextState);
+        else await persistMobileSecrets(nextState);
+      } catch {
+        secretsSaved = false;
+        setSecretsStorageUnavailable(true);
+      }
+      try {
         await enableCampusBackgroundSync(campus.academicYear, campus.term);
       } catch {
-        // The foreground read remains successful even if Android declines to
-        // schedule WorkManager or secure storage becomes temporarily unavailable.
+        // The foreground read remains successful if Android declines to
+        // schedule WorkManager.
       }
       updateState({ campus, campusAutoReadEnabled: true });
       setCampusAcademicYear(campus.academicYear);
       setCampusTerm(campus.term);
       setCampusGradeScope('current');
       setCampusSaved(true);
-      setCampusMessage(campus.warnings.length ? copy.campusPartial : copy.campusUpdated);
+      setCampusMessage(!secretsSaved ? copy.campusSecureStorageWarning : campus.warnings.length ? copy.campusPartial : copy.campusUpdated);
     } catch (error) {
       setCampusMessage(campusErrorMessage(error));
     } finally {
@@ -719,6 +728,37 @@ export function App() {
       setNoticesMessage(campusErrorMessage(error));
     } finally {
       setNoticesLoading(false);
+    }
+  }
+
+  async function saveCampusCredentials() {
+    if (!state.profile.studentId.trim() || !state.profile.studentPassword) {
+      setCampusMessage(copy.campusNeedCredentials);
+      return;
+    }
+    try {
+      let stateToSave = state;
+      if (secretsStorageUnavailable) {
+        await persistCampusCredentials(state);
+        const result = await hydrateMobileSecrets(state);
+        if (result.status === 'unavailable') {
+          setCampusSaved(true);
+          setCampusMessage(copy.campusSecureStorageWarning);
+          return;
+        }
+        stateToSave = result.state;
+        setState(result.state);
+      } else {
+        await persistMobileSecrets(state);
+      }
+      setSecretsStorageUnavailable(false);
+      saveMobileState(stateToSave);
+      setCampusSaved(true);
+      setCampusMessage('');
+    } catch {
+      setSecretsStorageUnavailable(true);
+      setCampusSaved(false);
+      setCampusMessage(copy.campusSecureStorageWarning);
     }
   }
 
@@ -1093,6 +1133,8 @@ export function App() {
     setConnectionMessage(`${copy.testing} DeepSeek…`);
     try {
       await testDeepSeekConnection(state.apiKey, AbortSignal.timeout(20_000));
+      if (secretsStorageUnavailable) await persistApiKey(state.apiKey);
+      else await persistMobileSecrets(state);
       setConnectionMessage(copy.connectionSuccess);
     } catch (error) {
       setConnectionMessage(friendlyError(error));
@@ -1597,6 +1639,7 @@ export function App() {
                 </button>
               </div>
               {connectionMessage && <p className="connection-message">{connectionMessage}</p>}
+              {secretsStorageUnavailable && <p className="campus-storage-warning" role="alert">{copy.campusSecureStorageWarning}</p>}
             </section>
             <section className="profile-section data-section">
               <div className="setting-label"><strong>本机资料</strong><span>导出的 JSON 不包含 API Key 和校园密码；清空后无法恢复。</span></div>
@@ -1708,11 +1751,12 @@ export function App() {
                 </select>
               </div>
               <div className="campus-account-actions">
-                <button className="secondary-button" onClick={() => setCampusSaved(true)}>{campusSaved ? copy.saved : copy.save}</button>
+                <button className="secondary-button" disabled={!secretsHydrated} onClick={() => void saveCampusCredentials()}>{campusSaved ? copy.saved : copy.save}</button>
                 <button className="primary-button" disabled={campusLoading} onClick={() => void refreshCampusInfo()}>{campusLoading ? copy.campusLoading : copy.campusRefresh}</button>
               </div>
               <button className="secondary-button campus-webvpn-button" disabled={campusLoading} onClick={() => void refreshCampusInfo()}>{copy.campusWebVpn}</button>
               <p className="campus-privacy-note">{copy.campusReadOnly}</p>
+              {secretsStorageUnavailable && <p className="campus-storage-warning" role="alert">{copy.campusSecureStorageWarning}</p>}
               <p className="campus-privacy-note">{copy.campusAutoReadHint || (state.profile.language === 'en'
                 ? 'Read manually once. After a successful read, campus information refreshes whenever you open the app.'
                 : state.profile.language === 'zh-TW'
