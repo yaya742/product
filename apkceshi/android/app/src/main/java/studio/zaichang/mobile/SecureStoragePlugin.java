@@ -15,7 +15,6 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
-import java.security.SecureRandom;
 import java.util.regex.Pattern;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -66,10 +65,15 @@ public class SecureStoragePlugin extends Plugin {
 
     private static String encrypt(String value) throws GeneralSecurityException {
         if (value.length() > MAX_VALUE_LENGTH) throw new GeneralSecurityException("secure_storage_value_too_large");
-        byte[] iv = new byte[IV_BYTES];
-        new SecureRandom().nextBytes(iv);
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        cipher.init(Cipher.ENCRYPT_MODE, key(), new GCMParameterSpec(TAG_BITS, iv));
+        // With randomized encryption required, Android Keystore rejects a caller-supplied
+        // IV for encryption. Let the provider generate it and persist that IV beside the
+        // ciphertext so decrypt() can initialize GCM with the exact same parameters.
+        cipher.init(Cipher.ENCRYPT_MODE, key());
+        byte[] iv = cipher.getIV();
+        if (iv == null || iv.length != IV_BYTES) {
+            throw new GeneralSecurityException("secure_storage_generated_iv_invalid");
+        }
         byte[] ciphertext = cipher.doFinal(value.getBytes(StandardCharsets.UTF_8));
         return Base64.encodeToString(iv, Base64.NO_WRAP) + "." + Base64.encodeToString(ciphertext, Base64.NO_WRAP);
     }
