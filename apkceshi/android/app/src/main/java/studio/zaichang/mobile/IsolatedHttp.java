@@ -15,6 +15,7 @@ import java.net.CookieHandler;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -28,6 +29,7 @@ import java.util.concurrent.Executors;
 public class IsolatedHttp extends Plugin {
     private static final Object COOKIE_HANDLER_LOCK = new Object();
     private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
+    private static final int MAX_BACKGROUND_RESPONSE_BYTES = 4 * 1024 * 1024;
 
     @PluginMethod
     public void request(PluginCall call) {
@@ -59,6 +61,28 @@ public class IsolatedHttp extends Plugin {
         boolean disableRedirects,
         String body,
         JSObject headers
+    ) throws Exception {
+        return performRequestInternal(url, method, responseType, disableRedirects, body, headers, 0);
+    }
+
+    static JSObject performBackgroundRequest(
+        String url,
+        String method,
+        String responseType,
+        String body,
+        JSObject headers
+    ) throws Exception {
+        return performRequestInternal(url, method, responseType, true, body, headers, MAX_BACKGROUND_RESPONSE_BYTES);
+    }
+
+    private static JSObject performRequestInternal(
+        String url,
+        String method,
+        String responseType,
+        boolean disableRedirects,
+        String body,
+        JSObject headers,
+        int maxResponseBytes
     ) throws Exception {
         // CapacitorCookies installs a process-wide CookieHandler. Temporarily
         // disable it while this connection is active so no gateway or other
@@ -97,7 +121,7 @@ public class IsolatedHttp extends Plugin {
 
                 int status = connection.getResponseCode();
                 InputStream input = status >= 400 ? connection.getErrorStream() : connection.getInputStream();
-                byte[] bytes = input == null ? new byte[0] : readAll(input);
+                byte[] bytes = input == null ? new byte[0] : readAll(input, maxResponseBytes);
                 JSObject result = new JSObject();
                 result.put("status", status);
                 result.put("url", connection.getURL().toString());
@@ -122,11 +146,14 @@ public class IsolatedHttp extends Plugin {
         }
     }
 
-    private static byte[] readAll(InputStream input) throws Exception {
+    private static byte[] readAll(InputStream input, int maxBytes) throws Exception {
         try (InputStream source = input; ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             byte[] buffer = new byte[8192];
             int count;
-            while ((count = source.read(buffer)) != -1) output.write(buffer, 0, count);
+            while ((count = source.read(buffer)) != -1) {
+                if (maxBytes > 0 && output.size() + count > maxBytes) throw new IOException("campus_response_too_large");
+                output.write(buffer, 0, count);
+            }
             return output.toByteArray();
         }
     }

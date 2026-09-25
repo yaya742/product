@@ -229,13 +229,14 @@ let practiceLoginPromise: Promise<string> | null = null;
 let zdbkSessionReady = false;
 let campusTransport: CampusTransport = 'direct';
 let activeCampusCredentials: { studentId: string; password: string } | null = null;
+let backgroundRunnerMode = false;
 // Keep a good response for each half-semester so a transient empty or
 // malformed response cannot erase a timetable that was already read.
 const scheduleCache = new Map<string, CampusCourse[]>();
 let scheduleReadWarning = '';
 
-function assertNative() {
-  if (!Capacitor.isNativePlatform()) {
+function assertNative(allowBackgroundRunner = false) {
+  if (!allowBackgroundRunner && !Capacitor.isNativePlatform()) {
     throw new CampusError('请安装 APK 后读取校园信息。浏览器预览不具备校方登录所需的原生网络能力。', 'native_required');
   }
 }
@@ -247,7 +248,39 @@ function asText(value: unknown): string {
 }
 
 function waitForNativeCookieSync(): Promise<void> {
+  if (backgroundRunnerMode) return Promise.resolve();
   return new Promise((resolve) => window.setTimeout(resolve, NATIVE_COOKIE_SYNC_DELAY_MS));
+}
+
+interface CampusNativeHttpRequest {
+  url: string;
+  method: string;
+  headers: Record<string, string>;
+  body?: string;
+  responseType: 'text' | 'arraybuffer';
+}
+
+declare global {
+  // The Android WorkManager runner provides a synchronous native HTTP bridge
+  // through its CapacitorKV adapter. Requests remain redirect-disabled in
+  // IsolatedHttp and are individually checked against the ZJU host allowlist.
+  var CapacitorKV: { get(key: string): { value?: string | null } } | undefined;
+}
+
+function requestThroughBackgroundBridge(options: CampusNativeHttpRequest): HttpResult {
+  const bridge = globalThis.CapacitorKV;
+  if (!bridge) throw new CampusError('后台校园读取通道不可用。', 'network');
+  const raw = bridge.get(`zaichang-campus-http:${JSON.stringify(options)}`)?.value;
+  if (typeof raw !== 'string') throw new CampusError('后台校园读取没有返回网络响应。', 'network');
+  try {
+    const result = JSON.parse(raw) as HttpResult;
+    if (typeof result.status !== 'number' || typeof result.url !== 'string' || !result.headers || typeof result.headers !== 'object') {
+      throw new Error('invalid_http_result');
+    }
+    return result;
+  } catch {
+    throw new CampusError('后台校园读取返回了无法识别的网络响应。', 'response');
+  }
 }
 
 function responseText(result: HttpResult): string {
@@ -484,8 +517,8 @@ async function request(options: {
   cookieJar?: CookieJar;
   isolated?: boolean;
 }): Promise<HttpResult> {
-  if (isMobileVmOffline()) throw new CampusError('虚拟机已模拟断网，校园请求未发送。', 'network');
-  assertNative();
+  if (!backgroundRunnerMode && isMobileVmOffline()) throw new CampusError('虚拟机已模拟断网，校园请求未发送。', 'network');
+  assertNative(backgroundRunnerMode);
   const url = trustedUrl(routedUrl(options.url), undefined, { allowWebVpn: options.allowWebVpn || campusTransport === 'webvpn' });
   try {
     const requestHeaders: Record<string, string> = { ...options.headers };
@@ -520,16 +553,25 @@ async function request(options: {
       'Accept-Encoding': 'identity',
       ...requestHeaders,
     };
-    const result = options.isolated
-      ? await IsolatedHttp.request({
+    const body = options.data ? new URLSearchParams(options.data).toString() : undefined;
+    const result = backgroundRunnerMode
+      ? requestThroughBackgroundBridge({
         url,
         method: options.method || 'GET',
         headers,
-        body: options.data ? new URLSearchParams(options.data).toString() : undefined,
+        body,
+        responseType: options.responseType === 'arraybuffer' ? 'arraybuffer' : 'text',
+      })
+      : options.isolated
+        ? await IsolatedHttp.request({
+        url,
+        method: options.method || 'GET',
+        headers,
+        body,
         responseType: options.responseType === 'arraybuffer' ? 'arraybuffer' : 'text',
         disableRedirects: options.disableRedirects ?? true,
-      })
-      : await CapacitorHttp.request({
+        })
+        : await CapacitorHttp.request({
         url,
         method: options.method || 'GET',
         data: options.data,
@@ -538,12 +580,12 @@ async function request(options: {
         disableRedirects: options.disableRedirects ?? true,
         connectTimeout: 20_000,
         readTimeout: 30_000,
-      });
+        });
     const normalizedHeaders = (result.headers || {}) as Record<string, string>;
     cookieJar?.capture(normalizedHeaders, url);
     // Do not start the next CAS/WebVPN request until the native cookie store
     // has had time to expose the Set-Cookie values to HttpURLConnection.
-    if (!options.isolated && await persistNativeResponseCookies(normalizedHeaders, url)) await waitForNativeCookieSync();
+    if (!backgroundRunnerMode && !options.isolated && await persistNativeResponseCookies(normalizedHeaders, url)) await waitForNativeCookieSync();
     return { status: result.status, data: result.data, headers: normalizedHeaders, url: result.url || url };
   } catch (error) {
     if (error instanceof CampusError) throw error;
@@ -790,6 +832,7 @@ async function loginWebVpn(studentId: string, password: string): Promise<void> {
 async function clearCampusCookies() {
   activeCookieJar?.clear();
   zdbkSessionReady = false;
+  if (backgroundRunnerMode) return;
   await Promise.allSettled([
     // URL-scoped removal is not consistently propagated by Android's
     // CookieManager when a previous WebVPN redirect set a parent-domain
@@ -2600,6 +2643,7 @@ async function establishCampusSession(studentId: string, password: string): Prom
         await authenticate(studentId, password);
       } catch (error) {
         if (!(error instanceof CampusError) || error.code !== 'network') throw error;
+        if (backgroundRunnerMode) throw error;
         await activateWebVpn();
       }
       return;
@@ -2614,10 +2658,11 @@ async function establishCampusSession(studentId: string, password: string): Prom
   throw lastError instanceof Error ? lastError : new CampusError('校园登录会话没有建立。', 'network');
 }
 
-export async function readCampusInfo(studentId: string, password: string, options: { academicYear?: string; term?: string } = {}): Promise<MobileCampusData> {
-  assertNative();
+export async function readCampusInfo(studentId: string, password: string, options: { academicYear?: string; term?: string; backgroundRefresh?: boolean } = {}): Promise<MobileCampusData> {
+  assertNative(options.backgroundRefresh === true);
   const cleanId = studentId.trim();
   if (!cleanId || !password) throw new CampusError('请先填写学号和校园密码。', 'credentials');
+  backgroundRunnerMode = options.backgroundRefresh === true;
   campusTransport = 'direct';
   activeCampusCredentials = { studentId: cleanId, password };
   activeCookieJar = new CookieJar();
@@ -2643,10 +2688,12 @@ export async function readCampusInfo(studentId: string, password: string, option
     let holidays: CampusHoliday[] = [];
     let calendarUrl: string | undefined;
     let successfulModules = 0;
+    const refreshedDomains: NonNullable<MobileCampusData['refreshedDomains']> = [];
 
     try {
       courses = await readSchedule(year, term);
       successfulModules += 1;
+      refreshedDomains.push('schedule');
       if (scheduleReadWarning) warnings.push(`课表：${scheduleReadWarning}`);
     } catch (error) {
       if (isFatalModuleError(error)) throw error;
@@ -2672,32 +2719,37 @@ export async function readCampusInfo(studentId: string, password: string, option
       }
     }
     courseOfferings = [...new Map(courses.map((course) => [course.id, normalizeCourseOffering(course, `${year}-${term}`)])).values()];
-    try { exams = await readExams(); successfulModules += 1; } catch (error) { if (isFatalModuleError(error)) throw error; warnings.push(`考试：${errorText(error)}`); }
-    try { grades = await readGrades(); successfulModules += 1; } catch (error) { if (isFatalModuleError(error)) throw error; warnings.push(`成绩：${errorText(error)}`); }
+    try { exams = await readExams(); successfulModules += 1; refreshedDomains.push('exams'); } catch (error) { if (isFatalModuleError(error)) throw error; warnings.push(`考试：${errorText(error)}`); }
+    try { grades = await readGrades(); successfulModules += 1; refreshedDomains.push('grades'); } catch (error) { if (isFatalModuleError(error)) throw error; warnings.push(`成绩：${errorText(error)}`); }
     try {
       learningCourses = await readLearningCourses();
       successfulModules += 1;
+      refreshedDomains.push('learningCourses');
     } catch (error) {
       if (isFatalModuleError(error)) throw error;
       warnings.push(`学在浙大课程：${errorText(error)}`);
     }
-    try { todos = await readTodos(); successfulModules += 1; } catch (error) { if (isFatalModuleError(error)) throw error; warnings.push(`待办：${errorText(error)}`); }
-    try {
-      const practice = await readPractice();
-      practiceSummary = practice.summary;
-      practiceProjects = practice.projects;
-      warnings.push(...practice.warnings);
-      successfulModules += 1;
-    } catch (error) {
-      warnings.push(`体育与素质拓展：${errorText(error)}`);
-    }
-    try {
-      const calendar = await readPublicHolidays(`${year}-${Number(year) + 1}`);
-      holidays = calendar.holidays;
-      calendarUrl = calendar.calendarUrl;
-      successfulModules += 1;
-    } catch (error) {
-      warnings.push(`校历：${errorText(error)}`);
+    try { todos = await readTodos(); successfulModules += 1; refreshedDomains.push('todos'); } catch (error) { if (isFatalModuleError(error)) throw error; warnings.push(`待办：${errorText(error)}`); }
+    if (!backgroundRunnerMode) {
+      try {
+        const practice = await readPractice();
+        practiceSummary = practice.summary;
+        practiceProjects = practice.projects;
+        warnings.push(...practice.warnings);
+        successfulModules += 1;
+        refreshedDomains.push('practice');
+      } catch (error) {
+        warnings.push(`体育与素质拓展：${errorText(error)}`);
+      }
+      try {
+        const calendar = await readPublicHolidays(`${year}-${Number(year) + 1}`);
+        holidays = calendar.holidays;
+        calendarUrl = calendar.calendarUrl;
+        successfulModules += 1;
+        refreshedDomains.push('calendar');
+      } catch (error) {
+        warnings.push(`校历：${errorText(error)}`);
+      }
     }
     if (!successfulModules && warnings.length) throw new CampusError(warnings.join('；'), 'response');
 
@@ -2761,6 +2813,7 @@ export async function readCampusInfo(studentId: string, password: string, option
         note: '手机端使用浙江大学官方只读来源；未执行任何教务写操作。',
       },
       warnings,
+      refreshedDomains,
     };
   } finally {
     activeCookieJar = null;
@@ -2769,5 +2822,6 @@ export async function readCampusInfo(studentId: string, password: string, option
     zdbkSessionReady = false;
     campusTransport = 'direct';
     activeCampusCredentials = null;
+    backgroundRunnerMode = false;
   }
 }

@@ -27,11 +27,15 @@ import {
 } from './types';
 import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
+import { secureGet, secureRemove, secureSet } from './secureStorage';
+import { disableCampusBackgroundSync } from './campusBackgroundSync';
 import { enrichCoursesWithAcademicData } from './campus';
 
 const STORAGE_KEY = 'zaichang.mobile.local.v2';
 const SECURE_API_KEY = 'zaichang.mobile.deepseek.api-key';
+const SECURE_STUDENT_ID = 'zaichang.mobile.campus.student-id';
 const SECURE_STUDENT_PASSWORD = 'zaichang.mobile.campus.password';
+let nativeSecureStorageReady = !Capacitor.isNativePlatform();
 // Remove the duplicate seeded history item shown at the top of the mobile history panel.
 
 function normalizeYearLevel(value: string): string {
@@ -316,7 +320,48 @@ function parseCampusData(value: unknown): MobileCampusData | null {
     warnings: Array.isArray(value.warnings)
       ? value.warnings.filter((item): item is string => typeof item === 'string').map((item) => item.trim()).filter(Boolean).slice(0, 12)
       : [],
+    ...(Array.isArray(value.refreshedDomains)
+      ? { refreshedDomains: value.refreshedDomains.filter((item): item is NonNullable<MobileCampusData['refreshedDomains']>[number] =>
+          item === 'schedule' || item === 'exams' || item === 'grades' || item === 'learningCourses' || item === 'todos' || item === 'practice' || item === 'calendar') }
+      : {}),
   };
+}
+
+export function mergeBackgroundCampusData(existing: MobileCampusData | null, value: unknown): MobileCampusData | null {
+  const incoming = parseCampusData(value);
+  const domains = new Set(incoming?.refreshedDomains || []);
+  if (!incoming || !domains.size) return existing;
+  const incomingAt = Date.parse(incoming.fetchedAt);
+  const existingAt = existing ? Date.parse(existing.fetchedAt) : Number.NEGATIVE_INFINITY;
+  if (Number.isFinite(existingAt) && Number.isFinite(incomingAt) && incomingAt <= existingAt) return existing;
+
+  const base = existing || incoming;
+  const gradesRefreshed = domains.has('grades');
+  const merged: MobileCampusData = {
+    ...base,
+    fetchedAt: incoming.fetchedAt,
+    academicYear: incoming.academicYear || base.academicYear,
+    term: incoming.term || base.term,
+    ...(domains.has('schedule') ? { courses: incoming.courses, courseOfferings: incoming.courseOfferings } : {}),
+    ...(domains.has('exams') ? { exams: incoming.exams } : {}),
+    ...(gradesRefreshed ? {
+      grades: incoming.grades,
+      gradeAlerts: incoming.gradeAlerts,
+      gpaSemesters: incoming.gpaSemesters,
+      gpaCumulative: incoming.gpaCumulative,
+      gpa: incoming.gpa,
+      totalCredit: incoming.totalCredit,
+      completedCredit: incoming.completedCredit,
+      earnedCredit: incoming.earnedCredit,
+      yearLevel: incoming.yearLevel,
+    } : {}),
+    ...(domains.has('learningCourses') ? { learningCourses: incoming.learningCourses, activities: incoming.activities } : {}),
+    ...(domains.has('todos') ? { todos: incoming.todos } : {}),
+    sourceStatus: incoming.sourceStatus,
+    warnings: incoming.warnings,
+    refreshedDomains: incoming.refreshedDomains,
+  };
+  return parseCampusData(merged);
 }
 
 function parseConversations(value: unknown): MobileConversation[] {
@@ -396,43 +441,93 @@ export function loadMobileState(): MobileState {
 
 export function saveMobileState(state: MobileState): void {
   try {
-    const persisted: MobileState = {
-      ...state,
-      apiKey: Capacitor.isNativePlatform() ? '' : state.apiKey,
-      profile: Capacitor.isNativePlatform() ? { ...state.profile, studentPassword: '' } : state.profile,
-      conversations: state.conversations.map((conversation) => ({
-        ...conversation,
-        messages: conversation.messages.filter((message) => !message.ephemeral),
-      })),
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
-    if (Capacitor.isNativePlatform()) {
-      void Preferences.set({ key: SECURE_API_KEY, value: state.apiKey }).catch(() => {});
-      void Preferences.set({ key: SECURE_STUDENT_PASSWORD, value: state.profile.studentPassword }).catch(() => {});
+    persistMobileState(state);
+    if (Capacitor.isNativePlatform() && nativeSecureStorageReady) {
+      void persistMobileSecrets(state).catch(() => { nativeSecureStorageReady = false; });
     }
   } catch {
     // Storage is best effort. The app remains usable for the current session.
   }
 }
 
+export async function persistMobileSecrets(state: MobileState): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  await Promise.all([
+    secureSet(SECURE_API_KEY, state.apiKey),
+    secureSet(SECURE_STUDENT_ID, state.profile.studentId),
+    secureSet(SECURE_STUDENT_PASSWORD, state.profile.studentPassword),
+  ]);
+  nativeSecureStorageReady = true;
+}
+
+function persistMobileState(state: MobileState): void {
+  const native = Capacitor.isNativePlatform();
+  const persisted: MobileState = {
+    ...state,
+    apiKey: native ? '' : state.apiKey,
+    profile: native ? { ...state.profile, studentId: '', studentPassword: '' } : state.profile,
+    conversations: state.conversations.map((conversation) => ({
+      ...conversation,
+      messages: conversation.messages.filter((message) => !message.ephemeral),
+    })),
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
+}
+
 export async function hydrateMobileSecrets(state: MobileState): Promise<MobileState> {
   if (!Capacitor.isNativePlatform()) return state;
   try {
-    const [apiKey, password] = await Promise.all([
+    const [secureApiKey, secureStudentId, securePassword, legacyApiKey, legacyPassword] = await Promise.all([
+      secureGet(SECURE_API_KEY),
+      secureGet(SECURE_STUDENT_ID),
+      secureGet(SECURE_STUDENT_PASSWORD),
       Preferences.get({ key: SECURE_API_KEY }),
       Preferences.get({ key: SECURE_STUDENT_PASSWORD }),
     ]);
-    const nextApiKey = apiKey.value || state.apiKey;
-    const nextPassword = password.value || state.profile.studentPassword;
-    if (!apiKey.value && state.apiKey) await Preferences.set({ key: SECURE_API_KEY, value: state.apiKey });
-    if (!password.value && state.profile.studentPassword) await Preferences.set({ key: SECURE_STUDENT_PASSWORD, value: state.profile.studentPassword });
-    return {
+    const nextApiKey = secureApiKey || legacyApiKey.value || state.apiKey;
+    const nextStudentId = secureStudentId || state.profile.studentId;
+    const nextPassword = securePassword || legacyPassword.value || state.profile.studentPassword;
+    await Promise.all([
+      secureSet(SECURE_API_KEY, nextApiKey),
+      secureSet(SECURE_STUDENT_ID, nextStudentId),
+      secureSet(SECURE_STUDENT_PASSWORD, nextPassword),
+    ]);
+    const [verifiedApiKey, verifiedStudentId, verifiedPassword] = await Promise.all([
+      secureGet(SECURE_API_KEY),
+      secureGet(SECURE_STUDENT_ID),
+      secureGet(SECURE_STUDENT_PASSWORD),
+    ]);
+    if (verifiedApiKey !== (nextApiKey || null) || verifiedStudentId !== (nextStudentId || null) || verifiedPassword !== (nextPassword || null)) {
+      throw new Error('secure_storage_migration_verification_failed');
+    }
+    await Promise.all([
+      Preferences.remove({ key: SECURE_API_KEY }),
+      Preferences.remove({ key: SECURE_STUDENT_PASSWORD }),
+    ]);
+    const nextState = {
       ...state,
       apiKey: nextApiKey,
-      profile: { ...state.profile, studentPassword: nextPassword },
+      profile: { ...state.profile, studentId: nextStudentId, studentPassword: nextPassword },
     };
+    persistMobileState(nextState);
+    localStorage.removeItem('zaichang.mobile.local.v1');
+    nativeSecureStorageReady = true;
+    return nextState;
   } catch {
-    return state;
+    // Do not fall back to plaintext if Android Keystore cannot be used.
+    nativeSecureStorageReady = false;
+    await Promise.allSettled([
+      Preferences.remove({ key: SECURE_API_KEY }),
+      Preferences.remove({ key: SECURE_STUDENT_PASSWORD }),
+    ]);
+    const sanitized = { ...state, apiKey: '', profile: { ...state.profile, studentId: '', studentPassword: '' } };
+    try {
+      persistMobileState(sanitized);
+      localStorage.removeItem('zaichang.mobile.local.v1');
+    } catch {
+      // Keep startup available even if browser storage itself is unavailable.
+    }
+    return sanitized;
   }
 }
 
@@ -441,8 +536,15 @@ export function clearMobileState(): void {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem('zaichang.mobile.local.v1');
     if (Capacitor.isNativePlatform()) {
-      void Preferences.remove({ key: SECURE_API_KEY }).catch(() => {});
-      void Preferences.remove({ key: SECURE_STUDENT_PASSWORD }).catch(() => {});
+      nativeSecureStorageReady = true;
+      void disableCampusBackgroundSync().catch(() => {});
+      void Promise.all([
+        Preferences.remove({ key: SECURE_API_KEY }),
+        Preferences.remove({ key: SECURE_STUDENT_PASSWORD }),
+        secureRemove(SECURE_API_KEY),
+        secureRemove(SECURE_STUDENT_ID),
+        secureRemove(SECURE_STUDENT_PASSWORD),
+      ]).catch(() => {});
     }
   } catch {
     // Best effort only.

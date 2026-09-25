@@ -250,6 +250,7 @@ export interface MobileCampusData {
   calendarUrl?: string;
   sourceStatus: CampusSourceStatus;
   warnings: string[];
+  refreshedDomains?: Array<'schedule' | 'exams' | 'grades' | 'learningCourses' | 'todos' | 'practice' | 'calendar'>;
 }
 
 export interface MobileMessage {

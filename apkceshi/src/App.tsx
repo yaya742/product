@@ -6,9 +6,10 @@ import { WeatherPanel } from './WeatherPanel';
 import { runMobileAgent, type AgentStatus } from './runtime/agent';
 import { completeDeepSeek, DeepSeekError, testDeepSeekConnection, translateText } from './runtime/deepseek';
 import { CampusError, currentAcademicTerm, readCampusInfo, readLearningActivities, readPublicCollegeInfo, readPublicNotices, type CampusPublicInfoResult } from './runtime/campus';
+import { enableCampusBackgroundSync, getCampusBackgroundSnapshot } from './runtime/campusBackgroundSync';
 import { getUiCopy } from './runtime/i18n';
 import { cancelLocalReminder, scheduleLocalReminder, withNotificationId } from './runtime/reminders';
-import { clearMobileState, hydrateMobileSecrets, loadMobileState, saveMobileState } from './runtime/storage';
+import { clearMobileState, hydrateMobileSecrets, loadMobileState, mergeBackgroundCampusData, persistMobileSecrets, saveMobileState } from './runtime/storage';
 import { isMobileVmSession, launchMobileVm } from './runtime/mobileVm';
 import {
   createConversation,
@@ -545,6 +546,31 @@ export function App() {
   }, [initial]);
 
   useEffect(() => {
+    if (!secretsHydrated || Capacitor.getPlatform() !== 'android') return;
+    let cancelled = false;
+    void getCampusBackgroundSnapshot().then((snapshot) => {
+      if (cancelled || !snapshot) return;
+      try {
+        const value: unknown = JSON.parse(snapshot);
+        setState((current) => {
+          const campus = mergeBackgroundCampusData(current.campus, value);
+          if (!campus || campus === current.campus) return current;
+          return { ...current, campus };
+        });
+      } catch {
+        // A corrupt or older encrypted snapshot must not replace current data.
+      }
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [secretsHydrated]);
+
+  useEffect(() => {
+    if (!state.campus) return;
+    setCampusAcademicYear(state.campus.academicYear);
+    setCampusTerm(state.campus.term);
+  }, [state.campus?.fetchedAt]);
+
+  useEffect(() => {
     if (!secretsHydrated || autoReadOnLaunchHandledRef.current) return;
     autoReadOnLaunchHandledRef.current = true;
     if (Capacitor.isNativePlatform() && state.campusAutoReadEnabled && state.profile.studentId.trim() && state.profile.studentPassword) {
@@ -637,13 +663,22 @@ export function App() {
     campusRefreshAttemptAtRef.current = Date.now();
     setCampusLoading(true);
     setCampusSaved(false);
-    // Do not keep rendering a previous term while a new read is in flight.
-    // A failed refresh must never leave an old schedule labelled as the
-    // currently selected academic year and term.
-    updateState({ campus: null });
+    // Keep same-term data visible during an automatic refresh. When the user
+    // explicitly switches terms, clear the previous term to avoid mislabeling.
+    if (state.campus && (state.campus.academicYear !== campusAcademicYear || state.campus.term !== campusTerm)) {
+      updateState({ campus: null });
+    }
     setCampusMessage(copy.campusLoading);
     try {
       const campus = await readCampusInfo(state.profile.studentId, state.profile.studentPassword, { academicYear: campusAcademicYear, term: campusTerm });
+      const nextState = { ...state, campus, campusAutoReadEnabled: true };
+      try {
+        await persistMobileSecrets(nextState);
+        await enableCampusBackgroundSync(campus.academicYear, campus.term);
+      } catch {
+        // The foreground read remains successful even if Android declines to
+        // schedule WorkManager or secure storage becomes temporarily unavailable.
+      }
       updateState({ campus, campusAutoReadEnabled: true });
       setCampusAcademicYear(campus.academicYear);
       setCampusTerm(campus.term);

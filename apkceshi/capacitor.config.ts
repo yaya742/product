@@ -1,5 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
+/// <reference types="@capacitor/background-runner" />
+
 const config: CapacitorConfig = {
   appId: 'studio.zaichang.mobile',
   appName: '在场',
@@ -13,6 +15,14 @@ const config: CapacitorConfig = {
     },
     CapacitorCookies: {
       enabled: true,
+    },
+    BackgroundRunner: {
+      label: 'studio.zaichang.mobile.campus-sync',
+      src: 'runners/campus-sync.js',
+      event: 'campusSync',
+      repeat: true,
+      interval: 15,
+      autoStart: false,
     },
     SplashScreen: {
       launchAutoHide: true,
