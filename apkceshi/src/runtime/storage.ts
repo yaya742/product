@@ -493,58 +493,108 @@ export interface MobileSecretsHydrationResult {
   diagnostic?: string;
 }
 
+interface SecretHydrationResult {
+  value: string;
+  status: 'available' | 'unavailable';
+  diagnostic?: string;
+}
+
+function readLegacyLocalSecrets(): { apiKey: string; studentId: string; studentPassword: string } {
+  try {
+    const raw = localStorage.getItem('zaichang.mobile.local.v1');
+    if (!raw) return { apiKey: '', studentId: '', studentPassword: '' };
+    const value: unknown = JSON.parse(raw);
+    if (!isRecord(value)) return { apiKey: '', studentId: '', studentPassword: '' };
+    const profile = isRecord(value.profile) ? value.profile : {};
+    return {
+      apiKey: typeof value.apiKey === 'string' ? value.apiKey : '',
+      studentId: typeof profile.studentId === 'string' ? profile.studentId : '',
+      studentPassword: typeof profile.studentPassword === 'string' ? profile.studentPassword : '',
+    };
+  } catch {
+    return { apiKey: '', studentId: '', studentPassword: '' };
+  }
+}
+
+async function hydrateSecret(key: string, candidate: string, legacyReadFailed = false): Promise<SecretHydrationResult> {
+  let storedValue: string | null = null;
+  let readError: unknown;
+  try {
+    storedValue = await secureGet(key);
+  } catch (error) {
+    readError = error;
+  }
+
+  // A successfully decrypted Keystore value is authoritative. If reading fails,
+  // a verified legacy candidate may still repair the entry without exposing it
+  // as a plaintext fallback in app state.
+  if (storedValue !== null) return { value: storedValue, status: 'available' };
+  if (candidate) {
+    try {
+      await secureSet(key, candidate);
+      const verifiedValue = await secureGet(key);
+      if (verifiedValue !== candidate) throw new Error('secure_storage_migration_verification_failed');
+      return { value: candidate, status: 'available' };
+    } catch (error) {
+      return { value: '', status: 'unavailable', diagnostic: secureStorageDiagnostic(error) };
+    }
+  }
+  if (readError) return { value: '', status: 'unavailable', diagnostic: secureStorageDiagnostic(readError) };
+  if (legacyReadFailed) return { value: '', status: 'unavailable', diagnostic: 'legacy_preferences_read_failed' };
+  return { value: '', status: 'available' };
+}
+
 export async function hydrateMobileSecrets(state: MobileState): Promise<MobileSecretsHydrationResult> {
   if (!Capacitor.isNativePlatform()) return { state, status: 'available' };
+  const legacyLocal = readLegacyLocalSecrets();
+  const [legacyApiKeyResult, legacyPasswordResult] = await Promise.allSettled([
+    Preferences.get({ key: SECURE_API_KEY }),
+    Preferences.get({ key: SECURE_STUDENT_PASSWORD }),
+  ]);
+  const legacyApiKey = legacyApiKeyResult.status === 'fulfilled' ? legacyApiKeyResult.value.value || '' : '';
+  const legacyPassword = legacyPasswordResult.status === 'fulfilled' ? legacyPasswordResult.value.value || '' : '';
+  const firstNonEmpty = (...values: string[]) => values.find((value) => value.length > 0) || '';
+
+  const [apiKey, studentId, password] = await Promise.all([
+    hydrateSecret(SECURE_API_KEY, firstNonEmpty(state.apiKey, legacyLocal.apiKey, legacyApiKey), legacyApiKeyResult.status === 'rejected'),
+    hydrateSecret(SECURE_STUDENT_ID, firstNonEmpty(state.profile.studentId, legacyLocal.studentId)),
+    hydrateSecret(SECURE_STUDENT_PASSWORD, firstNonEmpty(state.profile.studentPassword, legacyLocal.studentPassword, legacyPassword), legacyPasswordResult.status === 'rejected'),
+  ]);
+  const status = apiKey.status === 'available' && studentId.status === 'available' && password.status === 'available'
+    ? 'available'
+    : 'unavailable';
+  const nextState = {
+    ...state,
+    apiKey: apiKey.value,
+    profile: { ...state.profile, studentId: studentId.value, studentPassword: password.value },
+  };
+
+  // Native persistence always strips these fields from localStorage. Keep the
+  // original v1 record until every secret has a verified Keystore copy, so a
+  // later retry can migrate any remaining field independently.
   try {
-    const [secureApiKey, secureStudentId, securePassword, legacyApiKey, legacyPassword] = await Promise.all([
-      secureGet(SECURE_API_KEY),
-      secureGet(SECURE_STUDENT_ID),
-      secureGet(SECURE_STUDENT_PASSWORD),
-      Preferences.get({ key: SECURE_API_KEY }),
-      Preferences.get({ key: SECURE_STUDENT_PASSWORD }),
-    ]);
-    const nextApiKey = secureApiKey || legacyApiKey.value || state.apiKey;
-    const nextStudentId = secureStudentId || state.profile.studentId;
-    const nextPassword = securePassword || legacyPassword.value || state.profile.studentPassword;
-    await Promise.all([
-      secureSet(SECURE_API_KEY, nextApiKey),
-      secureSet(SECURE_STUDENT_ID, nextStudentId),
-      secureSet(SECURE_STUDENT_PASSWORD, nextPassword),
-    ]);
-    const [verifiedApiKey, verifiedStudentId, verifiedPassword] = await Promise.all([
-      secureGet(SECURE_API_KEY),
-      secureGet(SECURE_STUDENT_ID),
-      secureGet(SECURE_STUDENT_PASSWORD),
-    ]);
-    if (verifiedApiKey !== (nextApiKey || null) || verifiedStudentId !== (nextStudentId || null) || verifiedPassword !== (nextPassword || null)) {
-      throw new Error('secure_storage_migration_verification_failed');
-    }
-    const nextState = {
-      ...state,
-      apiKey: nextApiKey,
-      profile: { ...state.profile, studentId: nextStudentId, studentPassword: nextPassword },
-    };
     persistMobileState(nextState);
-    nativeSecureStorageReady = true;
-    await Promise.allSettled([
-      Preferences.remove({ key: SECURE_API_KEY }),
-      Preferences.remove({ key: SECURE_STUDENT_PASSWORD }),
-    ]);
+  } catch {
+    // Current-session state remains usable even if WebView storage is full.
+  }
+  nativeSecureStorageReady = status === 'available';
+  const cleanup: Promise<unknown>[] = [];
+  if (apiKey.status === 'available' && legacyApiKeyResult.status === 'fulfilled') cleanup.push(Preferences.remove({ key: SECURE_API_KEY }));
+  if (password.status === 'available' && legacyPasswordResult.status === 'fulfilled') cleanup.push(Preferences.remove({ key: SECURE_STUDENT_PASSWORD }));
+  await Promise.allSettled(cleanup);
+  if (status === 'available') {
     try {
       localStorage.removeItem('zaichang.mobile.local.v1');
     } catch {
-      // The verified Keystore copy is already available if legacy cleanup fails.
+      // All values already have verified Keystore copies.
     }
-    return { state: nextState, status: 'available' };
-  } catch (error) {
-    // Do not fall back to plaintext if Android Keystore cannot be used.
-    nativeSecureStorageReady = false;
-    const sanitized = { ...state, apiKey: '', profile: { ...state.profile, studentId: '', studentPassword: '' } };
-    // Keep legacy copies intact until a verified Keystore migration succeeds.
-    // The app still receives a sanitized state and never reads those copies as a
-    // plaintext fallback during this session.
-    return { state: sanitized, status: 'unavailable', diagnostic: secureStorageDiagnostic(error) };
   }
+  const diagnostics = [apiKey, studentId, password].flatMap((item) => item.diagnostic ? [item.diagnostic] : []);
+  return {
+    state: nextState,
+    status,
+    diagnostic: diagnostics.length ? [...new Set(diagnostics)].join(', ') : undefined,
+  };
 }
 
 export function clearMobileState(): void {
