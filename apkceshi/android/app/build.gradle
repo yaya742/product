@@ -8,8 +8,8 @@ android {
         applicationId "studio.zaichang.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 27
-        versionName "0.1.26-partial-secure-migration"
+        versionCode 28
+        versionName "0.1.27-secure-storage-pdf-legacy"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

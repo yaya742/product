@@ -17,6 +17,8 @@ import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.util.regex.Pattern;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -31,6 +33,7 @@ public class SecureStoragePlugin extends Plugin {
     private static final int TAG_BITS = 128;
     private static final int MAX_VALUE_LENGTH = 4096;
     private static final Pattern SAFE_KEY = Pattern.compile("[A-Za-z0-9._-]{1,80}");
+    private static final ExecutorService STORAGE_EXECUTOR = Executors.newSingleThreadExecutor();
 
     private static SharedPreferences preferences(Context context) {
         return context.getApplicationContext().getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE);
@@ -91,10 +94,36 @@ public class SecureStoragePlugin extends Plugin {
     public static void writeStored(Context context, String key, String value) throws GeneralSecurityException {
         requireKey(key);
         if (value == null || value.isEmpty()) {
-            preferences(context).edit().remove(key).apply();
+            SharedPreferences stored = preferences(context);
+            if (!stored.edit().remove(key).commit()) {
+                throw new GeneralSecurityException("secure_storage_persistence_failed");
+            }
+            if (stored.contains(key)) throw new GeneralSecurityException("secure_storage_verification_failed");
             return;
         }
-        preferences(context).edit().putString(key, encrypt(value)).apply();
+        String encrypted = encrypt(value);
+        SharedPreferences stored = preferences(context);
+        if (!stored.edit().putString(key, encrypted).commit()) {
+            throw new GeneralSecurityException("secure_storage_persistence_failed");
+        }
+        String persisted = stored.getString(key, null);
+        if (persisted == null || !value.equals(decrypt(persisted))) {
+            throw new GeneralSecurityException("secure_storage_verification_failed");
+        }
+    }
+
+    private interface StorageOperation {
+        void run() throws Exception;
+    }
+
+    private void runStorageOperation(PluginCall call, String operation, StorageOperation task) {
+        STORAGE_EXECUTOR.execute(() -> {
+            try {
+                task.run();
+            } catch (Exception error) {
+                call.reject("secure_storage_" + operation + "_failed:" + safeErrorType(error), "secure_storage_" + operation + "_failed");
+            }
+        });
     }
 
     private static String requiredString(PluginCall call, String name) throws GeneralSecurityException {
@@ -114,44 +143,50 @@ public class SecureStoragePlugin extends Plugin {
 
     @PluginMethod
     public void get(PluginCall call) {
-        try {
+        runStorageOperation(call, "get", () -> {
             String key = requiredString(call, "key");
             String value = readStored(getContext(), key);
             JSObject result = new JSObject();
             if (value != null) result.put("value", value);
             call.resolve(result);
-        } catch (Exception error) {
-            call.reject("secure_storage_get_failed:" + safeErrorType(error), "secure_storage_get_failed");
-        }
+        });
     }
 
     @PluginMethod
     public void set(PluginCall call) {
-        try {
+        runStorageOperation(call, "set", () -> {
             String key = requiredString(call, "key");
             String value = requiredString(call, "value");
             writeStored(getContext(), key, value);
             call.resolve();
-        } catch (Exception error) {
-            call.reject("secure_storage_set_failed:" + safeErrorType(error), "secure_storage_set_failed");
-        }
+        });
     }
 
     @PluginMethod
     public void remove(PluginCall call) {
-        try {
+        runStorageOperation(call, "remove", () -> {
             String key = requiredString(call, "key");
             requireKey(key);
-            preferences(getContext()).edit().remove(key).apply();
+            if (!preferences(getContext()).edit().remove(key).commit()) {
+                throw new GeneralSecurityException("secure_storage_persistence_failed");
+            }
+            if (preferences(getContext()).contains(key)) {
+                throw new GeneralSecurityException("secure_storage_verification_failed");
+            }
             call.resolve();
-        } catch (Exception error) {
-            call.reject("secure_storage_remove_failed:" + safeErrorType(error), "secure_storage_remove_failed");
-        }
+        });
     }
 
     @PluginMethod
     public void clear(PluginCall call) {
-        preferences(getContext()).edit().clear().apply();
-        call.resolve();
+        runStorageOperation(call, "remove", () -> {
+            if (!preferences(getContext()).edit().clear().commit()) {
+                throw new GeneralSecurityException("secure_storage_persistence_failed");
+            }
+            if (!preferences(getContext()).getAll().isEmpty()) {
+                throw new GeneralSecurityException("secure_storage_verification_failed");
+            }
+            call.resolve();
+        });
     }
 }

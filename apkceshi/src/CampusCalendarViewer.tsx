@@ -97,7 +97,7 @@ export function CampusCalendarViewer({ url, copy, onClose }: CampusCalendarViewe
         const data = await readOfficialCalendarPdf(url);
         if (cancelled) return;
         installPdfCompatibility();
-        const pdfjs = await import('pdfjs-dist');
+        const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
         if (cancelled) return;
         pdfjs.GlobalWorkerOptions.workerPort ??= new PdfWorker();
         loadingTask = pdfjs.getDocument({ data, enableXfa: false, useSystemFonts: true });

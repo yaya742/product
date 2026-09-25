@@ -18,6 +18,8 @@ export function secureStorageDiagnostic(error: unknown): string {
     const match = candidate.match(/(?:^|\s)(secure_storage_(get|set|remove)_failed)(?::([A-Za-z][A-Za-z0-9]*))?(?:$|\s)/);
     if (match) return match[3] ? `${match[1]}:${match[3]}` : match[1];
     if (candidate === 'secure_storage_migration_verification_failed') return candidate;
+    if (candidate === 'secure_storage_persistence_failed') return candidate;
+    if (candidate === 'secure_storage_verification_failed') return candidate;
   }
   return 'secure_storage_migration_failed';
 }

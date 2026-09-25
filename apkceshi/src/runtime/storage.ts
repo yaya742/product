@@ -35,7 +35,6 @@ const STORAGE_KEY = 'zaichang.mobile.local.v2';
 const SECURE_API_KEY = 'zaichang.mobile.deepseek.api-key';
 const SECURE_STUDENT_ID = 'zaichang.mobile.campus.student-id';
 const SECURE_STUDENT_PASSWORD = 'zaichang.mobile.campus.password';
-let nativeSecureStorageReady = !Capacitor.isNativePlatform();
 // Remove the duplicate seeded history item shown at the top of the mobile history panel.
 
 function normalizeYearLevel(value: string): string {
@@ -442,9 +441,6 @@ export function loadMobileState(): MobileState {
 export function saveMobileState(state: MobileState): void {
   try {
     persistMobileState(state);
-    if (Capacitor.isNativePlatform() && nativeSecureStorageReady) {
-      void persistMobileSecrets(state).catch(() => { nativeSecureStorageReady = false; });
-    }
   } catch {
     // Storage is best effort. The app remains usable for the current session.
   }
@@ -457,7 +453,6 @@ export async function persistMobileSecrets(state: MobileState): Promise<void> {
     secureSet(SECURE_STUDENT_ID, state.profile.studentId),
     secureSet(SECURE_STUDENT_PASSWORD, state.profile.studentPassword),
   ]);
-  nativeSecureStorageReady = true;
 }
 
 export async function persistCampusCredentials(state: MobileState): Promise<void> {
@@ -577,7 +572,6 @@ export async function hydrateMobileSecrets(state: MobileState): Promise<MobileSe
   } catch {
     // Current-session state remains usable even if WebView storage is full.
   }
-  nativeSecureStorageReady = status === 'available';
   const cleanup: Promise<unknown>[] = [];
   if (apiKey.status === 'available' && legacyApiKeyResult.status === 'fulfilled') cleanup.push(Preferences.remove({ key: SECURE_API_KEY }));
   if (password.status === 'available' && legacyPasswordResult.status === 'fulfilled') cleanup.push(Preferences.remove({ key: SECURE_STUDENT_PASSWORD }));
@@ -602,7 +596,6 @@ export function clearMobileState(): void {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem('zaichang.mobile.local.v1');
     if (Capacitor.isNativePlatform()) {
-      nativeSecureStorageReady = true;
       void disableCampusBackgroundSync().catch(() => {});
       void Promise.all([
         Preferences.remove({ key: SECURE_API_KEY }),

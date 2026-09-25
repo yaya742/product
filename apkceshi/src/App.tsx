@@ -620,6 +620,36 @@ export function App() {
   }, [secretsHydrated, secretsStorageUnavailable, state]);
 
   useEffect(() => {
+    if (!secretsHydrated || secretsStorageUnavailable || !Capacitor.isNativePlatform()) return;
+    let saveStarted = false;
+    const persistSecrets = () => {
+      if (saveStarted) return;
+      saveStarted = true;
+      void persistMobileSecrets(state).then(() => {
+        setSecretsStorageUnavailable(false);
+        setSecretsStorageDiagnostic('');
+      }).catch((error) => {
+        setSecretsStorageUnavailable(true);
+        setSecretsStorageDiagnostic(secureStorageDiagnostic(error));
+      });
+    };
+    const timeout = window.setTimeout(persistSecrets, 350);
+    const flushWhenLeavingApp = () => {
+      if (document.visibilityState === 'hidden') {
+        window.clearTimeout(timeout);
+        persistSecrets();
+      }
+    };
+    document.addEventListener('visibilitychange', flushWhenLeavingApp);
+    window.addEventListener('pagehide', persistSecrets);
+    return () => {
+      window.clearTimeout(timeout);
+      document.removeEventListener('visibilitychange', flushWhenLeavingApp);
+      window.removeEventListener('pagehide', persistSecrets);
+    };
+  }, [secretsHydrated, secretsStorageUnavailable, state.apiKey, state.profile.studentId, state.profile.studentPassword]);
+
+  useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, busy]);
 
