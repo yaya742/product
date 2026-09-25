@@ -35,6 +35,8 @@ const DEFAULT_TURN_CONTROLS: MobileTurnControls = {
   audience: 'self',
 };
 
+const CAMPUS_AUTO_REFRESH_COOLDOWN_MS = 15 * 60 * 1000;
+
 
 function friendlyError(error: unknown): string {
   if (error instanceof DeepSeekError) return error.message;
@@ -517,6 +519,7 @@ export function App() {
   const [scrollState, setScrollState] = useState({ canUp: false, canDown: false });
   const abortRef = useRef<AbortController | undefined>(undefined);
   const campusReadInFlightRef = useRef(false);
+  const campusRefreshAttemptAtRef = useRef(0);
   const autoReadOnLaunchHandledRef = useRef(false);
   const translationAbortRef = useRef<AbortController | undefined>(undefined);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -557,7 +560,9 @@ export function App() {
         appWasHidden = true;
       } else if (appWasHidden) {
         appWasHidden = false;
-        void refreshCampusInfo();
+        if (Date.now() - campusRefreshAttemptAtRef.current >= CAMPUS_AUTO_REFRESH_COOLDOWN_MS) {
+          void refreshCampusInfo();
+        }
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -629,6 +634,7 @@ export function App() {
       return;
     }
     campusReadInFlightRef.current = true;
+    campusRefreshAttemptAtRef.current = Date.now();
     setCampusLoading(true);
     setCampusSaved(false);
     // Do not keep rendering a previous term while a new read is in flight.
