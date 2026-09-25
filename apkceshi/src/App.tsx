@@ -6,7 +6,7 @@ import { WeatherPanel } from './WeatherPanel';
 import { CampusCalendarViewer } from './CampusCalendarViewer';
 import { runMobileAgent, type AgentStatus } from './runtime/agent';
 import { completeDeepSeek, DeepSeekError, testDeepSeekConnection, translateText } from './runtime/deepseek';
-import { CampusError, currentAcademicTerm, readCampusInfo, readLearningActivities, readPublicCollegeInfo, readPublicNotices, type CampusPublicInfoResult } from './runtime/campus';
+import { CampusError, COURSES_HOME_URL, currentAcademicTerm, readCampusInfo, readLearningActivities, readPublicCollegeInfo, readPublicNotices, type CampusPublicInfoResult } from './runtime/campus';
 import { enableCampusBackgroundSync, getCampusBackgroundSnapshot } from './runtime/campusBackgroundSync';
 import { getUiCopy } from './runtime/i18n';
 import { cancelLocalReminder, scheduleLocalReminder, withNotificationId } from './runtime/reminders';
@@ -20,6 +20,7 @@ import {
   type CampusPublicCategory,
   type CampusGrade,
   type CampusNotice,
+  type CampusTodo,
   type MobileAgendaItem,
   type MobileAttachment,
   type MobileConversation,
@@ -74,8 +75,10 @@ function formatReminderDate(value: string, language: MobileLanguage): string {
 }
 
 function formatCampusUpdated(value: string, language: MobileLanguage): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
   const locale = language === 'en' ? 'en-US' : language;
-  return new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
+  return new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
 }
 
 function formatCampusActivityTime(deadline: string, startTime: string, language: MobileLanguage): string {
@@ -495,6 +498,14 @@ export function App() {
   const [campusMessage, setCampusMessage] = useState('');
   const [showCampusPassword, setShowCampusPassword] = useState(false);
   const [campusCalendarViewerUrl, setCampusCalendarViewerUrl] = useState<string | null>(null);
+  const todoDetailRequestRef = useRef(0);
+  const [todoDetail, setTodoDetail] = useState<{
+    todo: CampusTodo;
+    loading: boolean;
+    reason: string;
+    readAt: string;
+    source: string;
+  } | null>(null);
   const initialAcademicTerm = currentAcademicTerm();
   const [campusTab, setCampusTab] = useState<'overview' | 'schedule' | 'courses' | 'learning' | 'activities' | 'exams' | 'grades' | 'gpa' | 'todos' | 'practice' | 'holidays' | 'notices' | 'public'>('overview');
   const [campusGradeScope, setCampusGradeScope] = useState('current');
@@ -802,6 +813,84 @@ export function App() {
     }
   }
 
+  async function toggleTodoDetails(todo: CampusTodo) {
+    if (todoDetail?.todo.id === todo.id) {
+      todoDetailRequestRef.current += 1;
+      setTodoDetail(null);
+      return;
+    }
+
+    const requestId = ++todoDetailRequestRef.current;
+    const readAt = new Date().toISOString();
+    const source = todo.source || '学在浙大待办列表';
+    const initialDetail = {
+      todo,
+      loading: false,
+      reason: '',
+      readAt,
+      source,
+    };
+    setTodoDetail(initialDetail);
+
+    if (!todo.courseId) {
+      setTodoDetail({ ...initialDetail, reason: copy.campusTodoNoCourseId });
+      return;
+    }
+    if (campusReadInFlightRef.current) {
+      setTodoDetail({ ...initialDetail, reason: copy.campusTodoBusy });
+      return;
+    }
+
+    campusReadInFlightRef.current = true;
+    setTodoDetail({ ...initialDetail, loading: true });
+    try {
+      const activities = await readLearningActivities(state.profile.studentId, state.profile.studentPassword, todo.courseId);
+      if (requestId !== todoDetailRequestRef.current) return;
+      const activity = activities.find((item) => item.id === todo.id);
+      const checkedAt = new Date().toISOString();
+      if (!activity) {
+        setTodoDetail({ ...initialDetail, readAt: checkedAt, reason: copy.campusTodoNoExactMatch });
+        return;
+      }
+
+      const mergedTodo: CampusTodo = {
+        ...todo,
+        deadline: todo.deadline || activity.deadline,
+        ...(todo.description || !activity.description ? {} : { description: activity.description }),
+        ...(todo.submissionRequirements || !activity.submissionRequirements ? {} : { submissionRequirements: activity.submissionRequirements }),
+        ...(todo.attachments?.length || !activity.attachments?.length ? {} : { attachments: activity.attachments }),
+        ...(!todo.updatedAt && activity.updatedAt ? { updatedAt: activity.updatedAt } : {}),
+        sourceUrl: todo.sourceUrl && todo.sourceUrl !== COURSES_HOME_URL ? todo.sourceUrl : activity.url || todo.sourceUrl || COURSES_HOME_URL,
+      };
+      const hasAnyDetail = Boolean(mergedTodo.description || mergedTodo.submissionRequirements || mergedTodo.attachments?.length);
+      setTodoDetail({
+        todo: mergedTodo,
+        loading: false,
+        reason: hasAnyDetail ? '' : copy.campusTodoSummaryOnly,
+        readAt: checkedAt,
+        source: `${source} · 学在浙大课程活动接口`,
+      });
+    } catch (error) {
+      if (requestId !== todoDetailRequestRef.current) return;
+      const message = error instanceof Error ? error.message.trim().slice(0, 240) : '';
+      setTodoDetail({
+        ...initialDetail,
+        readAt: new Date().toISOString(),
+        reason: message || copy.campusTodoSummaryOnly,
+      });
+    } finally {
+      campusReadInFlightRef.current = false;
+    }
+  }
+
+  async function openCampusTodoOriginal(value: string | undefined) {
+    const normalized = normalizeExternalUrl(value || COURSES_HOME_URL);
+    if (!normalized) return;
+    const parsed = new URL(normalized);
+    if (parsed.protocol !== 'https:' || parsed.hostname.toLowerCase() !== 'courses.zju.edu.cn') return;
+    await openExternalUrl(parsed.toString());
+  }
+
   async function openNoticeInBrowser(url: string) {
     const normalized = normalizeExternalUrl(url);
     if (!normalized) return;
@@ -820,6 +909,10 @@ export function App() {
 
   function selectCampusTab(tab: 'overview' | 'schedule' | 'courses' | 'learning' | 'activities' | 'exams' | 'grades' | 'gpa' | 'todos' | 'practice' | 'holidays' | 'notices' | 'public') {
     setCampusTab(tab);
+    if (tab !== 'todos') {
+      todoDetailRequestRef.current += 1;
+      setTodoDetail(null);
+    }
     if (tab === 'notices' && !notices.length && !noticesLoading) void refreshNotices('', 1);
   }
 
@@ -1710,7 +1803,6 @@ export function App() {
                 <button className="secondary-button" disabled={!secretsHydrated} onClick={() => void saveCampusCredentials()}>{campusSaved ? copy.saved : copy.save}</button>
                 <button className="primary-button" disabled={campusLoading} onClick={() => void refreshCampusInfo()}>{campusLoading ? copy.campusLoading : copy.campusRefresh}</button>
               </div>
-              <button className="secondary-button campus-webvpn-button" disabled={campusLoading} onClick={() => void refreshCampusInfo()}>{copy.campusWebVpn}</button>
               <p className="campus-privacy-note">{copy.campusReadOnly}</p>
               {secretsStorageUnavailable && <p className="campus-storage-warning" role="alert">{copy.campusSecureStorageWarning}<small>{copy.campusSecureStorageDiagnostic}: {secretsStorageDiagnostic || 'secure_storage_migration_failed'}</small></p>}
               <p className="campus-privacy-note">{copy.campusAutoReadHint || (state.profile.language === 'en'
@@ -1766,12 +1858,6 @@ export function App() {
                       <div><strong>{campus.todos.length}</strong><span>{copy.campusTodosCount}</span></div>
                       <div><strong>{campus.practiceProjects?.length || 0}</strong><span>{copy.campusPracticeProjects}</span></div>
                     </div>
-                    <div className="campus-overview-links">
-                      <button onClick={() => setCampusTab('schedule')}><span>{copy.campusSchedule}</span><strong>{campus.courses.length}</strong><ArrowIcon /></button>
-                      <button onClick={() => setCampusTab('exams')}><span>{copy.campusExams}</span><strong>{campus.exams.length}</strong><ArrowIcon /></button>
-                      <button onClick={() => setCampusTab('grades')}><span>{copy.campusGrades}</span><strong>{campus.grades.length}</strong><ArrowIcon /></button>
-                      <button onClick={() => setCampusTab('practice')}><span>{copy.campusPractice}</span><strong>{campus.practiceProjects?.length || 0}</strong><ArrowIcon /></button>
-                    </div>
                   </section>
                 )}
 
@@ -1809,7 +1895,6 @@ export function App() {
                         <small>{course.teachers || '教师未提供'} · ID {course.id}</small>
                       </div>
                     )) : <p className="empty-history">{copy.campusEmpty}</p>}
-                    <p className="connection-message">需要读取某门课程的活动时，可以在对话中询问课程作业或截止时间。</p>
                   </section>
                 )}
 
@@ -1874,11 +1959,61 @@ export function App() {
                 {campusTab === 'todos' && (
                   <section className="profile-section campus-data-card">
                     <div className="setting-label"><strong>{copy.campusTodos}</strong><span>{campus.todos.length ? `${campus.todos.length}` : copy.campusEmpty}</span></div>
-                    {campus.todos.length ? campus.todos.map((todo) => (
-                      <div className="campus-record" key={todo.id}>
-                        <strong>{todo.name}</strong><span>{todo.course}</span><small>{todo.deadline || copy.campusNoDeadline}</small>
-                      </div>
-                    )) : <p className="empty-history">{copy.campusEmpty}</p>}
+                    {campus.todos.length ? campus.todos.map((todo) => {
+                      const expanded = todoDetail?.todo.id === todo.id;
+                      const detail = expanded ? todoDetail : null;
+                      const detailTodo = detail?.todo || todo;
+                      return (
+                        <div className="campus-todo-item" key={todo.id}>
+                          <button
+                            className="campus-todo-summary"
+                            type="button"
+                            aria-expanded={expanded}
+                            disabled={campusLoading || todoDetail?.loading === true}
+                            onClick={() => void toggleTodoDetails(todo)}
+                          >
+                            <span className="campus-todo-summary-copy">
+                              <strong>{todo.name}</strong>
+                              <span>{todo.course}</span>
+                              <small>{todo.deadline || copy.campusNoDeadline}</small>
+                              <small className="campus-todo-open-hint">{expanded ? copy.campusTodoCloseDetails : copy.campusTodoOpenDetails}</small>
+                            </span>
+                            <span className="campus-todo-chevron" aria-hidden="true">{expanded ? '−' : '+'}</span>
+                          </button>
+                          {detail && (
+                            <div className="campus-todo-detail">
+                              <h3>{copy.campusTodoDetails}</h3>
+                              {detail.loading && <p className="connection-message">{copy.campusTodoDetailsLoading}</p>}
+                              <p className="campus-todo-detail-note">{copy.campusTodoPartialDetail}</p>
+                              <dl>
+                                <div><dt>{copy.campusTodoCourse}</dt><dd>{detailTodo.course || copy.campusTodoFieldUnavailable}</dd></div>
+                                <div><dt>{copy.campusTodoDeadline}</dt><dd>{detailTodo.deadline ? (formatCampusActivityTime(detailTodo.deadline, '', state.profile.language) || detailTodo.deadline) : copy.campusNoDeadline}</dd></div>
+                                <div><dt>{copy.campusTodoDescription}</dt><dd>{detailTodo.description || copy.campusTodoFieldUnavailable}</dd></div>
+                                <div><dt>{copy.campusTodoSubmissionRequirements}</dt><dd>{detailTodo.submissionRequirements || copy.campusTodoFieldUnavailable}</dd></div>
+                                <div>
+                                  <dt>{copy.campusTodoAttachments}</dt>
+                                  <dd>{detailTodo.attachments?.length ? (
+                                    <ul>{detailTodo.attachments.map((attachment, index) => (
+                                      <li key={`${attachment.name}-${index}`}>
+                                        {attachment.url
+                                          ? <button type="button" className="campus-todo-attachment-link" onClick={() => void openCampusTodoOriginal(attachment.url)}>{attachment.name}</button>
+                                          : attachment.name}
+                                      </li>
+                                    ))}</ul>
+                                  ) : copy.campusTodoFieldUnavailable}</dd>
+                                </div>
+                                <div><dt>{copy.campusTodoSource}</dt><dd>{detail.source}</dd></div>
+                                <div><dt>{copy.campusTodoPlatformUpdated}</dt><dd>{detailTodo.updatedAt ? formatCampusUpdated(detailTodo.updatedAt, state.profile.language) : copy.campusTodoPlatformUpdateUnavailable}</dd></div>
+                                <div><dt>{copy.campusTodoLastRead}</dt><dd>{formatCampusUpdated(detail.readAt, state.profile.language)}</dd></div>
+                              </dl>
+                              {detail.reason && <p className="campus-todo-reason" role="status">{detail.reason}</p>}
+                              {detailTodo.sourceUrl === COURSES_HOME_URL && <p className="campus-todo-original-note">{copy.campusTodoOriginalIsGeneric}</p>}
+                              <button type="button" className="campus-todo-original-button" onClick={() => void openCampusTodoOriginal(detailTodo.sourceUrl)}>{copy.campusTodoOpenOriginal}</button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }) : <p className="empty-history">{copy.campusEmpty}</p>}
                   </section>
                 )}
 

@@ -278,7 +278,6 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .password-visibility-button:hover, .password-visibility-button:focus-visible { color: var(--accent-strong); background: var(--surface-muted); }
 .campus-account-actions { display: flex; gap: 8px; margin-top: 19px; }
 .campus-account-actions button { flex: 1; }
-.campus-webvpn-button { width: 100%; margin-top: 8px; }
 .campus-read-options { display: grid; grid-template-columns: 1fr 1fr; gap: 0 9px; }
 .campus-read-options .field-label { margin-top: 14px; }
 .campus-read-options select { min-width: 0; width: 100%; padding: 10px 9px; font-size: 12px; }
@@ -303,13 +302,6 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .campus-overview-metrics div:nth-last-child(-n + 2) { border-bottom: 0; }
 .campus-overview-metrics strong { color: var(--text); font-size: 21px; font-weight: 600; letter-spacing: -.04em; }
 .campus-overview-metrics span { color: var(--text-soft); font-size: 10px; }
-.campus-overview-links { display: grid; overflow: hidden; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--surface); }
-.campus-overview-links button { display: grid; grid-template-columns: 1fr auto 16px; align-items: center; gap: 10px; min-height: 48px; padding: 0 12px; color: var(--text); border: 0; border-bottom: 1px solid var(--line); background: transparent; text-align: left; }
-.campus-overview-links button:last-child { border-bottom: 0; }
-.campus-overview-links button:hover { background: var(--surface-muted); }
-.campus-overview-links span { font-size: 12px; }
-.campus-overview-links strong { color: var(--text-soft); font-size: 12px; font-weight: 500; }
-.campus-overview-links svg { width: 15px; height: 15px; color: var(--text-faint); fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .campus-data-card { display: grid; gap: 0; }
 .campus-data-card .setting-label { margin-bottom: 3px; }
 .campus-calendar-link { width: 100%; margin: 8px 0 12px; padding: 13px 14px; border-radius: 11px; }
@@ -318,6 +310,25 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .campus-record strong { color: var(--text); font-size: 14px; line-height: 1.45; font-weight: 600; }
 .campus-record span { color: var(--text-soft); font-size: 12px; line-height: 1.5; }
 .campus-record small { color: var(--text-faint); font-size: 10px; line-height: 1.45; }
+.campus-todo-item { border-top: 1px solid var(--line); }
+.campus-todo-summary { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 0; color: var(--text); border: 0; background: transparent; text-align: left; }
+.campus-todo-summary:disabled { opacity: .6; }
+.campus-todo-summary-copy { display: grid; gap: 5px; min-width: 0; flex: 1; }
+.campus-todo-summary-copy strong { color: var(--text); font-size: 14px; line-height: 1.45; font-weight: 600; }
+.campus-todo-summary-copy > span { color: var(--text-soft); font-size: 12px; line-height: 1.5; }
+.campus-todo-summary-copy small { color: var(--text-faint); font-size: 10px; line-height: 1.45; }
+.campus-todo-summary-copy .campus-todo-open-hint { color: var(--accent); }
+.campus-todo-chevron { width: 26px; height: 26px; display: grid; place-items: center; flex: 0 0 auto; color: var(--text-soft); border: 1px solid var(--line); border-radius: 50%; font-size: 18px; line-height: 1; }
+.campus-todo-detail { display: grid; gap: 10px; margin: 0 0 13px; padding: 14px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface-muted); }
+.campus-todo-detail h3 { margin: 0; color: var(--text); font-size: 13px; }
+.campus-todo-detail-note, .campus-todo-original-note { margin: 0; color: var(--text-soft); font-size: 10px; line-height: 1.5; }
+.campus-todo-detail dl { display: grid; gap: 10px; margin: 0; }
+.campus-todo-detail dl > div { display: grid; grid-template-columns: minmax(74px, 28%) minmax(0, 1fr); gap: 10px; }
+.campus-todo-detail dt { color: var(--text-soft); font-size: 10px; line-height: 1.5; }
+.campus-todo-detail dd { min-width: 0; margin: 0; color: var(--text); font-size: 11px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.campus-todo-detail dd ul { display: grid; gap: 5px; margin: 0; padding-left: 16px; }
+.campus-todo-attachment-link, .campus-todo-original-button { width: fit-content; padding: 0; color: var(--accent); border: 0; background: transparent; text-align: left; font-size: 11px; line-height: 1.5; text-decoration: underline; }
+.campus-todo-reason { margin: 0; padding: 9px 10px; color: var(--text-soft); border-radius: 9px; background: var(--surface); font-size: 10px; line-height: 1.5; }
 .campus-activity-record { gap: 7px; padding: 15px 0; }
 .campus-activity-record strong { font-size: 15px; line-height: 1.5; }
 .campus-activity-record .campus-activity-course { color: var(--text-soft); font-size: 12px; font-weight: 500; }

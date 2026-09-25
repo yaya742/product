@@ -19,6 +19,7 @@ import type {
   CampusPublicInfo,
   MobileCampusData,
 } from './types';
+import { normalizeOfficialCourseUrl, normalizeTodoDetails } from './todoDetails';
 
 const LOGIN_URL = 'https://zjuam.zju.edu.cn/cas/login';
 const PUBLIC_KEY_URL = 'https://zjuam.zju.edu.cn/cas/v2/getPubKey';
@@ -30,6 +31,7 @@ const COURSE_CATALOG_URL = 'https://zdbk.zju.edu.cn/jwglxt/xsxk/zzxkghb_cxZzxkGh
 const EXAMS_URL = 'https://zdbk.zju.edu.cn/jwglxt/xskscx/kscx_cxXsgrksIndex.html?doType=query&queryModel.showCount=5000';
 const GRADES_URL = 'https://zdbk.zju.edu.cn/jwglxt/cxdy/xscjcx_cxXscjIndex.html?doType=query&queryModel.showCount=5000';
 const COURSES_HOME = 'https://courses.zju.edu.cn/user/index';
+export const COURSES_HOME_URL = COURSES_HOME;
 const TODOS_URL = 'https://courses.zju.edu.cn/api/todos';
 const MY_COURSES_URL = 'https://courses.zju.edu.cn/api/my-courses';
 const COURSE_ACTIVITIES_URL = 'https://courses.zju.edu.cn/api/courses/{courseId}/activities';
@@ -1808,16 +1810,8 @@ function normalizeActivity(item: Record<string, unknown>, courseId: string): Cam
   const id = field(item, ['id', 'activity_id', 'activityId', 'aid']);
   const title = field(item, ['title', 'name', 'activity_name', 'activityName']);
   if (!id || !title) return null;
-  const rawUrl = field(item, ['url', 'href', 'link']);
-  let url = '';
-  if (rawUrl) {
-    try {
-      const parsed = new URL(rawUrl, COURSES_HOME);
-      if (parsed.protocol === 'https:' && (parsed.hostname === 'zju.edu.cn' || parsed.hostname.endsWith('.zju.edu.cn'))) url = parsed.toString();
-    } catch {
-      url = '';
-    }
-  }
+  const details = normalizeTodoDetails(item);
+  const url = normalizeOfficialCourseUrl(item.url ?? item.href ?? item.link) || details.sourceUrl || '';
   return {
     id: id.slice(0, 100),
     courseId,
@@ -1828,6 +1822,10 @@ function normalizeActivity(item: Record<string, unknown>, courseId: string): Cam
     deadline: field(item, ['deadline', 'due_time', 'dueTime', 'due_at', 'dueAt']),
     status: field(item, ['status', 'state']),
     url,
+    ...(details.description ? { description: details.description } : {}),
+    ...(details.submissionRequirements ? { submissionRequirements: details.submissionRequirements } : {}),
+    ...(details.attachments.length ? { attachments: details.attachments } : {}),
+    ...(details.updatedAt ? { updatedAt: details.updatedAt } : {}),
   };
 }
 
@@ -2446,7 +2444,19 @@ async function readTodos(): Promise<CampusTodo[]> {
   const todos = listFromPayload(parseJson(response, '学在浙大待办'), ['todo_list', 'items', 'rows']);
   return todos.flatMap((item) => {
     if (!item.id || !(item.is_student === true || item.is_student === 1 || item.is_student === '1')) return [];
-    return [{ id: String(item.id), name: field(item, ['title', 'name'], '未命名作业'), course: field(item, ['course_name', 'course'], '未知课程'), deadline: field(item, ['end_time', 'deadline'], '未提供截止时间'), status: 'pending' }];
+    const details = normalizeTodoDetails(item);
+    const courseId = field(item, ['course_id', 'courseId', 'cid']);
+    return [{
+      id: String(item.id),
+      name: field(item, ['title', 'name'], '未命名作业'),
+      course: field(item, ['course_name', 'course'], '未知课程'),
+      deadline: field(item, ['end_time', 'deadline']),
+      status: 'pending',
+      ...(courseId ? { courseId } : {}),
+      ...details,
+      source: '学在浙大待办列表',
+      sourceUrl: details.sourceUrl || COURSES_HOME,
+    }];
   });
 }
 

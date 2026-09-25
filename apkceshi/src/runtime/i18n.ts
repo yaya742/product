@@ -106,6 +106,27 @@ export interface UiCopy {
   campusEmpty: string;
   campusNoLocation: string;
   campusNoDeadline: string;
+  campusTodoDetails: string;
+  campusTodoOpenDetails: string;
+  campusTodoCloseDetails: string;
+  campusTodoCourse: string;
+  campusTodoDeadline: string;
+  campusTodoDescription: string;
+  campusTodoSubmissionRequirements: string;
+  campusTodoAttachments: string;
+  campusTodoSource: string;
+  campusTodoPlatformUpdated: string;
+  campusTodoLastRead: string;
+  campusTodoFieldUnavailable: string;
+  campusTodoPlatformUpdateUnavailable: string;
+  campusTodoDetailsLoading: string;
+  campusTodoBusy: string;
+  campusTodoNoCourseId: string;
+  campusTodoNoExactMatch: string;
+  campusTodoSummaryOnly: string;
+  campusTodoPartialDetail: string;
+  campusTodoOpenOriginal: string;
+  campusTodoOriginalIsGeneric: string;
   campusNotices: string;
   campusNoticeHint: string;
   campusNoticeSearchPlaceholder: string;
@@ -270,6 +291,27 @@ const SIMPLIFIED: UiCopy = {
   campusEmpty: '暂无数据',
   campusNoLocation: '地点未提供',
   campusNoDeadline: '截止时间未提供',
+  campusTodoDetails: '作业详情',
+  campusTodoOpenDetails: '查看详情',
+  campusTodoCloseDetails: '收起详情',
+  campusTodoCourse: '课程',
+  campusTodoDeadline: '截止时间',
+  campusTodoDescription: '作业说明',
+  campusTodoSubmissionRequirements: '提交要求',
+  campusTodoAttachments: '附件',
+  campusTodoSource: '信息来源',
+  campusTodoPlatformUpdated: '平台更新时间',
+  campusTodoLastRead: '本机读取时间',
+  campusTodoFieldUnavailable: '平台未提供此项内容',
+  campusTodoPlatformUpdateUnavailable: '平台未提供更新时间',
+  campusTodoDetailsLoading: '正在核对官方课程活动…',
+  campusTodoBusy: '校园信息正在读取，请稍后再查看作业详情。',
+  campusTodoNoCourseId: '待办列表未返回课程编号，无法安全匹配课程活动详情。',
+  campusTodoNoExactMatch: '官方课程活动列表中没有找到 ID 完全一致的记录。为避免错配，未用其他活动填充详情。',
+  campusTodoSummaryOnly: '官方接口返回的仍是待办摘要，没有返回作业详情字段。',
+  campusTodoPartialDetail: '以下只显示官方接口实际返回的字段，缺失项不会推测。',
+  campusTodoOpenOriginal: '打开学在浙大官方入口',
+  campusTodoOriginalIsGeneric: '待办记录没有提供作业专属链接，以下为学在浙大官方入口。',
   campusNotices: '公告',
   campusNoticeHint: '公开通知，无需校园登录',
   campusNoticeSearchPlaceholder: '搜索学院、选课、考试、开学等公告',
@@ -345,6 +387,7 @@ const TRADITIONAL: UiCopy = {
   campus: '校園資訊', campusHint: '讀取課表、考試、成績、待辦和體育與素拓，僅保存在本機', campusTitle: '校園資訊',
   campusSecureStorageWarning: '部分憑據尚未遷移到 Android 安全儲存，舊副本未清除。重新輸入後請在校園資訊頁點「儲存」重試，暫勿解除安裝應用程式。',
   campusSecureStorageDiagnostic: '安全儲存診斷碼',
+  campusTodoDetails: '作業詳情', campusTodoOpenDetails: '查看詳情', campusTodoCloseDetails: '收起詳情', campusTodoCourse: '課程', campusTodoDeadline: '截止時間', campusTodoDescription: '作業說明', campusTodoSubmissionRequirements: '提交要求', campusTodoAttachments: '附件', campusTodoSource: '資訊來源', campusTodoPlatformUpdated: '平台更新時間', campusTodoLastRead: '本機讀取時間', campusTodoFieldUnavailable: '平台未提供此項內容', campusTodoPlatformUpdateUnavailable: '平台未提供更新時間', campusTodoDetailsLoading: '正在核對官方課程活動…', campusTodoBusy: '校園資訊正在讀取，請稍後再查看作業詳情。', campusTodoNoCourseId: '待辦列表未返回課程編號，無法安全匹配課程活動詳情。', campusTodoNoExactMatch: '官方課程活動列表中沒有找到 ID 完全一致的記錄。為避免錯配，未用其他活動填充詳情。', campusTodoSummaryOnly: '官方介面返回的仍是待辦摘要，沒有返回作業詳情欄位。', campusTodoPartialDetail: '以下只顯示官方介面實際返回的欄位，缺失項不會推測。', campusTodoOpenOriginal: '開啟學在浙大官方入口', campusTodoOriginalIsGeneric: '待辦記錄沒有提供作業專屬連結，以下為學在浙大官方入口。',
   campusReadOnly: '僅讀取，帳號和校園資料僅保存在本機。', campusRefresh: '讀取校園資訊', campusWebVpn: '自動讀取（含 WebVPN）', campusWebVpnOpened: '已嘗試應用內 WebVPN 自動登入。', campusLoading: '正在讀取校園資訊…', campusUpdated: '校園資訊已更新。', campusPartial: '校園資訊已更新，但部分模組讀取失敗。', campusNeedCredentials: '請先填寫學號和校園密碼。', campusOverview: '概覽', campusSchedule: '課表', campusExams: '考試', campusGrades: '成績', campusTodos: '待辦', campusCoursesCount: '門課程', campusExamsCount: '場考試', campusGradesCount: '筆成績', campusTodosCount: '項待辦', campusGpa: '均績（近似）', campusTotalCredit: '總學分', campusCompletedCredit: '已修學分', campusEarnedCredit: '取得學分', campusYearLevel: '年級', campusAcademicYear: '讀取學年', campusTerm: '學期', campusAutumnTerm: '秋冬學期', campusSpringTerm: '春夏學期', campusCourseCredit: '課程學分', campusCourseCompleted: '已有成績', campusPublic: '院系資料', campusPublicHint: '教師與院系公開資料，僅來自官方頁面', campusPublicSearchPlaceholder: '搜尋教師姓名或院系，例如「莫群」', campusPublicSearch: '查詢', campusPublicLoading: '正在讀取官方資料…', campusPublicEmpty: '官方資料中沒有找到符合結果', campusPublicOpen: '開啟官方主頁', campusUpcoming: '尚未開始的考試', campusFinished: '已結束的考試', campusUnknown: '時間待定', campusEmpty: '暫無資料', campusNoLocation: '地點未提供', campusNoDeadline: '截止時間未提供', campusNotices: '公告', campusNoticeHint: '公開通知，無需校園登入', campusNoticeSearchPlaceholder: '搜尋學院、選課、考試、開學等公告', campusNoticeSearch: '搜尋', campusNoticeLoading: '正在讀取官方公告…', campusNoticeEmpty: '暫無符合公告', campusNoticeOpen: '查看原文', campusNoticePrevious: '上一頁', campusNoticeNext: '下一頁', studentId: '學號',
   studentPassword: '密碼', passwordPlaceholder: '輸入校園密碼', showPassword: '顯示', hidePassword: '隱藏', saved: '已儲存',
   campusCalendarOpen: '在應用程式內查看本科生院校曆', campusCalendarHint: '完整學年安排 · PDF', campusCalendarLoading: '正在載入校曆…', campusCalendarError: '校曆暫時無法開啟，請檢查網絡後重試。', campusCalendarRetry: '重試校曆', campusCalendarZoom: '校曆縮放', campusCalendarZoomOut: '縮小校曆', campusCalendarZoomIn: '放大校曆', campusCalendarFitWidth: '適合寬度', campusCalendarPinchHint: '也可雙指縮放',
@@ -360,6 +403,7 @@ const ENGLISH: UiCopy = {
   ...SIMPLIFIED,
   campusSecureStorageWarning: 'Some credentials could not be migrated to Android secure storage; the old copies were preserved. Re-enter them and tap Save on the campus page. Do not uninstall the app yet.',
   campusSecureStorageDiagnostic: 'Secure storage diagnostic',
+  campusTodoDetails: 'Assignment details', campusTodoOpenDetails: 'View details', campusTodoCloseDetails: 'Hide details', campusTodoCourse: 'Course', campusTodoDeadline: 'Due date', campusTodoDescription: 'Description', campusTodoSubmissionRequirements: 'Submission requirements', campusTodoAttachments: 'Attachments', campusTodoSource: 'Source', campusTodoPlatformUpdated: 'Platform updated', campusTodoLastRead: 'Last read on this device', campusTodoFieldUnavailable: 'Not provided by the platform', campusTodoPlatformUpdateUnavailable: 'Platform update time not provided', campusTodoDetailsLoading: 'Checking official course activity…', campusTodoBusy: 'Campus information is loading. Try the assignment details again shortly.', campusTodoNoCourseId: 'The to-do list did not provide a course ID, so the activity cannot be safely matched.', campusTodoNoExactMatch: 'No exact ID match was found in the official course activities. Other activities were not substituted.', campusTodoSummaryOnly: 'The official endpoint returned a to-do summary, not assignment detail fields.', campusTodoPartialDetail: 'Only fields returned by the official endpoints are shown; missing details are not inferred.', campusTodoOpenOriginal: 'Open official 学在浙大', campusTodoOriginalIsGeneric: 'No assignment-specific link was provided. This opens the official course platform.',
   showPassword: 'Show', hidePassword: 'Hide',
   campusCalendarOpen: 'View undergraduate calendar in app', campusCalendarHint: 'Full academic-year schedule · PDF', campusCalendarLoading: 'Loading calendar…', campusCalendarError: 'The calendar could not be opened. Check your connection and try again.', campusCalendarRetry: 'Retry calendar', campusCalendarZoom: 'Calendar zoom', campusCalendarZoomOut: 'Zoom out', campusCalendarZoomIn: 'Zoom in', campusCalendarFitWidth: 'Fit width', campusCalendarPinchHint: 'Pinch with two fingers',
   appName: 'Zaichang', connected: 'Connected', waiting: 'Waiting', offline: 'Offline', history: 'History',

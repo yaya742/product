@@ -1,3 +1,5 @@
+import type { CampusTodoAttachment } from './todoDetails';
+
 export type MobileMessageRole = 'user' | 'assistant';
 export type MobileLanguage = 'zh-CN' | 'zh-TW' | 'en';
 export type MobileTheme = 'light' | 'dark';
@@ -97,6 +99,10 @@ export interface CampusActivity {
   deadline: string;
   status: string;
   url: string;
+  description?: string;
+  submissionRequirements?: string;
+  attachments?: CampusTodoAttachment[];
+  updatedAt?: string;
 }
 
 export interface CampusExam {
@@ -173,6 +179,13 @@ export interface CampusTodo {
   course: string;
   deadline: string;
   status: string;
+  courseId?: string;
+  description?: string;
+  submissionRequirements?: string;
+  attachments?: CampusTodoAttachment[];
+  source?: string;
+  sourceUrl?: string;
+  updatedAt?: string;
 }
 
 export interface CampusPracticeSummary {
