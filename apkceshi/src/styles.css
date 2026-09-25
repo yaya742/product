@@ -312,7 +312,6 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .campus-record small { color: var(--text-faint); font-size: 10px; line-height: 1.45; }
 .campus-todo-item { border-top: 1px solid var(--line); }
 .campus-todo-summary { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 0; color: var(--text); border: 0; background: transparent; text-align: left; }
-.campus-todo-summary:disabled { opacity: .6; }
 .campus-todo-summary-copy { display: grid; gap: 5px; min-width: 0; flex: 1; }
 .campus-todo-summary-copy strong { color: var(--text); font-size: 14px; line-height: 1.45; font-weight: 600; }
 .campus-todo-summary-copy > span { color: var(--text-soft); font-size: 12px; line-height: 1.5; }
@@ -327,7 +326,8 @@ input::placeholder, textarea::placeholder { color: var(--text-faint); }
 .campus-todo-detail dt { color: var(--text-soft); font-size: 10px; line-height: 1.5; }
 .campus-todo-detail dd { min-width: 0; margin: 0; color: var(--text); font-size: 11px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
 .campus-todo-detail dd ul { display: grid; gap: 5px; margin: 0; padding-left: 16px; }
-.campus-todo-attachment-link, .campus-todo-original-button { width: fit-content; padding: 0; color: var(--accent); border: 0; background: transparent; text-align: left; font-size: 11px; line-height: 1.5; text-decoration: underline; }
+.campus-todo-attachment-link, .campus-todo-original-button, .campus-todo-retry-button { width: fit-content; padding: 0; color: var(--accent); border: 0; background: transparent; text-align: left; font-size: 11px; line-height: 1.5; text-decoration: underline; }
+.campus-todo-retry-button:disabled { opacity: .55; }
 .campus-todo-reason { margin: 0; padding: 9px 10px; color: var(--text-soft); border-radius: 9px; background: var(--surface); font-size: 10px; line-height: 1.5; }
 .campus-activity-record { gap: 7px; padding: 15px 0; }
 .campus-activity-record strong { font-size: 15px; line-height: 1.5; }

@@ -13,6 +13,7 @@ import { cancelLocalReminder, scheduleLocalReminder, withNotificationId } from '
 import { clearMobileState, hydrateMobileSecrets, loadMobileState, mergeBackgroundCampusData, persistApiKey, persistCampusCredentials, persistMobileSecrets, saveMobileState } from './runtime/storage';
 import { secureStorageDiagnostic } from './runtime/secureStorage';
 import { isMobileVmSession, launchMobileVm } from './runtime/mobileVm';
+import { campusTodoDetailKey, CampusTodoDetailsSession, type CampusTodoDetailState } from './runtime/todoDetailSession';
 import {
   createConversation,
   createInitialState,
@@ -498,14 +499,11 @@ export function App() {
   const [campusMessage, setCampusMessage] = useState('');
   const [showCampusPassword, setShowCampusPassword] = useState(false);
   const [campusCalendarViewerUrl, setCampusCalendarViewerUrl] = useState<string | null>(null);
-  const todoDetailRequestRef = useRef(0);
-  const [todoDetail, setTodoDetail] = useState<{
-    todo: CampusTodo;
-    loading: boolean;
-    reason: string;
-    readAt: string;
-    source: string;
-  } | null>(null);
+  const todoDetailsSessionRef = useRef<CampusTodoDetailsSession | null>(null);
+  if (!todoDetailsSessionRef.current) todoDetailsSessionRef.current = new CampusTodoDetailsSession();
+  const lastTodoRefreshAtRef = useRef(initial.campus?.fetchedAt || '');
+  const [expandedTodoDetails, setExpandedTodoDetails] = useState<Set<string>>(() => new Set());
+  const [todoDetailsById, setTodoDetailsById] = useState<Record<string, CampusTodoDetailState>>({});
   const initialAcademicTerm = currentAcademicTerm();
   const [campusTab, setCampusTab] = useState<'overview' | 'schedule' | 'courses' | 'learning' | 'activities' | 'exams' | 'grades' | 'gpa' | 'todos' | 'practice' | 'holidays' | 'notices' | 'public'>('overview');
   const [campusGradeScope, setCampusGradeScope] = useState('current');
@@ -570,6 +568,12 @@ export function App() {
     }).catch(() => {});
     return () => { cancelled = true; };
   }, [secretsHydrated]);
+
+  useEffect(() => {
+    const campus = state.campus;
+    if (!campus?.refreshedDomains?.includes('todos')) return;
+    invalidateTodoDetailsAfterRefresh(campus.fetchedAt);
+  }, [state.campus?.fetchedAt, state.campus?.refreshedDomains]);
 
   useEffect(() => {
     if (!state.campus) return;
@@ -697,6 +701,14 @@ export function App() {
     setState((current) => ({ ...current, profile: { ...current.profile, ...partial } }));
   }
 
+  function invalidateTodoDetailsAfterRefresh(fetchedAt: string, force = false) {
+    if (!fetchedAt || (!force && lastTodoRefreshAtRef.current === fetchedAt)) return;
+    lastTodoRefreshAtRef.current = fetchedAt;
+    todoDetailsSessionRef.current?.invalidate();
+    setTodoDetailsById({});
+    setExpandedTodoDetails(new Set());
+  }
+
   function campusErrorMessage(error: unknown): string {
     if (error instanceof CampusError) return error.message;
     return state.profile.language === 'en' ? 'Campus information could not be loaded. Please try again.' : state.profile.language === 'zh-TW' ? '無法讀取校園資訊，請稍後再試。' : '暂时无法读取校园信息，请稍后重试。';
@@ -717,6 +729,7 @@ export function App() {
     setCampusMessage(copy.campusLoading);
     try {
       const campus = await readCampusInfo(state.profile.studentId, state.profile.studentPassword, { academicYear: campusAcademicYear, term: campusTerm });
+      if (campus.refreshedDomains?.includes('todos')) invalidateTodoDetailsAfterRefresh(campus.fetchedAt, true);
       const nextState = { ...state, campus, campusAutoReadEnabled: true };
       let secretsSaved = true;
       try {
@@ -813,74 +826,38 @@ export function App() {
     }
   }
 
-  async function toggleTodoDetails(todo: CampusTodo) {
-    if (todoDetail?.todo.id === todo.id) {
-      todoDetailRequestRef.current += 1;
-      setTodoDetail(null);
-      return;
-    }
-
-    const requestId = ++todoDetailRequestRef.current;
-    const readAt = new Date().toISOString();
-    const source = todo.source || '学在浙大待办列表';
-    const initialDetail = {
-      todo,
-      loading: false,
-      reason: '',
-      readAt,
-      source,
-    };
-    setTodoDetail(initialDetail);
-
-    if (!todo.courseId) {
-      setTodoDetail({ ...initialDetail, reason: copy.campusTodoNoCourseId });
-      return;
-    }
-    if (campusReadInFlightRef.current) {
-      setTodoDetail({ ...initialDetail, reason: copy.campusTodoBusy });
-      return;
-    }
-
-    campusReadInFlightRef.current = true;
-    setTodoDetail({ ...initialDetail, loading: true });
-    try {
-      const activities = await readLearningActivities(state.profile.studentId, state.profile.studentPassword, todo.courseId);
-      if (requestId !== todoDetailRequestRef.current) return;
-      const activity = activities.find((item) => item.id === todo.id);
-      const checkedAt = new Date().toISOString();
-      if (!activity) {
-        setTodoDetail({ ...initialDetail, readAt: checkedAt, reason: copy.campusTodoNoExactMatch });
-        return;
+  function loadTodoDetails(todo: CampusTodo, retry = false) {
+    const session = todoDetailsSessionRef.current;
+    if (!session) return;
+    const request = session.load(todo, async (courseId) => {
+      if (campusReadInFlightRef.current) throw new Error(copy.campusTodoBusy);
+      campusReadInFlightRef.current = true;
+      try {
+        return await readLearningActivities(state.profile.studentId, state.profile.studentPassword, courseId);
+      } finally {
+        campusReadInFlightRef.current = false;
       }
+    }, {
+      noCourseId: copy.campusTodoNoCourseId,
+      noExactMatch: copy.campusTodoNoExactMatch,
+      summaryOnly: copy.campusTodoSummaryOnly,
+    }, retry);
+    setTodoDetailsById(session.snapshot());
+    void request.then(() => setTodoDetailsById(session.snapshot()));
+  }
 
-      const mergedTodo: CampusTodo = {
-        ...todo,
-        deadline: todo.deadline || activity.deadline,
-        ...(todo.description || !activity.description ? {} : { description: activity.description }),
-        ...(todo.submissionRequirements || !activity.submissionRequirements ? {} : { submissionRequirements: activity.submissionRequirements }),
-        ...(todo.attachments?.length || !activity.attachments?.length ? {} : { attachments: activity.attachments }),
-        ...(!todo.updatedAt && activity.updatedAt ? { updatedAt: activity.updatedAt } : {}),
-        sourceUrl: todo.sourceUrl && todo.sourceUrl !== COURSES_HOME_URL ? todo.sourceUrl : activity.url || todo.sourceUrl || COURSES_HOME_URL,
-      };
-      const hasAnyDetail = Boolean(mergedTodo.description || mergedTodo.submissionRequirements || mergedTodo.attachments?.length);
-      setTodoDetail({
-        todo: mergedTodo,
-        loading: false,
-        reason: hasAnyDetail ? '' : copy.campusTodoSummaryOnly,
-        readAt: checkedAt,
-        source: `${source} · 学在浙大课程活动接口`,
+  function toggleTodoDetails(todo: CampusTodo) {
+    const key = campusTodoDetailKey(todo);
+    if (expandedTodoDetails.has(key)) {
+      setExpandedTodoDetails((current) => {
+        const next = new Set(current);
+        next.delete(key);
+        return next;
       });
-    } catch (error) {
-      if (requestId !== todoDetailRequestRef.current) return;
-      const message = error instanceof Error ? error.message.trim().slice(0, 240) : '';
-      setTodoDetail({
-        ...initialDetail,
-        readAt: new Date().toISOString(),
-        reason: message || copy.campusTodoSummaryOnly,
-      });
-    } finally {
-      campusReadInFlightRef.current = false;
+      return;
     }
+    setExpandedTodoDetails((current) => new Set(current).add(key));
+    loadTodoDetails(todo);
   }
 
   async function openCampusTodoOriginal(value: string | undefined) {
@@ -909,10 +886,7 @@ export function App() {
 
   function selectCampusTab(tab: 'overview' | 'schedule' | 'courses' | 'learning' | 'activities' | 'exams' | 'grades' | 'gpa' | 'todos' | 'practice' | 'holidays' | 'notices' | 'public') {
     setCampusTab(tab);
-    if (tab !== 'todos') {
-      todoDetailRequestRef.current += 1;
-      setTodoDetail(null);
-    }
+    if (tab !== 'todos') setExpandedTodoDetails(new Set());
     if (tab === 'notices' && !notices.length && !noticesLoading) void refreshNotices('', 1);
   }
 
@@ -1960,16 +1934,16 @@ export function App() {
                   <section className="profile-section campus-data-card">
                     <div className="setting-label"><strong>{copy.campusTodos}</strong><span>{campus.todos.length ? `${campus.todos.length}` : copy.campusEmpty}</span></div>
                     {campus.todos.length ? campus.todos.map((todo) => {
-                      const expanded = todoDetail?.todo.id === todo.id;
-                      const detail = expanded ? todoDetail : null;
+                      const todoKey = campusTodoDetailKey(todo);
+                      const expanded = expandedTodoDetails.has(todoKey);
+                      const detail = expanded ? todoDetailsById[todoKey] : null;
                       const detailTodo = detail?.todo || todo;
                       return (
-                        <div className="campus-todo-item" key={todo.id}>
+                        <div className="campus-todo-item" key={todoKey}>
                           <button
                             className="campus-todo-summary"
                             type="button"
                             aria-expanded={expanded}
-                            disabled={campusLoading || todoDetail?.loading === true}
                             onClick={() => void toggleTodoDetails(todo)}
                           >
                             <span className="campus-todo-summary-copy">
@@ -1981,7 +1955,7 @@ export function App() {
                             <span className="campus-todo-chevron" aria-hidden="true">{expanded ? '−' : '+'}</span>
                           </button>
                           {detail && (
-                            <div className="campus-todo-detail">
+                            <div className="campus-todo-detail" aria-busy={detail.loading}>
                               <h3>{copy.campusTodoDetails}</h3>
                               {detail.loading && <p className="connection-message">{copy.campusTodoDetailsLoading}</p>}
                               <p className="campus-todo-detail-note">{copy.campusTodoPartialDetail}</p>
@@ -2007,6 +1981,7 @@ export function App() {
                                 <div><dt>{copy.campusTodoLastRead}</dt><dd>{formatCampusUpdated(detail.readAt, state.profile.language)}</dd></div>
                               </dl>
                               {detail.reason && <p className="campus-todo-reason" role="status">{detail.reason}</p>}
+                              {detail.reason && todo.courseId && <button type="button" className="campus-todo-retry-button" disabled={detail.loading} onClick={() => loadTodoDetails(todo, true)}>{copy.campusTodoRetryDetails}</button>}
                               {detailTodo.sourceUrl === COURSES_HOME_URL && <p className="campus-todo-original-note">{copy.campusTodoOriginalIsGeneric}</p>}
                               <button type="button" className="campus-todo-original-button" onClick={() => void openCampusTodoOriginal(detailTodo.sourceUrl)}>{copy.campusTodoOpenOriginal}</button>
                             </div>
