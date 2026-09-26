@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { CampusActivity, CampusTodo } from '../src/runtime/types.ts';
-import { normalizeOfficialCourseUrl, normalizeTodoDetails, officialActivityUrl } from '../src/runtime/todoDetails.ts';
+import { normalizeOfficialCourseUrl, normalizeTodoDetails, officialActivityUrl, officialTodoPageUrl } from '../src/runtime/todoDetails.ts';
 import { campusTodoDetailKey, CampusTodoDetailsSession } from '../src/runtime/todoDetailSession.ts';
 import { runWithSingleFallback } from '../src/runtime/singleFallback.ts';
 
@@ -242,4 +242,17 @@ test('normalizes the verified official activity detail shape and attachment refe
 test('builds direct links only from numeric exact course and activity IDs', () => {
   assert.equal(officialActivityUrl('102844', '1191531'), 'https://courses.zju.edu.cn/course/102844/learning-activity#/1191531');
   assert.equal(officialActivityUrl('course-1', 'assignment-1'), undefined);
+});
+
+test('uses the exact official activity page when only a generic or untrusted todo URL is available', () => {
+  const expected = 'https://courses.zju.edu.cn/course/102844/learning-activity#/1191531';
+  assert.equal(officialTodoPageUrl('https://courses.zju.edu.cn/user/index', '102844', '1191531'), expected);
+  assert.equal(officialTodoPageUrl('https://example.com/fake', '102844', '1191531'), expected);
+  assert.equal(officialTodoPageUrl(undefined, '102844', '1191531'), expected);
+});
+
+test('preserves a trusted item-specific URL and falls back to the platform home only without verified IDs', () => {
+  const specific = 'https://courses.zju.edu.cn/course/102844/learning-activity#/1191531';
+  assert.equal(officialTodoPageUrl(specific, '102844', '1191531'), specific);
+  assert.equal(officialTodoPageUrl('https://courses.zju.edu.cn/user/index', 'course-x', 'activity-y'), 'https://courses.zju.edu.cn/user/index');
 });

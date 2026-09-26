@@ -64,6 +64,14 @@ export function officialActivityUrl(courseId: string, activityId: string): strin
     .replace('{activityId}', encodeURIComponent(activityId)));
 }
 
+export function officialTodoPageUrl(sourceUrl: unknown, courseId: string, activityId: string): string {
+  const normalizedSource = normalizeOfficialCourseUrl(sourceUrl);
+  const sourcePath = normalizedSource ? new URL(normalizedSource).pathname.replace(/\/$/, '') : '';
+  const hasSpecificSource = Boolean(normalizedSource && sourcePath !== '/user/index');
+  if (hasSpecificSource) return normalizedSource!;
+  return officialActivityUrl(courseId, activityId) || normalizedSource || COURSES_HOME;
+}
+
 function attachmentUrl(record: Record<string, unknown>): string | undefined {
   const directUrl = normalizeOfficialCourseUrl(record.url ?? record.href ?? record.link);
   if (directUrl) return directUrl;

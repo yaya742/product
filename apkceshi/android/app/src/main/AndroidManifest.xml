@@ -25,6 +25,12 @@
 
         </activity>
 
+        <activity
+            android:name=".CampusOfficialPageActivity"
+            android:exported="false"
+            android:label="学在浙大"
+            android:theme="@style/AppTheme.NoActionBar" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

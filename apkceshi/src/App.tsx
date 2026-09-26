@@ -7,12 +7,14 @@ import { CampusCalendarViewer } from './CampusCalendarViewer';
 import { runMobileAgent, type AgentStatus } from './runtime/agent';
 import { completeDeepSeek, DeepSeekError, testDeepSeekConnection, translateText } from './runtime/deepseek';
 import { CampusError, COURSES_HOME_URL, currentAcademicTerm, readCampusInfo, readLearningActivities, readLearningActivityDetails, readPublicCollegeInfo, readPublicNotices, type CampusPublicInfoResult } from './runtime/campus';
+import { isAndroidNative, openCampusOfficialPage } from './runtime/campusOfficialPage';
 import { enableCampusBackgroundSync, getCampusBackgroundSnapshot } from './runtime/campusBackgroundSync';
 import { getUiCopy } from './runtime/i18n';
 import { cancelLocalReminder, scheduleLocalReminder, withNotificationId } from './runtime/reminders';
 import { clearMobileState, hydrateMobileSecrets, loadMobileState, mergeBackgroundCampusData, persistApiKey, persistCampusCredentials, persistMobileSecrets, saveMobileState } from './runtime/storage';
 import { secureStorageDiagnostic } from './runtime/secureStorage';
 import { isMobileVmSession, launchMobileVm } from './runtime/mobileVm';
+import { normalizeOfficialCourseUrl, officialTodoPageUrl } from './runtime/todoDetails';
 import { campusTodoDetailKey, CampusTodoDetailsSession, type CampusTodoDetailState } from './runtime/todoDetailSession';
 import {
   createConversation,
@@ -497,6 +499,7 @@ export function App() {
   const [campusSaved, setCampusSaved] = useState(false);
   const [campusLoading, setCampusLoading] = useState(false);
   const [campusMessage, setCampusMessage] = useState('');
+  const [campusTodoLinkErrors, setCampusTodoLinkErrors] = useState<Record<string, string>>({});
   const [showCampusPassword, setShowCampusPassword] = useState(false);
   const [campusCalendarViewerUrl, setCampusCalendarViewerUrl] = useState<string | null>(null);
   const todoDetailsSessionRef = useRef<CampusTodoDetailsSession | null>(null);
@@ -860,12 +863,16 @@ export function App() {
     loadTodoDetails(todo);
   }
 
-  async function openCampusTodoOriginal(value: string | undefined) {
-    const normalized = normalizeExternalUrl(value || COURSES_HOME_URL);
+  async function openCampusTodoOriginal(value: string | undefined, errorKey: string) {
+    const normalized = normalizeOfficialCourseUrl(value);
     if (!normalized) return;
-    const parsed = new URL(normalized);
-    if (parsed.protocol !== 'https:' || parsed.hostname.toLowerCase() !== 'courses.zju.edu.cn') return;
-    await openExternalUrl(parsed.toString());
+    try {
+      if (isAndroidNative()) await openCampusOfficialPage(normalized);
+      else await openExternalUrl(normalized);
+      setCampusTodoLinkErrors((current) => ({ ...current, [errorKey]: '' }));
+    } catch {
+      setCampusTodoLinkErrors((current) => ({ ...current, [errorKey]: copy.campusTodoOpenError }));
+    }
   }
 
   async function openNoticeInBrowser(url: string) {
@@ -1938,6 +1945,7 @@ export function App() {
                       const expanded = expandedTodoDetails.has(todoKey);
                       const detail = expanded ? todoDetailsById[todoKey] : null;
                       const detailTodo = detail?.todo || todo;
+                      const officialTodoUrl = officialTodoPageUrl(detailTodo.sourceUrl, todo.courseId || '', todo.id);
                       return (
                         <div className="campus-todo-item" key={todoKey}>
                           <button
@@ -1970,7 +1978,7 @@ export function App() {
                                     <ul>{detailTodo.attachments.map((attachment, index) => (
                                       <li key={`${attachment.name}-${index}`}>
                                         {attachment.url
-                                          ? <button type="button" className="campus-todo-attachment-link" onClick={() => void openCampusTodoOriginal(attachment.url)}>{attachment.name}</button>
+                                          ? <button type="button" className="campus-todo-attachment-link" onClick={() => void openCampusTodoOriginal(attachment.url, `${todoKey}:attachment:${index}`)}>{attachment.name}</button>
                                           : attachment.name}
                                       </li>
                                     ))}</ul>
@@ -1982,8 +1990,9 @@ export function App() {
                               </dl>
                               {detail.reason && <p className="campus-todo-reason" role="status">{detail.reason}</p>}
                               {detail.reason && todo.courseId && <button type="button" className="campus-todo-retry-button" disabled={detail.loading} onClick={() => loadTodoDetails(todo, true)}>{copy.campusTodoRetryDetails}</button>}
-                              {detailTodo.sourceUrl === COURSES_HOME_URL && <p className="campus-todo-original-note">{copy.campusTodoOriginalIsGeneric}</p>}
-                              <button type="button" className="campus-todo-original-button" onClick={() => void openCampusTodoOriginal(detailTodo.sourceUrl)}>{copy.campusTodoOpenOriginal}</button>
+                              {officialTodoUrl === COURSES_HOME_URL && <p className="campus-todo-original-note">{copy.campusTodoOriginalIsGeneric}</p>}
+                              <button type="button" className="campus-todo-original-button" onClick={() => void openCampusTodoOriginal(officialTodoUrl, todoKey)}>{copy.campusTodoOpenOriginal}</button>
+                              {campusTodoLinkErrors[todoKey] && <p className="campus-todo-reason" role="status">{campusTodoLinkErrors[todoKey]}</p>}
                             </div>
                           )}
                         </div>

@@ -21,6 +21,7 @@ import type {
 } from './types';
 import { normalizeOfficialCourseUrl, normalizeTodoDetails, officialActivityUrl } from './todoDetails';
 import { runWithSingleFallback } from './singleFallback';
+import { mirrorCampusCookies } from './campusOfficialPage';
 
 const LOGIN_URL = 'https://zjuam.zju.edu.cn/cas/login';
 const PUBLIC_KEY_URL = 'https://zjuam.zju.edu.cn/cas/v2/getPubKey';
@@ -366,49 +367,16 @@ async function persistNativeResponseCookies(headers: Record<string, string>, sou
   if (!setCookie) return false;
   let source: URL;
   try { source = new URL(sourceUrl); } catch { return false; }
-
-  for (const rawCookie of splitSetCookieHeader(setCookie)) {
-    const segments = rawCookie.split(';').map((segment) => segment.trim()).filter(Boolean);
-    const pair = segments.shift();
-    if (!pair) continue;
-    const separator = pair.indexOf('=');
-    if (separator <= 0) continue;
-    const key = pair.slice(0, separator).trim();
-    const value = pair.slice(separator + 1).trim();
-    if (!key) continue;
-
-    let path = defaultCookiePath(source.pathname);
-    let expires = '';
-    let remove = !value;
-    for (const segment of segments) {
-      const attributeSeparator = segment.indexOf('=');
-      const attribute = (attributeSeparator >= 0 ? segment.slice(0, attributeSeparator) : segment).trim().toLowerCase();
-      const attributeValue = attributeSeparator >= 0 ? segment.slice(attributeSeparator + 1).trim() : '';
-      if (attribute === 'path' && attributeValue.startsWith('/')) path = attributeValue;
-      if (attribute === 'expires' && attributeValue) {
-        expires = attributeValue;
-        const timestamp = Date.parse(attributeValue);
-        if (Number.isFinite(timestamp) && timestamp <= Date.now()) remove = true;
-      }
-      if (attribute === 'max-age') {
-        const seconds = Number(attributeValue);
-        if (Number.isFinite(seconds) && seconds <= 0) remove = true;
-      }
-    }
-    if (source.hostname.toLowerCase() === WEBVPN_HOST) path = '/';
-
-    try {
-      if (remove) {
-        await CapacitorCookies.deleteCookie({ url: sourceUrl, key });
-      } else {
-        await CapacitorCookies.setCookie({ url: sourceUrl, key, value, path, ...(expires ? { expires } : {}) });
-      }
-    } catch {
-      // The JS CookieJar remains the fallback when the native cookie bridge
-      // is unavailable on an older Capacitor runtime.
-    }
+  if (source.protocol !== 'https:' || !TRUSTED_HOSTS.has(source.hostname.toLowerCase()) && source.hostname.toLowerCase() !== WEBVPN_HOST) return false;
+  try {
+    // Preserve the complete Set-Cookie attributes, especially HttpOnly,
+    // Secure, SameSite, Domain, and Max-Age, in Android's shared WebView store.
+    await mirrorCampusCookies(sourceUrl, splitSetCookieHeader(setCookie));
+    return true;
+  } catch {
+    // The request-local JS CookieJar remains available if native mirroring fails.
+    return false;
   }
-  return true;
 }
 
 function defaultCookiePath(pathname: string): string {

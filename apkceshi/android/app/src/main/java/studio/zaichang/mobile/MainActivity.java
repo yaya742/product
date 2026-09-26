@@ -10,6 +10,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(IsolatedHttp.class);
         registerPlugin(SecureStoragePlugin.class);
         registerPlugin(CampusBackgroundSyncPlugin.class);
+        registerPlugin(CampusOfficialPagePlugin.class);
         super.onCreate(savedInstanceState);
     }
 }
