@@ -1,5 +1,6 @@
 package studio.zaichang.mobile;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -20,6 +21,15 @@ public class CampusOfficialUrlTest {
         assertFalse(CampusOfficialUrl.isCoursePage("https://user@courses.zju.edu.cn/course/1"));
         assertFalse(CampusOfficialUrl.isCoursePage("https://courses.zju.edu.cn:8443/course/1"));
         assertFalse(CampusOfficialUrl.parseTrustedHttps("https://evil.example/") != null);
+    }
+
+    @Test
+    public void sanitizesAttachmentNamesAndAddsAUniqueSuffix() {
+        assertEquals("lab__report__12345.docx", CampusOfficialUrl.safeAttachmentFileName("lab/\\report?.docx", 12345));
+        assertEquals("assignment-attachment_7", CampusOfficialUrl.safeAttachmentFileName("../", 7));
+        StringBuilder longName = new StringBuilder();
+        for (int index = 0; index < 300; index++) longName.append('x');
+        assertTrue(CampusOfficialUrl.safeAttachmentFileName(longName + ".pdf", 1).length() <= 180);
     }
 
     @Test

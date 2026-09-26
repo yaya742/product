@@ -31,6 +31,22 @@ final class CampusOfficialUrl {
         return uri != null && "courses.zju.edu.cn".equalsIgnoreCase(uri.getHost());
     }
 
+    static String safeAttachmentFileName(String value, long uniqueSuffix) {
+        String fileName = value == null ? "" : value.replaceAll("[\\p{Cntrl}/\\\\:*?\"<>|]", "_").trim();
+        fileName = fileName.replaceAll("^[. ]+", "").replaceAll("[. ]+$", "");
+        if (fileName.replaceAll("[._ -]", "").isEmpty()) fileName = "assignment-attachment";
+
+        int extensionIndex = fileName.lastIndexOf('.');
+        if (extensionIndex <= 0) extensionIndex = fileName.length();
+        String extension = fileName.substring(extensionIndex);
+        if (extension.length() > 24) extension = extension.substring(0, 24);
+        String suffix = "_" + Math.max(0L, uniqueSuffix);
+        int maxBaseLength = Math.max(1, 180 - extension.length() - suffix.length());
+        String baseName = fileName.substring(0, extensionIndex);
+        if (baseName.length() > maxBaseLength) baseName = baseName.substring(0, maxBaseLength);
+        return baseName + suffix + extension;
+    }
+
     static boolean isValidSetCookie(String sourceUrl, String cookie) {
         URI uri = parseTrustedHttps(sourceUrl);
         if (uri == null || cookie == null || cookie.isEmpty() || cookie.length() > 8192 || cookie.indexOf('\r') >= 0 || cookie.indexOf('\n') >= 0) return false;

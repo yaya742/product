@@ -2,6 +2,7 @@ import { Capacitor, registerPlugin } from '@capacitor/core';
 
 interface CampusOfficialPagePlugin {
   open(options: { url: string }): Promise<void>;
+  downloadAttachment(options: { url: string; fileName: string }): Promise<void>;
   setCookies(options: { url: string; cookies: string[] }): Promise<void>;
 }
 
@@ -13,6 +14,10 @@ export function isAndroidNative(): boolean {
 
 export async function openCampusOfficialPage(url: string): Promise<void> {
   await CampusOfficialPage.open({ url });
+}
+
+export async function downloadCampusAttachment(url: string, fileName: string): Promise<void> {
+  await CampusOfficialPage.downloadAttachment({ url, fileName });
 }
 
 export async function mirrorCampusCookies(url: string, cookies: string[]): Promise<void> {
