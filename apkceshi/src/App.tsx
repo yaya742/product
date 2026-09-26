@@ -14,7 +14,7 @@ import { cancelLocalReminder, scheduleLocalReminder, withNotificationId } from '
 import { clearMobileState, hydrateMobileSecrets, loadMobileState, mergeBackgroundCampusData, persistApiKey, persistCampusCredentials, persistMobileSecrets, saveMobileState } from './runtime/storage';
 import { secureStorageDiagnostic } from './runtime/secureStorage';
 import { isMobileVmSession, launchMobileVm } from './runtime/mobileVm';
-import { normalizeOfficialCourseUrl, officialTodoPageUrl } from './runtime/todoDetails';
+import { hasOfficialTodoDetails, normalizeOfficialCourseUrl, officialTodoPageUrl } from './runtime/todoDetails';
 import { campusTodoDetailKey, CampusTodoDetailsSession, type CampusTodoDetailState } from './runtime/todoDetailSession';
 import {
   createConversation,
@@ -1945,6 +1945,7 @@ export function App() {
                       const expanded = expandedTodoDetails.has(todoKey);
                       const detail = expanded ? todoDetailsById[todoKey] : null;
                       const detailTodo = detail?.todo || todo;
+                      const hasOfficialDetails = hasOfficialTodoDetails(detailTodo);
                       const officialTodoUrl = officialTodoPageUrl(detailTodo.sourceUrl, todo.courseId || '', todo.id);
                       return (
                         <div className="campus-todo-item" key={todoKey}>
@@ -1966,30 +1967,32 @@ export function App() {
                             <div className="campus-todo-detail" aria-busy={detail.loading}>
                               <h3>{copy.campusTodoDetails}</h3>
                               {detail.loading && <p className="connection-message">{copy.campusTodoDetailsLoading}</p>}
-                              <p className="campus-todo-detail-note">{copy.campusTodoPartialDetail}</p>
+                              {hasOfficialDetails && <p className="campus-todo-detail-note">{copy.campusTodoPartialDetail}</p>}
                               <dl>
                                 <div><dt>{copy.campusTodoCourse}</dt><dd>{detailTodo.course || copy.campusTodoFieldUnavailable}</dd></div>
                                 <div><dt>{copy.campusTodoDeadline}</dt><dd>{detailTodo.deadline ? (formatCampusActivityTime(detailTodo.deadline, '', state.profile.language) || detailTodo.deadline) : copy.campusNoDeadline}</dd></div>
-                                <div><dt>{copy.campusTodoDescription}</dt><dd>{detailTodo.description || copy.campusTodoFieldUnavailable}</dd></div>
-                                <div><dt>{copy.campusTodoSubmissionRequirements}</dt><dd>{detailTodo.submissionRequirements || copy.campusTodoFieldUnavailable}</dd></div>
-                                <div>
-                                  <dt>{copy.campusTodoAttachments}</dt>
-                                  <dd>{detailTodo.attachments?.length ? (
-                                    <ul>{detailTodo.attachments.map((attachment, index) => (
-                                      <li key={`${attachment.name}-${index}`}>
-                                        {attachment.url
-                                          ? <button type="button" className="campus-todo-attachment-link" onClick={() => void openCampusTodoOriginal(attachment.url, `${todoKey}:attachment:${index}`)}>{attachment.name}</button>
-                                          : attachment.name}
-                                      </li>
-                                    ))}</ul>
-                                  ) : copy.campusTodoFieldUnavailable}</dd>
-                                </div>
+                                {hasOfficialDetails && <>
+                                  <div><dt>{copy.campusTodoDescription}</dt><dd>{detailTodo.description || copy.campusTodoFieldUnavailable}</dd></div>
+                                  <div><dt>{copy.campusTodoSubmissionRequirements}</dt><dd>{detailTodo.submissionRequirements || copy.campusTodoFieldUnavailable}</dd></div>
+                                  <div>
+                                    <dt>{copy.campusTodoAttachments}</dt>
+                                    <dd>{detailTodo.attachments?.length ? (
+                                      <ul>{detailTodo.attachments.map((attachment, index) => (
+                                        <li key={`${attachment.name}-${index}`}>
+                                          {attachment.url
+                                            ? <button type="button" className="campus-todo-attachment-link" onClick={() => void openCampusTodoOriginal(attachment.url, `${todoKey}:attachment:${index}`)}>{attachment.name}</button>
+                                            : attachment.name}
+                                        </li>
+                                      ))}</ul>
+                                    ) : copy.campusTodoFieldUnavailable}</dd>
+                                  </div>
+                                </>}
                                 <div><dt>{copy.campusTodoSource}</dt><dd>{detail.source}</dd></div>
-                                <div><dt>{copy.campusTodoPlatformUpdated}</dt><dd>{detailTodo.updatedAt ? formatCampusUpdated(detailTodo.updatedAt, state.profile.language) : copy.campusTodoPlatformUpdateUnavailable}</dd></div>
+                                {detailTodo.updatedAt && <div><dt>{copy.campusTodoPlatformUpdated}</dt><dd>{formatCampusUpdated(detailTodo.updatedAt, state.profile.language)}</dd></div>}
                                 <div><dt>{copy.campusTodoLastRead}</dt><dd>{formatCampusUpdated(detail.readAt, state.profile.language)}</dd></div>
                               </dl>
                               {detail.reason && <p className="campus-todo-reason" role="status">{detail.reason}</p>}
-                              {detail.reason && todo.courseId && <button type="button" className="campus-todo-retry-button" disabled={detail.loading} onClick={() => loadTodoDetails(todo, true)}>{copy.campusTodoRetryDetails}</button>}
+                              {detail.reason && detail.reason !== copy.campusTodoSummaryOnly && todo.courseId && <button type="button" className="campus-todo-retry-button" disabled={detail.loading} onClick={() => loadTodoDetails(todo, true)}>{copy.campusTodoRetryDetails}</button>}
                               {officialTodoUrl === COURSES_HOME_URL && <p className="campus-todo-original-note">{copy.campusTodoOriginalIsGeneric}</p>}
                               <button type="button" className="campus-todo-original-button" onClick={() => void openCampusTodoOriginal(officialTodoUrl, todoKey)}>{copy.campusTodoOpenOriginal}</button>
                               {campusTodoLinkErrors[todoKey] && <p className="campus-todo-reason" role="status">{campusTodoLinkErrors[todoKey]}</p>}

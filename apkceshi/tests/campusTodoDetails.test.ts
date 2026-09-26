@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { CampusActivity, CampusTodo } from '../src/runtime/types.ts';
-import { normalizeOfficialCourseUrl, normalizeTodoDetails, officialActivityUrl, officialTodoPageUrl } from '../src/runtime/todoDetails.ts';
+import { hasOfficialTodoDetails, normalizeOfficialCourseUrl, normalizeTodoDetails, officialActivityUrl, officialTodoPageUrl } from '../src/runtime/todoDetails.ts';
 import { campusTodoDetailKey, CampusTodoDetailsSession } from '../src/runtime/todoDetailSession.ts';
 import { runWithSingleFallback } from '../src/runtime/singleFallback.ts';
 
@@ -223,6 +223,13 @@ test('normalizes explicit details and accepts only trusted HTTPS platform links'
   assert.equal(details.sourceUrl, 'https://courses.zju.edu.cn/course/123/activities/456');
   assert.equal(normalizeOfficialCourseUrl('https://example.com/assignment'), undefined);
   assert.equal(normalizeOfficialCourseUrl('http://courses.zju.edu.cn/assignment'), undefined);
+});
+
+test('detects when the official response contains no assignment body or attachments', () => {
+  assert.equal(hasOfficialTodoDetails({ attachments: [] }), false);
+  assert.equal(hasOfficialTodoDetails({ description: '  ', attachments: [] }), false);
+  assert.equal(hasOfficialTodoDetails({ description: '作业说明', attachments: [] }), true);
+  assert.equal(hasOfficialTodoDetails({ attachments: [{ name: '说明.pdf' }] }), true);
 });
 
 test('normalizes the verified official activity detail shape and attachment references', () => {

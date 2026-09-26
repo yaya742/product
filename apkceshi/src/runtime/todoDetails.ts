@@ -11,6 +11,14 @@ export interface CampusTodoDetails {
   updatedAt?: string;
 }
 
+export function hasOfficialTodoDetails(value: {
+  description?: string;
+  submissionRequirements?: string;
+  attachments?: CampusTodoAttachment[];
+}): boolean {
+  return Boolean(value.description?.trim() || value.submissionRequirements?.trim() || value.attachments?.length);
+}
+
 const COURSES_HOME = 'https://courses.zju.edu.cn/user/index';
 const COURSE_ACTIVITY_PAGE = 'https://courses.zju.edu.cn/course/{courseId}/learning-activity#/{activityId}';
 const TEXT_VALUE_KEYS = ['name', 'filename', 'file_name', 'title', 'text', 'value', 'label'];
