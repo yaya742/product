@@ -57,6 +57,7 @@ export class CampusTodoDetailsSession {
     const active = this.inFlight.get(key);
     if (active) return active;
 
+    if (retry) this.cache.delete(key);
     const cached = this.cache.get(key);
     if (cached && !retry) {
       this.states.set(key, cached);
@@ -74,6 +75,7 @@ export class CampusTodoDetailsSession {
       source: listSource,
     });
 
+    let cacheResult = false;
     const operation = this.queue.then(async (): Promise<CampusTodoDetailState> => {
       const checkedAt = new Date().toISOString();
       if (!todo.courseId) {
@@ -85,6 +87,7 @@ export class CampusTodoDetailsSession {
       if (!activity) {
         return { todo, loading: false, reason: messages.noExactMatch, readAt: new Date().toISOString(), source };
       }
+      cacheResult = true;
 
       const mergedTodo: CampusTodo = {
         ...todo,
@@ -117,7 +120,7 @@ export class CampusTodoDetailsSession {
       source,
     })).then((result) => {
       if (generation === this.generation) {
-        this.cache.set(key, result);
+        if (cacheResult) this.cache.set(key, result);
         this.states.set(key, result);
       }
       return result;

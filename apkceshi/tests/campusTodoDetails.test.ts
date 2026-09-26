@@ -119,6 +119,37 @@ test('incomplete official activity stays incomplete instead of fabricating assig
   assert.equal(result.source, '官方待办 · 学在浙大课程活动接口');
 });
 
+test('transient errors and unmatched activities are not cached; a later reopen can load a matching result', async () => {
+  const session = new CampusTodoDetailsSession();
+  const item = todo('assignment-1');
+  let requests = 0;
+
+  const failed = await session.load(item, async () => {
+    requests += 1;
+    throw new Error('temporary network error');
+  }, messages);
+  assert.equal(failed.reason, 'temporary network error');
+
+  const unmatched = await session.load(item, async () => {
+    requests += 1;
+    return [activity('another-assignment', item.courseId!, { description: '不能错配' })];
+  }, messages);
+  assert.equal(unmatched.reason, messages.noExactMatch);
+
+  const matched = await session.load(item, async (courseId) => {
+    requests += 1;
+    return [activity(item.id, courseId, { description: '重新读取后取得的说明' })];
+  }, messages);
+  assert.equal(matched.todo.description, '重新读取后取得的说明');
+
+  const reopened = await session.load(item, async () => {
+    requests += 1;
+    return [];
+  }, messages);
+  assert.equal(requests, 3, 'only the successfully matched result is reused');
+  assert.equal(reopened.todo.description, '重新读取后取得的说明');
+});
+
 test('activity match requires both the exact course ID and assignment ID', async () => {
   const session = new CampusTodoDetailsSession();
   const item = todo('assignment-1', 'course-1');
