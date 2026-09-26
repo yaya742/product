@@ -3,6 +3,7 @@ import test from 'node:test';
 import type { CampusActivity, CampusTodo } from '../src/runtime/types.ts';
 import { normalizeOfficialCourseUrl, normalizeTodoDetails, officialActivityUrl } from '../src/runtime/todoDetails.ts';
 import { campusTodoDetailKey, CampusTodoDetailsSession } from '../src/runtime/todoDetailSession.ts';
+import { runWithSingleFallback } from '../src/runtime/singleFallback.ts';
 
 const messages = {
   noCourseId: 'missing course id',
@@ -151,6 +152,46 @@ test('transient errors and unmatched activities are not cached; a later reopen c
   }, messages);
   assert.equal(requests, 3, 'only the successfully matched result is reused');
   assert.equal(reopened.todo.description, '重新读取后取得的说明');
+});
+
+test('raw native timeout is shown as a clear retryable network error', async () => {
+  const session = new CampusTodoDetailsSession();
+  const item = todo('assignment-timeout');
+  const result = await session.load(item, async () => { throw new Error('timeout'); }, messages);
+
+  assert.equal(result.reason, '详情接口连接超时，请检查网络后重试。');
+  assert.equal(result.todo.description, undefined);
+});
+
+test('a direct course-platform network timeout retries once through the fallback transport', async () => {
+  let requests = 0;
+  let fallbackActivations = 0;
+  const value = await runWithSingleFallback(
+    async () => {
+      requests += 1;
+      if (requests === 1) throw new Error('timeout');
+      return 'official detail';
+    },
+    async () => { fallbackActivations += 1; },
+    (error) => error instanceof Error && /timeout/i.test(error.message),
+  );
+
+  assert.equal(value, 'official detail');
+  assert.equal(requests, 2);
+  assert.equal(fallbackActivations, 1);
+});
+
+test('fallback transport does not retry authentication or data-integrity failures', async () => {
+  let fallbackActivations = 0;
+  await assert.rejects(
+    runWithSingleFallback(
+      async () => { throw new Error('wrong activity ID'); },
+      async () => { fallbackActivations += 1; },
+      (error) => error instanceof Error && /timeout/i.test(error.message),
+    ),
+    /wrong activity ID/,
+  );
+  assert.equal(fallbackActivations, 0);
 });
 
 test('activity match requires both the exact course ID and assignment ID', async () => {

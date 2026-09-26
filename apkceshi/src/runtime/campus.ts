@@ -20,6 +20,7 @@ import type {
   MobileCampusData,
 } from './types';
 import { normalizeOfficialCourseUrl, normalizeTodoDetails, officialActivityUrl } from './todoDetails';
+import { runWithSingleFallback } from './singleFallback';
 
 const LOGIN_URL = 'https://zjuam.zju.edu.cn/cas/login';
 const PUBLIC_KEY_URL = 'https://zjuam.zju.edu.cn/cas/v2/getPubKey';
@@ -1865,6 +1866,18 @@ function officialActivityId(value: string): boolean {
   return /^\d{1,20}$/.test(value);
 }
 
+async function withLearningActivityStage<T>(stage: string, operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (!(error instanceof CampusError) || error.code !== 'network') throw error;
+    const reason = /timeout|timed\s*out/i.test(error.message)
+      ? '连接超时'
+      : `连接失败：${error.message.trim().slice(0, 160)}`;
+    throw new CampusError(`${stage}${reason}，请检查网络后重试。`, 'network');
+  }
+}
+
 export async function readLearningActivityDetails(studentId: string, password: string, courseId: string, activityId: string): Promise<CampusActivity[]> {
   assertNative();
   const cleanId = studentId.trim();
@@ -1876,35 +1889,54 @@ export async function readLearningActivityDetails(studentId: string, password: s
   activeCampusCredentials = { studentId: cleanId, password };
   activeCookieJar = new CookieJar();
   try {
-    await establishCampusSession(cleanId, password);
-    await ensureCoursesSession();
-    const activities = await readCourseActivities(cleanCourseId);
-    const matched = activities.find((activity) => activity.courseId === cleanCourseId && activity.id === cleanActivityId);
-    if (!matched) return activities;
+    await withLearningActivityStage('校园账号登录', () => establishCampusSession(cleanId, password));
+    let usedWebVpnRetry = false;
+    const readDetails = async (): Promise<CampusActivity[]> => {
+      await withLearningActivityStage('学在浙大登录会话', () => ensureCoursesSession());
+      const activities = await withLearningActivityStage('课程作业列表', () => readCourseActivities(cleanCourseId));
+      const matched = activities.find((activity) => activity.courseId === cleanCourseId && activity.id === cleanActivityId);
+      if (!matched) return activities;
 
-    const detailUrl = COURSE_ACTIVITY_DETAIL_URL.replace('{activityId}', encodeURIComponent(cleanActivityId));
-    const detailPayload = await readOfficialActivityPayload(detailUrl, '学在浙大作业详情');
-    if (Array.isArray(detailPayload)) throw new CampusError('学在浙大作业详情返回了无法识别的数据。', 'response');
-    const detailRecord = detailPayload as Record<string, unknown>;
-    const returnedId = field(detailRecord, ['id', 'activity_id', 'activityId']);
-    const returnedCourseId = field(detailRecord, ['course_id', 'courseId']);
-    if ((returnedId && returnedId !== cleanActivityId) || (returnedCourseId && returnedCourseId !== cleanCourseId)) {
-      throw new CampusError('官方作业详情的课程或作业编号与待办不一致，已停止显示以避免错配。', 'response');
-    }
+      const detailUrl = COURSE_ACTIVITY_DETAIL_URL.replace('{activityId}', encodeURIComponent(cleanActivityId));
+      const detailPayload = await withLearningActivityStage('作业详情接口', () => readOfficialActivityPayload(detailUrl, '学在浙大作业详情'));
+      if (Array.isArray(detailPayload)) throw new CampusError('学在浙大作业详情返回了无法识别的数据。', 'response');
+      const detailRecord = detailPayload as Record<string, unknown>;
+      const returnedId = field(detailRecord, ['id', 'activity_id', 'activityId']);
+      const returnedCourseId = field(detailRecord, ['course_id', 'courseId']);
+      if ((returnedId && returnedId !== cleanActivityId) || (returnedCourseId && returnedCourseId !== cleanCourseId)) {
+        throw new CampusError('官方作业详情的课程或作业编号与待办不一致，已停止显示以避免错配。', 'response');
+      }
 
-    const referencesUrl = COURSE_ACTIVITY_REFERENCES_URL.replace('{activityId}', encodeURIComponent(cleanActivityId));
-    const referencesPayload = await readOfficialActivityPayload(referencesUrl, '学在浙大作业附件');
-    const referenceKeys = ['upload_references', 'references', 'items', 'results'];
-    if (!payloadContainsList(referencesPayload, referenceKeys)) throw new CampusError('学在浙大作业附件接口返回了无法识别的数据。', 'response');
-    const uploadReferences = listFromPayload(referencesPayload, referenceKeys);
-    const normalized = normalizeActivity({ ...matched, ...detailRecord, upload_references: uploadReferences }, cleanCourseId);
-    if (!normalized || normalized.id !== cleanActivityId || normalized.courseId !== cleanCourseId) {
-      throw new CampusError('学在浙大作业详情无法与待办编号精确匹配。', 'response');
+      const referencesUrl = COURSE_ACTIVITY_REFERENCES_URL.replace('{activityId}', encodeURIComponent(cleanActivityId));
+      const referencesPayload = await withLearningActivityStage('作业附件信息接口', () => readOfficialActivityPayload(referencesUrl, '学在浙大作业附件'));
+      const referenceKeys = ['upload_references', 'references', 'items', 'results'];
+      if (!payloadContainsList(referencesPayload, referenceKeys)) throw new CampusError('学在浙大作业附件接口返回了无法识别的数据。', 'response');
+      const uploadReferences = listFromPayload(referencesPayload, referenceKeys);
+      const normalized = normalizeActivity({ ...matched, ...detailRecord, upload_references: uploadReferences }, cleanCourseId);
+      if (!normalized || normalized.id !== cleanActivityId || normalized.courseId !== cleanCourseId) {
+        throw new CampusError('学在浙大作业详情无法与待办编号精确匹配。', 'response');
+      }
+      return [{
+        ...normalized,
+        url: normalized.url || officialActivityUrl(cleanCourseId, cleanActivityId) || '',
+      }];
+    };
+
+    try {
+      return await runWithSingleFallback(
+        readDetails,
+        async () => {
+          usedWebVpnRetry = true;
+          await withLearningActivityStage('校园 WebVPN 登录', () => activateWebVpn());
+        },
+        (error) => campusTransport === 'direct' && error instanceof CampusError && error.code === 'network',
+      );
+    } catch (error) {
+      if (usedWebVpnRetry && error instanceof CampusError && error.code === 'network') {
+        throw new CampusError(`直连读取失败，已通过校园 WebVPN 重试但仍未成功：${error.message}`, 'network');
+      }
+      throw error;
     }
-    return [{
-      ...normalized,
-      url: normalized.url || officialActivityUrl(cleanCourseId, cleanActivityId) || '',
-    }];
   } finally {
     activeCookieJar = null;
     zdbkSessionReady = false;

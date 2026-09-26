@@ -26,7 +26,10 @@ export function findMatchingTodoActivity(todo: CampusTodo, activities: CampusAct
 }
 
 function safeErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message.trim().slice(0, 240) : '';
+  if (!(error instanceof Error)) return '';
+  const message = error.message.trim();
+  if (/^(?:timeout|timed\s*out)$/i.test(message)) return '详情接口连接超时，请检查网络后重试。';
+  return message.slice(0, 240);
 }
 
 export class CampusTodoDetailsSession {
