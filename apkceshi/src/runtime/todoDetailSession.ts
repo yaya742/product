@@ -14,7 +14,7 @@ export interface CampusTodoDetailMessages {
   summaryOnly: string;
 }
 
-export type CampusTodoActivityReader = (courseId: string) => Promise<CampusActivity[]>;
+export type CampusTodoActivityReader = (courseId: string, activityId: string) => Promise<CampusActivity[]>;
 
 export function campusTodoDetailKey(todo: Pick<CampusTodo, 'id' | 'courseId'>): string {
   return JSON.stringify([todo.courseId || '', todo.id]);
@@ -66,7 +66,7 @@ export class CampusTodoDetailsSession {
 
     const generation = this.generation;
     const listSource = todo.source || '学在浙大待办列表';
-    const source = todo.courseId ? `${listSource} · 学在浙大课程活动接口` : listSource;
+    const source = todo.courseId ? `${listSource} · 学在浙大课程活动详情接口` : listSource;
     this.states.set(key, {
       todo,
       loading: true,
@@ -82,7 +82,7 @@ export class CampusTodoDetailsSession {
         return { todo, loading: false, reason: messages.noCourseId, readAt: checkedAt, source: listSource };
       }
 
-      const activities = await reader(todo.courseId);
+      const activities = await reader(todo.courseId, todo.id);
       const activity = findMatchingTodoActivity(todo, activities);
       if (!activity) {
         return { todo, loading: false, reason: messages.noExactMatch, readAt: new Date().toISOString(), source };

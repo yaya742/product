@@ -6,7 +6,7 @@ import { WeatherPanel } from './WeatherPanel';
 import { CampusCalendarViewer } from './CampusCalendarViewer';
 import { runMobileAgent, type AgentStatus } from './runtime/agent';
 import { completeDeepSeek, DeepSeekError, testDeepSeekConnection, translateText } from './runtime/deepseek';
-import { CampusError, COURSES_HOME_URL, currentAcademicTerm, readCampusInfo, readLearningActivities, readPublicCollegeInfo, readPublicNotices, type CampusPublicInfoResult } from './runtime/campus';
+import { CampusError, COURSES_HOME_URL, currentAcademicTerm, readCampusInfo, readLearningActivities, readLearningActivityDetails, readPublicCollegeInfo, readPublicNotices, type CampusPublicInfoResult } from './runtime/campus';
 import { enableCampusBackgroundSync, getCampusBackgroundSnapshot } from './runtime/campusBackgroundSync';
 import { getUiCopy } from './runtime/i18n';
 import { cancelLocalReminder, scheduleLocalReminder, withNotificationId } from './runtime/reminders';
@@ -829,11 +829,11 @@ export function App() {
   function loadTodoDetails(todo: CampusTodo, retry = false) {
     const session = todoDetailsSessionRef.current;
     if (!session) return;
-    const request = session.load(todo, async (courseId) => {
+    const request = session.load(todo, async (courseId, activityId) => {
       if (campusReadInFlightRef.current) throw new Error(copy.campusTodoBusy);
       campusReadInFlightRef.current = true;
       try {
-        return await readLearningActivities(state.profile.studentId, state.profile.studentPassword, courseId);
+        return await readLearningActivityDetails(state.profile.studentId, state.profile.studentPassword, courseId, activityId);
       } finally {
         campusReadInFlightRef.current = false;
       }

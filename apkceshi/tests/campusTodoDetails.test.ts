@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { CampusActivity, CampusTodo } from '../src/runtime/types.ts';
-import { normalizeOfficialCourseUrl, normalizeTodoDetails } from '../src/runtime/todoDetails.ts';
+import { normalizeOfficialCourseUrl, normalizeTodoDetails, officialActivityUrl } from '../src/runtime/todoDetails.ts';
 import { campusTodoDetailKey, CampusTodoDetailsSession } from '../src/runtime/todoDetailSession.ts';
 
 const messages = {
@@ -48,14 +48,17 @@ test('reopening a completed todo reuses its session result; retry and todo refre
   const session = new CampusTodoDetailsSession();
   const item = todo('assignment-1');
   let requests = 0;
-  const reader = async (courseId: string) => {
+  const requestedIds: string[] = [];
+  const reader = async (courseId: string, activityId: string) => {
     requests += 1;
+    requestedIds.push(activityId);
     return [activity(item.id, courseId, { description: `说明 ${requests}` })];
   };
 
   const first = await session.load(item, reader, messages);
   const reopened = await session.load(item, reader, messages);
   assert.equal(requests, 1);
+  assert.deepEqual(requestedIds, [item.id], 'the reader receives the exact expanded assignment ID');
   assert.equal(reopened.todo.description, first.todo.description);
 
   const retried = await session.load(item, reader, messages, true);
@@ -116,7 +119,7 @@ test('incomplete official activity stays incomplete instead of fabricating assig
   assert.equal(result.todo.submissionRequirements, undefined);
   assert.deepEqual(result.todo.attachments, undefined);
   assert.equal(result.reason, messages.summaryOnly);
-  assert.equal(result.source, '官方待办 · 学在浙大课程活动接口');
+  assert.equal(result.source, '官方待办 · 学在浙大课程活动详情接口');
 });
 
 test('transient errors and unmatched activities are not cached; a later reopen can load a matching result', async () => {
@@ -160,7 +163,7 @@ test('activity match requires both the exact course ID and assignment ID', async
 
   assert.equal(result.reason, messages.noExactMatch);
   assert.equal(result.todo.description, undefined);
-  assert.equal(result.source, '官方待办 · 学在浙大课程活动接口');
+  assert.equal(result.source, '官方待办 · 学在浙大课程活动详情接口');
 });
 
 test('normalizes explicit details and accepts only trusted HTTPS platform links', () => {
@@ -179,4 +182,23 @@ test('normalizes explicit details and accepts only trusted HTTPS platform links'
   assert.equal(details.sourceUrl, 'https://courses.zju.edu.cn/course/123/activities/456');
   assert.equal(normalizeOfficialCourseUrl('https://example.com/assignment'), undefined);
   assert.equal(normalizeOfficialCourseUrl('http://courses.zju.edu.cn/assignment'), undefined);
+});
+
+test('normalizes the verified official activity detail shape and attachment references', () => {
+  const details = normalizeTodoDetails({
+    description: '列表摘要，不应覆盖详情接口正文',
+    data: { description: '<p>参见附件，并完成</p>' },
+    upload_references: [{ upload_id: 12345, name: '作业说明.pdf', reference_id: 12345 }],
+  });
+
+  assert.equal(details.description, '参见附件，并完成');
+  assert.deepEqual(details.attachments, [{
+    name: '作业说明.pdf',
+    url: 'https://courses.zju.edu.cn/api/uploads/reference/12345/blob',
+  }]);
+});
+
+test('builds direct links only from numeric exact course and activity IDs', () => {
+  assert.equal(officialActivityUrl('102844', '1191531'), 'https://courses.zju.edu.cn/course/102844/learning-activity#/1191531');
+  assert.equal(officialActivityUrl('course-1', 'assignment-1'), undefined);
 });

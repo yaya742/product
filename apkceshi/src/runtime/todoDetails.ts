@@ -12,6 +12,7 @@ export interface CampusTodoDetails {
 }
 
 const COURSES_HOME = 'https://courses.zju.edu.cn/user/index';
+const COURSE_ACTIVITY_PAGE = 'https://courses.zju.edu.cn/course/{courseId}/learning-activity#/{activityId}';
 const TEXT_VALUE_KEYS = ['name', 'filename', 'file_name', 'title', 'text', 'value', 'label'];
 
 function valueText(value: unknown, depth = 0): string {
@@ -56,13 +57,30 @@ export function normalizeOfficialCourseUrl(value: unknown): string | undefined {
   }
 }
 
+export function officialActivityUrl(courseId: string, activityId: string): string | undefined {
+  if (!/^\d{1,20}$/.test(courseId) || !/^\d{1,20}$/.test(activityId)) return undefined;
+  return normalizeOfficialCourseUrl(COURSE_ACTIVITY_PAGE
+    .replace('{courseId}', encodeURIComponent(courseId))
+    .replace('{activityId}', encodeURIComponent(activityId)));
+}
+
+function attachmentUrl(record: Record<string, unknown>): string | undefined {
+  const directUrl = normalizeOfficialCourseUrl(record.url ?? record.href ?? record.link);
+  if (directUrl) return directUrl;
+  const referenceId = record.reference_id;
+  const normalizedReferenceId = typeof referenceId === 'number' && Number.isSafeInteger(referenceId)
+    ? String(referenceId)
+    : typeof referenceId === 'string' ? referenceId.trim() : '';
+  if (!/^\d{1,30}$/.test(normalizedReferenceId)) return undefined;
+  return `https://courses.zju.edu.cn/api/uploads/reference/${encodeURIComponent(normalizedReferenceId)}/blob`;
+}
+
 function normalizeAttachments(value: unknown): CampusTodoAttachment[] {
   const items = Array.isArray(value) ? value : value && typeof value === 'object' ? [value] : [];
   return items.flatMap((item): CampusTodoAttachment[] => {
     const record = typeof item === 'string' ? { name: item } : item && typeof item === 'object' && !Array.isArray(item) ? item as Record<string, unknown> : null;
     if (!record) return [];
-    const rawUrl = record.url ?? record.href ?? record.link;
-    const url = normalizeOfficialCourseUrl(rawUrl);
+    const url = attachmentUrl(record);
     const name = displayText(record.name ?? record.filename ?? record.file_name ?? record.title ?? (typeof item === 'string' ? item : ''));
     if (!name && !url) return [];
     return [{ name: (name || '附件').slice(0, 240), ...(url ? { url } : {}) }];
@@ -78,11 +96,15 @@ function firstText(record: Record<string, unknown>, keys: string[]): string | un
 }
 
 export function normalizeTodoDetails(record: Record<string, unknown>): CampusTodoDetails {
-  const description = firstText(record, ['description', 'instructions', 'content', 'brief', 'requirement', 'requirements']);
+  const officialData = record.data && typeof record.data === 'object' && !Array.isArray(record.data)
+    ? record.data as Record<string, unknown>
+    : undefined;
+  const description = (officialData ? firstText(officialData, ['description']) : undefined)
+    || firstText(record, ['description', 'instructions', 'content', 'brief', 'requirement', 'requirements']);
   const submissionRequirements = firstText(record, [
     'submission_requirements', 'submissionRequirements', 'submission_requirement', 'submit_requirement', 'submitRequirement', 'submission_instructions',
   ]);
-  const rawAttachments = record.attachments ?? record.attachment_list ?? record.attachmentList ?? record.assignment_attachments;
+  const rawAttachments = record.upload_references ?? record.attachments ?? record.attachment_list ?? record.attachmentList ?? record.assignment_attachments;
   const attachments = normalizeAttachments(rawAttachments);
   const sourceUrl = normalizeOfficialCourseUrl(record.url ?? record.href ?? record.link ?? record.detail_url ?? record.detailUrl);
   const updatedAt = firstText(record, ['updated_at', 'updatedAt', 'update_time', 'updateTime']);

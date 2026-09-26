@@ -19,7 +19,7 @@ import type {
   CampusPublicInfo,
   MobileCampusData,
 } from './types';
-import { normalizeOfficialCourseUrl, normalizeTodoDetails } from './todoDetails';
+import { normalizeOfficialCourseUrl, normalizeTodoDetails, officialActivityUrl } from './todoDetails';
 
 const LOGIN_URL = 'https://zjuam.zju.edu.cn/cas/login';
 const PUBLIC_KEY_URL = 'https://zjuam.zju.edu.cn/cas/v2/getPubKey';
@@ -35,6 +35,8 @@ export const COURSES_HOME_URL = COURSES_HOME;
 const TODOS_URL = 'https://courses.zju.edu.cn/api/todos';
 const MY_COURSES_URL = 'https://courses.zju.edu.cn/api/my-courses';
 const COURSE_ACTIVITIES_URL = 'https://courses.zju.edu.cn/api/courses/{courseId}/activities';
+const COURSE_ACTIVITY_DETAIL_URL = 'https://courses.zju.edu.cn/api/activities/{activityId}';
+const COURSE_ACTIVITY_REFERENCES_URL = 'https://courses.zju.edu.cn/api/activities/{activityId}/upload_references';
 const SZTZ_SERVICE = 'https://sztz.zju.edu.cn/dekt/';
 const SZTZ_CTX = 'https://sztz.zju.edu.cn/dekt/ctx';
 const SZTZ_PROJECTS = 'https://sztz.zju.edu.cn/dekt/student/home/getSqjl';
@@ -1829,6 +1831,88 @@ function normalizeActivity(item: Record<string, unknown>, courseId: string): Cam
   };
 }
 
+function parseCourseActivities(response: HttpResult, courseId: string): CampusActivity[] {
+  const body = responseText(response);
+  if (response.status === 401 || response.status === 403 || isAuthenticationPage(body)) throw new CampusError('学在浙大登录态已失效，请重新读取。', 'authentication');
+  if (response.status < 200 || response.status >= 300) throw new CampusError(`学在浙大课程活动读取失败（HTTP ${response.status}）。`, 'response');
+  const activities = listFromPayload(parseJson(response, '学在浙大课程活动'), ['activities', 'activity_list', 'items', 'data', 'results'])
+    .map((item) => normalizeActivity(item, courseId))
+    .filter((item): item is CampusActivity => item !== null);
+  const seen = new Set<string>();
+  return activities.filter((activity) => {
+    if (seen.has(activity.id)) return false;
+    seen.add(activity.id);
+    return true;
+  }).slice(0, 500);
+}
+
+async function readCourseActivities(courseId: string): Promise<CampusActivity[]> {
+  const response = await request({ url: COURSE_ACTIVITIES_URL.replace('{courseId}', encodeURIComponent(courseId)), responseType: 'text', disableRedirects: true });
+  return parseCourseActivities(response, courseId);
+}
+
+async function readOfficialActivityPayload(url: string, label: string): Promise<unknown> {
+  const response = await request({ url, responseType: 'text', disableRedirects: true });
+  const body = responseText(response);
+  if (response.status === 401 || response.status === 403 || isAuthenticationPage(body)) throw new CampusError('学在浙大登录态已失效，请重新读取。', 'authentication');
+  if (response.status < 200 || response.status >= 300) throw new CampusError(`${label}读取失败（HTTP ${response.status}）。`, 'response');
+  const payload = parseJson(response, label);
+  if (!payload || typeof payload !== 'object') throw new CampusError(`${label}返回了无法识别的数据。`, 'response');
+  return payload;
+}
+
+function officialActivityId(value: string): boolean {
+  return /^\d{1,20}$/.test(value);
+}
+
+export async function readLearningActivityDetails(studentId: string, password: string, courseId: string, activityId: string): Promise<CampusActivity[]> {
+  assertNative();
+  const cleanId = studentId.trim();
+  const cleanCourseId = courseId.trim();
+  const cleanActivityId = activityId.trim();
+  if (!cleanId || !password) throw new CampusError('请先填写学号和校园密码。', 'credentials');
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(cleanCourseId) || !officialActivityId(cleanActivityId)) throw new CampusError('学在浙大课程或作业编号格式不正确。', 'response');
+  campusTransport = 'direct';
+  activeCampusCredentials = { studentId: cleanId, password };
+  activeCookieJar = new CookieJar();
+  try {
+    await establishCampusSession(cleanId, password);
+    await ensureCoursesSession();
+    const activities = await readCourseActivities(cleanCourseId);
+    const matched = activities.find((activity) => activity.courseId === cleanCourseId && activity.id === cleanActivityId);
+    if (!matched) return activities;
+
+    const detailUrl = COURSE_ACTIVITY_DETAIL_URL.replace('{activityId}', encodeURIComponent(cleanActivityId));
+    const detailPayload = await readOfficialActivityPayload(detailUrl, '学在浙大作业详情');
+    if (Array.isArray(detailPayload)) throw new CampusError('学在浙大作业详情返回了无法识别的数据。', 'response');
+    const detailRecord = detailPayload as Record<string, unknown>;
+    const returnedId = field(detailRecord, ['id', 'activity_id', 'activityId']);
+    const returnedCourseId = field(detailRecord, ['course_id', 'courseId']);
+    if ((returnedId && returnedId !== cleanActivityId) || (returnedCourseId && returnedCourseId !== cleanCourseId)) {
+      throw new CampusError('官方作业详情的课程或作业编号与待办不一致，已停止显示以避免错配。', 'response');
+    }
+
+    const referencesUrl = COURSE_ACTIVITY_REFERENCES_URL.replace('{activityId}', encodeURIComponent(cleanActivityId));
+    const referencesPayload = await readOfficialActivityPayload(referencesUrl, '学在浙大作业附件');
+    const referenceKeys = ['upload_references', 'references', 'items', 'results'];
+    if (!payloadContainsList(referencesPayload, referenceKeys)) throw new CampusError('学在浙大作业附件接口返回了无法识别的数据。', 'response');
+    const uploadReferences = listFromPayload(referencesPayload, referenceKeys);
+    const normalized = normalizeActivity({ ...matched, ...detailRecord, upload_references: uploadReferences }, cleanCourseId);
+    if (!normalized || normalized.id !== cleanActivityId || normalized.courseId !== cleanCourseId) {
+      throw new CampusError('学在浙大作业详情无法与待办编号精确匹配。', 'response');
+    }
+    return [{
+      ...normalized,
+      url: normalized.url || officialActivityUrl(cleanCourseId, cleanActivityId) || '',
+    }];
+  } finally {
+    activeCookieJar = null;
+    zdbkSessionReady = false;
+    campusTransport = 'direct';
+    activeCampusCredentials = null;
+  }
+}
+
 async function readSchedule(year: string, term: string): Promise<CampusCourse[]> {
   await loginZdbk();
   scheduleReadWarning = '';
@@ -2416,18 +2500,7 @@ export async function readLearningActivities(studentId: string, password: string
   try {
     await establishCampusSession(cleanId, password);
     await ensureCoursesSession();
-    const response = await request({ url: COURSE_ACTIVITIES_URL.replace('{courseId}', encodeURIComponent(cleanCourseId)), responseType: 'text', disableRedirects: true });
-    const body = responseText(response);
-    if (response.status === 401 || response.status === 403 || isAuthenticationPage(body)) throw new CampusError('学在浙大登录态已失效，请重新读取。', 'authentication');
-    const activities = listFromPayload(parseJson(response, '学在浙大课程活动'), ['activities', 'activity_list', 'items', 'data', 'results'])
-      .map((item) => normalizeActivity(item, cleanCourseId))
-      .filter((item): item is CampusActivity => item !== null);
-    const seen = new Set<string>();
-    return activities.filter((activity) => {
-      if (seen.has(activity.id)) return false;
-      seen.add(activity.id);
-      return true;
-    }).slice(0, 500);
+    return await readCourseActivities(cleanCourseId);
   } finally {
     activeCookieJar = null;
     zdbkSessionReady = false;
