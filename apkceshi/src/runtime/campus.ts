@@ -19,7 +19,7 @@ import type {
   CampusPublicInfo,
   MobileCampusData,
 } from './types';
-import { normalizeOfficialCourseUrl, normalizeTodoDetails, officialActivityUrl } from './todoDetails';
+import { normalizeOfficialCourseUrl, normalizeTodoDetails, officialActivityUrl, officialAttachmentUrlLookup } from './todoDetails';
 import { runWithSingleFallback } from './singleFallback';
 import { mirrorCampusCookies } from './campusOfficialPage';
 
@@ -1830,6 +1830,24 @@ async function readOfficialActivityPayload(url: string, label: string): Promise<
   return payload;
 }
 
+async function resolveOfficialAttachmentReferences(references: Record<string, unknown>[]): Promise<Record<string, unknown>[]> {
+  return Promise.all(references.map(async (reference) => {
+    const attachment = normalizeTodoDetails({ upload_references: [reference] }).attachments[0];
+    if (!attachment?.referenceId || attachment.url) return reference;
+    const lookupUrl = officialAttachmentUrlLookup(attachment.referenceId);
+    if (!lookupUrl) return reference;
+    try {
+      const payload = await readOfficialActivityPayload(lookupUrl, '学在浙大附件下载地址');
+      const directUrl = normalizeOfficialCourseUrl((payload as Record<string, unknown>).url);
+      return directUrl ? { ...reference, url: directUrl } : reference;
+    } catch {
+      // Keep the filename visible if the official URL lookup is unavailable;
+      // the UI will leave it non-interactive and retain the separate page link.
+      return { ...reference, attachment_url_lookup_failed: true };
+    }
+  }));
+}
+
 function officialActivityId(value: string): boolean {
   return /^\d{1,20}$/.test(value);
 }
@@ -1879,7 +1897,7 @@ export async function readLearningActivityDetails(studentId: string, password: s
       const referencesPayload = await withLearningActivityStage('作业附件信息接口', () => readOfficialActivityPayload(referencesUrl, '学在浙大作业附件'));
       const referenceKeys = ['upload_references', 'references', 'items', 'results'];
       if (!payloadContainsList(referencesPayload, referenceKeys)) throw new CampusError('学在浙大作业附件接口返回了无法识别的数据。', 'response');
-      const uploadReferences = listFromPayload(referencesPayload, referenceKeys);
+      const uploadReferences = await resolveOfficialAttachmentReferences(listFromPayload(referencesPayload, referenceKeys));
       const normalized = normalizeActivity({ ...matched, ...detailRecord, upload_references: uploadReferences }, cleanCourseId);
       if (!normalized || normalized.id !== cleanActivityId || normalized.courseId !== cleanCourseId) {
         throw new CampusError('学在浙大作业详情无法与待办编号精确匹配。', 'response');

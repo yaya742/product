@@ -2001,16 +2001,23 @@ export function App() {
                                     <dd>{detailTodo.attachments?.length ? (
                                       <ul>{detailTodo.attachments.map((attachment, index) => (
                                         <li key={`${attachment.name}-${index}`}>
-                                          <button
-                                            type="button"
-                                            className="campus-todo-attachment-link"
-                                            onClick={() => void openCampusTodoOriginal(
-                                              attachment.url || officialTodoUrl,
-                                              `${todoKey}:attachment:${index}`,
-                                              attachment.url ? attachment.name : undefined,
-                                              attachment.url ? undefined : copy.campusTodoAttachmentOpenFallback,
-                                            )}
-                                          >{attachment.name}</button>
+                                          {attachment.url ? (
+                                            <button
+                                              type="button"
+                                              className="campus-todo-attachment-link"
+                                              onClick={() => void openCampusTodoOriginal(
+                                                attachment.url,
+                                                `${todoKey}:attachment:${index}`,
+                                                attachment.name,
+                                              )}
+                                            >{attachment.name}</button>
+                                          ) : (
+                                            <>
+                                              <span className="campus-todo-attachment-name">{attachment.name}</span>
+                                              <p className="campus-todo-reason">{attachment.urlLookupFailed ? copy.campusTodoAttachmentResolveError : copy.campusTodoAttachmentOpenFallback}</p>
+                                              {attachment.urlLookupFailed && <button type="button" className="campus-todo-retry-button" onClick={() => loadTodoDetails(todo, true)}>{copy.campusTodoRetryDetails}</button>}
+                                            </>
+                                          )}
                                           {campusTodoLinkErrors[`${todoKey}:attachment:${index}`] && <p className="campus-todo-reason" role="status">{campusTodoLinkErrors[`${todoKey}:attachment:${index}`]}</p>}
                                         </li>
                                       ))}</ul>

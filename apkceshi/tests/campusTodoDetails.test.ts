@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { CampusActivity, CampusTodo } from '../src/runtime/types.ts';
-import { hasOfficialTodoDetails, normalizeOfficialCourseUrl, normalizeTodoDetails, officialActivityUrl, officialTodoPageUrl } from '../src/runtime/todoDetails.ts';
+import { hasOfficialTodoDetails, normalizeOfficialCourseUrl, normalizeTodoDetails, officialActivityUrl, officialAttachmentUrlLookup, officialTodoPageUrl } from '../src/runtime/todoDetails.ts';
 import { campusTodoDetailKey, CampusTodoDetailsSession } from '../src/runtime/todoDetailSession.ts';
 import { runWithSingleFallback } from '../src/runtime/singleFallback.ts';
 
@@ -232,18 +232,32 @@ test('detects when the official response contains no assignment body or attachme
   assert.equal(hasOfficialTodoDetails({ attachments: [{ name: '说明.pdf' }] }), true);
 });
 
-test('normalizes the verified official activity detail shape and attachment references', () => {
+test('preserves the official attachment reference without inventing a download URL', () => {
   const details = normalizeTodoDetails({
     description: '列表摘要，不应覆盖详情接口正文',
     data: { description: '<p>参见附件，并完成</p>' },
-    upload_references: [{ upload_id: 12345, name: '作业说明.pdf', reference_id: 12345 }],
+    upload_references: [{ upload_id: 12345, file_name: '作业说明.pdf', reference_id: 12345 }],
   });
 
   assert.equal(details.description, '参见附件，并完成');
   assert.deepEqual(details.attachments, [{
     name: '作业说明.pdf',
-    url: 'https://courses.zju.edu.cn/api/uploads/reference/12345/blob',
+    referenceId: '12345',
   }]);
+  assert.equal(officialAttachmentUrlLookup('12345'), 'https://courses.zju.edu.cn/api/uploads/reference/document/12345/url?preview=true');
+  assert.equal(officialAttachmentUrlLookup('../other'), undefined);
+  assert.deepEqual(normalizeTodoDetails({
+    upload_references: [{ file_name: '作业说明.pdf', reference_id: 12345, attachment_url_lookup_failed: true }],
+  }).attachments, [{ name: '作业说明.pdf', referenceId: '12345', urlLookupFailed: true }]);
+});
+
+test('accepts a resolved attachment URL only from the official course host', () => {
+  assert.deepEqual(normalizeTodoDetails({
+    upload_references: [{ file_name: '作业说明.pdf', url: '/api/uploads/reference/document/12345/file' }],
+  }).attachments, [{ name: '作业说明.pdf', url: 'https://courses.zju.edu.cn/api/uploads/reference/document/12345/file' }]);
+  assert.deepEqual(normalizeTodoDetails({
+    upload_references: [{ file_name: '作业说明.pdf', url: 'https://example.com/file.pdf' }],
+  }).attachments, [{ name: '作业说明.pdf' }]);
 });
 
 test('builds direct links only from numeric exact course and activity IDs', () => {

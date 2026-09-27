@@ -1,6 +1,8 @@
 export interface CampusTodoAttachment {
   name: string;
   url?: string;
+  referenceId?: string;
+  urlLookupFailed?: boolean;
 }
 
 export interface CampusTodoDetails {
@@ -81,14 +83,20 @@ export function officialTodoPageUrl(sourceUrl: unknown, courseId: string, activi
 }
 
 function attachmentUrl(record: Record<string, unknown>): string | undefined {
-  const directUrl = normalizeOfficialCourseUrl(record.url ?? record.href ?? record.link);
-  if (directUrl) return directUrl;
-  const referenceId = record.reference_id;
-  const normalizedReferenceId = typeof referenceId === 'number' && Number.isSafeInteger(referenceId)
-    ? String(referenceId)
-    : typeof referenceId === 'string' ? referenceId.trim() : '';
-  if (!/^\d{1,30}$/.test(normalizedReferenceId)) return undefined;
-  return `https://courses.zju.edu.cn/api/uploads/reference/${encodeURIComponent(normalizedReferenceId)}/blob`;
+  return normalizeOfficialCourseUrl(record.url ?? record.href ?? record.link);
+}
+
+function attachmentReferenceId(value: unknown): string | undefined {
+  const normalized = typeof value === 'number' && Number.isSafeInteger(value)
+    ? String(value)
+    : typeof value === 'string' ? value.trim() : '';
+  return /^[A-Za-z0-9_-]{1,100}$/.test(normalized) ? normalized : undefined;
+}
+
+export function officialAttachmentUrlLookup(referenceId: string): string | undefined {
+  const normalizedReferenceId = attachmentReferenceId(referenceId);
+  if (!normalizedReferenceId) return undefined;
+  return `https://courses.zju.edu.cn/api/uploads/reference/document/${encodeURIComponent(normalizedReferenceId)}/url?preview=true`;
 }
 
 function normalizeAttachments(value: unknown): CampusTodoAttachment[] {
@@ -97,9 +105,15 @@ function normalizeAttachments(value: unknown): CampusTodoAttachment[] {
     const record = typeof item === 'string' ? { name: item } : item && typeof item === 'object' && !Array.isArray(item) ? item as Record<string, unknown> : null;
     if (!record) return [];
     const url = attachmentUrl(record);
+    const referenceId = attachmentReferenceId(record.reference_id);
     const name = displayText(record.name ?? record.filename ?? record.file_name ?? record.title ?? (typeof item === 'string' ? item : ''));
     if (!name && !url) return [];
-    return [{ name: (name || '附件').slice(0, 240), ...(url ? { url } : {}) }];
+    return [{
+      name: (name || '附件').slice(0, 240),
+      ...(url ? { url } : {}),
+      ...(referenceId ? { referenceId } : {}),
+      ...(record.attachment_url_lookup_failed === true ? { urlLookupFailed: true } : {}),
+    }];
   }).slice(0, 20);
 }
 
