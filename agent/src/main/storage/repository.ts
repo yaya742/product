@@ -498,7 +498,8 @@ export class KernelRepository {
     const s = this.scope(handle);
     if (!s.sources.includes('history:self') || s.audience !== 'self' || s.subjectId !== s.principalId || s.worldId !== 'real') return [];
     const f = this.filter(handle);
-    const rows = this.db.prepare(`SELECT m.id,m.role,CASE WHEN m.role='user' THEN (SELECT content FROM h_evidence WHERE id=m.id) ELSE m.content END AS content,m.created_at FROM messages m
+    const rows = this.db.prepare(`SELECT m.id,m.role,CASE WHEN m.role='user' THEN (SELECT content FROM h_evidence WHERE id=m.id) ELSE m.content END AS content,m.created_at,
+        CASE WHEN json_type(m.payload,'$.image')='object' THEN 1 ELSE 0 END AS has_image FROM messages m
       WHERE m.session_id=? AND m.id NOT IN (SELECT value FROM json_each(?))
       AND json_extract(m.payload,'$.status')='done'
       AND ((m.role='user' AND EXISTS(SELECT 1 FROM h_evidence r WHERE r.id=m.id AND ${f.sql} AND r.status='active'
@@ -512,7 +513,13 @@ export class KernelRepository {
       sessionId, JSON.stringify(excludeIds), ...f.params, s.privacyEpoch, s.policyRevision, JSON.stringify(s.sources), Math.min(24, limit),
     );
     for (const row of rows) this.recordAccess(handle, { ...row, source: 'history:self' }, 'conversation_history');
-    return rows.reverse().map(row => ({ id: String(row.id), role: row.role as 'user' | 'assistant', content: String(row.content), createdAt: String(row.created_at) }));
+    return rows.reverse().map(row => ({
+      id: String(row.id),
+      role: row.role as 'user' | 'assistant',
+      content: String(row.content),
+      createdAt: String(row.created_at),
+      hasImage: Number(row.has_image) === 1,
+    }));
   }
   pendingConstraints(handle: ScopeHandle, sessionId: string): EvidenceEvent[] {
     const f = this.filter(handle);
