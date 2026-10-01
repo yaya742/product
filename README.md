@@ -8,7 +8,7 @@
 - `mobile/`：React/Vite + Capacitor 移动端，手机本地运行并直接调用用户配置的 DeepSeek API。
 - `weather/`：Python/FastAPI 天气服务、天气包及其测试。
 - `map/`：地图能力的统一入口、职责清单和跨端边界；平台 UI 与设备适配保留在 `agent/` 和 `mobile/`。
-- `school/`：浙江大学校园信息插件和只读连接器。
+- `school/`：浙江大学校园信息插件和只读连接器；AI 可在已接入的公开来源中尝试不同关键词并阅读页面结果。
 
 目录与分支边界详见 [REPOSITORY_LAYOUT.md](REPOSITORY_LAYOUT.md)。产品范围、数据边界和阶段规划详见 [PRODUCT_PLAN.md](PRODUCT_PLAN.md)。
 

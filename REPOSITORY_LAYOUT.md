@@ -10,7 +10,7 @@
 - `mobile/` → `codex/mobile`：Android/Capacitor 移动端及手机侧本地能力。
 - `weather/` → `codex/weather`：天气服务、Python 包、配置示例和测试。
 - `map/` → `codex/map`：地图能力入口、共享边界和跨端职责清单。桌面地图 UI、Electron 定位适配和移动端 UI 仍放在对应应用目录，避免平台代码倒灌到共享层。
-- `school/` → `codex/school`：学校插件和校园只读连接器。
+- `school/` → `codex/school`：学校插件和校园只读连接器；公开信息由已有浙大来源读取，AI 可调整检索词，但不依赖额外的全网搜索服务。
 
 所有新责任分支都必须以 `main` 为祖先，并保留根级 `AGENTS.md`。AI 读取的是当前工作树中的规则文件，因此 `main` 的规则发生变化后，需要把 `main` 合并到各功能分支。旧的 `PCagent`、`mobile_app`、`weather`、`school`、`codex/zaichang-desktop` 分支暂时作为历史与回退来源，不删除、不强推。
 
