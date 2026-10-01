@@ -27,7 +27,6 @@ const ACADEMIC_RESOURCES = new Set([
   'gpa_semesters',
   'gpa_cumulative',
   'practice',
-  'sports',
   'projects',
 ]);
 const RESOURCE_NAMES = {
@@ -41,7 +40,6 @@ const RESOURCE_NAMES = {
   gpa_semesters: 'gpa_semesters',
   gpa_cumulative: 'gpa_cumulative',
   practice: 'practice_summary',
-  sports: 'practice_summary',
   projects: 'projects',
   learning_courses: 'learning_courses',
   activities: 'activities',
@@ -52,6 +50,7 @@ const SUPPORTED_PERSONAL_DOMAINS = new Set([
   'notices',
   'learning_courses',
   'activities',
+  'sports',
   'source_status',
 ]);
 const SENSITIVE_FIELD = /^(?:password|passwd|token|ticket|cookie|authorization|synjones|secret|openid|unionid|accesskey|qrcode|qr_code|barcode|voucher|body_b64|student.?no|student.?id|card.?no|card_number|identity.?no|identity.?id|id.?card|phone|mobile|email|account|sno|xh|yhm|xm|zgh|custid|custmemberid|acctid|cardid|bankacc|cert|schcode|yktschoolcode)$/i;
@@ -381,10 +380,33 @@ function addOption(args, output, name, value) {
   output.push(name, String(value));
 }
 
+function unavailableSportsDomain() {
+  return envelope('unavailable', {
+    domain: 'sports',
+    resource: 'exercise',
+    status: 'unavailable',
+    records: [],
+    requiredCount: null,
+    completedCount: null,
+    validCount: null,
+    remainingCount: null,
+    coverage: {
+      complete: false,
+      scope: 'current-term',
+      note: '当前没有经过核验的体育打卡读取接口；素质拓展记点和项目记录不代表体育打卡。',
+    },
+    freshness: 'not_available',
+    source: { service: '浙大体艺', origin: 'connector-not-connected' },
+    nextStep: '需要先核验获准使用的体育打卡来源，再接入独立的只读领域。',
+    schema_version: 1,
+  }, '当前连接器没有已核验的体育打卡接口，无法读取真实次数。');
+}
+
 async function readConnectorDomain(args, context) {
   const domain = String(args?.domain || '');
   if (!SUPPORTED_PERSONAL_DOMAINS.has(domain)) return envelope('unsupported', undefined, `校园资料类别 ${domain} 尚未接入。`);
   if (domain === 'source_status') return connectorStatusRead(context);
+  if (domain === 'sports') return unavailableSportsDomain();
   if (domain === 'holidays') {
     try {
       const year = academicYearForArgs(args);
@@ -448,7 +470,7 @@ async function readConnectorDomain(args, context) {
 async function readOverview(args, context) {
   const sections = {};
   const issues = [];
-  const academicDomains = ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'practice', 'sports', 'projects'];
+  const academicDomains = ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'practice', 'projects'];
   for (const domain of academicDomains) {
     const result = await readConnectorDomain({ ...args, domain, limit: 6 }, context);
     sections[domain] = result.data || { status: result.status, reason: result.reason };

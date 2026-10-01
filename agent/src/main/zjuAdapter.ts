@@ -113,7 +113,7 @@ export interface CampusFullContextArgs {
   term?: '1' | '2';
 }
 
-const DOMAIN_RESOURCE: Record<CampusDomain, string> = {
+const DOMAIN_RESOURCE: Partial<Record<CampusDomain, string>> = {
   schedule: 'classes',
   courses: 'courses',
   learning_courses: 'records',
@@ -126,7 +126,6 @@ const DOMAIN_RESOURCE: Record<CampusDomain, string> = {
   gpa_cumulative: 'gpa_cumulative',
   retakes: 'retakes',
   practice: 'practice_summary',
-  sports: 'practice_summary',
   projects: 'projects',
   activities: 'activities',
   reservations: 'reservations',
@@ -184,8 +183,8 @@ const DOMAIN_LABEL: Record<CampusDomain, string> = {
   gpa_semesters: '分学期绩点',
   gpa_cumulative: '累计绩点',
   retakes: '重修记录',
-  practice: '素质拓展与体育记点',
-  sports: '体育记录',
+  practice: '素质拓展记点',
+  sports: '体育打卡记录',
   projects: '实践项目',
   activities: '课程活动',
   reservations: '图书馆预约',
@@ -266,7 +265,6 @@ const ACADEMIC_RESOURCES = new Set<CampusDomain>([
   'gpa_cumulative',
   'retakes',
   'practice',
-  'sports',
   'projects',
   'calendar_pending',
   'cancelled_classes',
@@ -360,7 +358,7 @@ function hostAuthError(error: unknown): { code: string; message: string } {
 function modelRecords(domain: CampusDomain | undefined, records: any): any {
   const clean = sanitize(records);
   if (!Array.isArray(clean)) return clean;
-  if (domain === 'practice' || domain === 'sports')
+  if (domain === 'practice')
     return clean.map((record) => ({
       second_class_points: record.dektJf,
       third_class_points: record.dsktJf,
@@ -741,7 +739,7 @@ export class ZjuAdapter {
         label: '浙大校园账号',
         sourceKind: 'zju_account',
         accessMode: 'compatibility_local',
-        supportedDomains: ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'practice', 'sports', 'projects', 'holidays', 'notices', 'source_status'],
+        supportedDomains: ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'practice', 'projects', 'holidays', 'notices', 'source_status'],
         authStatus: 'needs_login',
         credentialsConfigured: false,
         reason: '还没有找到浙大个人信息技能。可以安装技能，或在连接设置中选择它。',
@@ -777,7 +775,7 @@ export class ZjuAdapter {
         label: '浙大校园账号',
         sourceKind: 'zju_account',
         accessMode: manifest?.accessMode || 'compatibility_local',
-        supportedDomains: manifest?.supportedDomains,
+        supportedDomains: manifest?.supportedDomains?.filter((domain) => domain !== 'sports'),
         authStatus,
         lastVerifiedAt,
         catalogued: Number(verification?.total_catalogued || 0) || undefined,
@@ -804,7 +802,7 @@ export class ZjuAdapter {
         label: '浙大校园账号',
         sourceKind: 'zju_account',
         accessMode: 'compatibility_local',
-        supportedDomains: ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'practice', 'sports', 'projects', 'holidays', 'notices', 'source_status'],
+        supportedDomains: ['schedule', 'courses', 'exams', 'assignments', 'grades', 'grade_alerts', 'gpa', 'gpa_semesters', 'gpa_cumulative', 'practice', 'projects', 'holidays', 'notices', 'source_status'],
         authStatus: this.credentialsConfigured() ? 'credentials_saved' : 'needs_login',
         credentialsConfigured: this.credentialsConfigured(),
         reason: '技能目录可用，但连接状态摘要暂时不可读。',
@@ -1545,6 +1543,31 @@ export class ZjuAdapter {
 
   async read(args: CampusReadArgs, signal: AbortSignal) {
     const connector = this.describe();
+    if (args.domain === 'sports')
+      return {
+        domain: args.domain,
+        label: DOMAIN_LABEL[args.domain],
+        cached: false,
+        connector,
+        data: {
+          status: 'unavailable',
+          resource: 'exercise',
+          records: [],
+          requiredCount: null,
+          completedCount: null,
+          validCount: null,
+          remainingCount: null,
+          coverage: {
+            complete: false,
+            scope: 'current-term',
+            note: '当前没有经过核验的体育打卡读取接口；素质拓展记点和项目记录不代表体育打卡。',
+          },
+          freshness: 'not_available',
+          source: { service: '浙大体艺', evidence: 'connector-not-connected' },
+          nextStep: '需要先核验获准使用的体育打卡来源，再接入独立的只读领域。',
+          origin: 'zju_sports_not_connected',
+        },
+      };
     if (!connector.available)
       return {
         domain: args.domain,
